@@ -1,0 +1,5 @@
+rootProject.name = 'keyboard'
+include ':react-native-keyboard-service'
+project(':react-native-keyboard-service').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keyboard-service/android')
+
+include ':app'
