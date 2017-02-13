@@ -23,7 +23,8 @@ export default class extends Component {
     static propTypes = {
         height: PropTypes.number.isRequired,
         backgroundColor: PropTypes.string,
-        renderStickyView: PropTypes.func
+        renderStickyView: PropTypes.func,
+        stickyViewHeight: PropTypes.number
     };
 
     constructor(props, context) {
@@ -31,7 +32,6 @@ export default class extends Component {
         this.state = {
             visible: false,
             contentEnabled: false,
-            initialized: false,
             height: props.height
         };
         this._animatedTranslateValue = new Animated.Value(0);
@@ -89,15 +89,17 @@ export default class extends Component {
         return false;
     }
 
-    async _didShow({ endCoordinates: { height } }) {
+    async _didShow(e) {
+        const height = e.endCoordinates.height;
+
         this._willHideKeyboardManually = false;
 
         if (!this.state.visible) {
             await this._setAsVisible();
-            this._animatedTranslateValue.setValue(1);
+            this._animatedTranslateValue.setValue(height / this.props.height);
         } else if (this.props.height !== height) {
             Animated.timing(this._animatedTranslateValue, {
-                toValue: 1 - ((this.props.height - height) / this.props.height),
+                toValue: height / this.props.height,
                 useNativeDriver: true,
                 duration: 120
             }).start(() => this.setState({ height }));
@@ -131,8 +133,7 @@ export default class extends Component {
     _setAsVisible() {
         return new Promise((resolve) => {
             this.setState({
-                visible: true,
-                initialized: true
+                visible: true
             }, resolve);
         });
     }
@@ -189,16 +190,12 @@ export default class extends Component {
     }
 
     _callKeyboardService(method) {
-        return NativeModules.RNKeyboardService[method](findNodeHandle(this.refs.keyboardView));
+        return NativeModules.RNKeyboardModule[method](findNodeHandle(this.refs.keyboardView));
     }
 
     render() {
-        const { backgroundColor, children } = this.props;
+        const { backgroundColor, children, renderStickyView, stickyViewHeight } = this.props;
         const { visible, height } = this.state;
-
-        if (height <= 0 || !this.state.initialized) {
-            return null;
-        }
 
         let content = children;
 
@@ -214,6 +211,7 @@ export default class extends Component {
                     <View style={[styles.content]}>
                         {children}
                     </View>
+                    {renderStickyView && renderStickyView()}
                 </Animated.View>
             );
         }
@@ -224,7 +222,7 @@ export default class extends Component {
                 onStartShouldSetResponder={this._shouldSetResponder}
                 style={styles.keyboard}
                 visible={visible}
-                height={height}>
+                height={height + (renderStickyView ? stickyViewHeight : 0)}>
                 {content}
             </RNKeyboardView>
         );

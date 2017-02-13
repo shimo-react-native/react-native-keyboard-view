@@ -41,7 +41,22 @@ class Keyboard extends Component {
 
     _renderStickyView() {
         return (
-            <View style={styles.stickyView} />
+            <View style={styles.stickyView}>
+                <TouchableHighlight
+                    style={styles.stickyViewButton}
+                    onPress={() => {}}
+                    underlayColor="#ccc"
+                >
+                    <Text style={styles.buttonText}>1</Text>
+                </TouchableHighlight>
+                <TouchableHighlight
+                    style={styles.stickyViewButton}
+                    onPress={() => {}}
+                    underlayColor="#ccc"
+                >
+                    <Text style={styles.buttonText}>2</Text>
+                </TouchableHighlight>
+            </View>
         );
     }
 
@@ -112,8 +127,8 @@ class Keyboard extends Component {
                 />
                 <KeyboardView
                     ref={KEYBOARD_VIEW}
-                    height={286}
-
+                    height={300}
+                    stickyViewHeight={40}
                     renderStickyView={this._renderStickyView}>
                         <ScrollView style={{flex: 1}}>
                             <View style={styles.keyboard}>
@@ -188,8 +203,16 @@ const styles = StyleSheet.create({
 
     stickyView: {
         height: 40,
-        width: 200,
-        backgroundColor: 'red'
+        backgroundColor: 'red',
+        flexDirection: 'row'
+    },
+
+    stickyViewButton: {
+        height: 40,
+        marginHorizontal: 10,
+        paddingHorizontal: 20,
+        backgroundColor: '#aaa',
+        justifyContent: 'center'
     }
 });
 
