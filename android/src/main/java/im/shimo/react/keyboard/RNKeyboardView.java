@@ -227,17 +227,13 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
 
     private void hideContent() {
         if (mWindow != null) {
-            mHostView.setVisible(false);
-            mWindow.setTouchable(false);
-            mWindow.update();
+            mHostView.setContentVisible(false);
         }
     }
 
     private void showContent() {
         if (mWindow != null) {
-            mHostView.setVisible(true);
-            mWindow.setTouchable(true);
-            mWindow.update();
+            mHostView.setContentVisible(true);
         }
     }
 
@@ -245,14 +241,12 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
     static class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
 
         private final JSTouchDispatcher mJSTouchDispatcher = new JSTouchDispatcher(this);
-        private boolean mVisble;
 
         public KeyboardRootViewGroup(Context context) {
             super(context);
         }
 
-        public void setVisible(boolean visible) {
-            mVisble = visible;
+        public void setContentVisible(boolean visible) {
             ViewGroup container = (ViewGroup) getChildAt(0);
             if (visible) {
                 container.getChildAt(0).setVisibility(View.VISIBLE);
@@ -278,10 +272,6 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
 
         @Override
         public boolean onInterceptTouchEvent(MotionEvent event) {
-            if (!mVisble) {
-                return true;
-            }
-
             try {
                 mJSTouchDispatcher.handleTouchEvent(event, getEventDispatcher());
                 return super.onInterceptTouchEvent(event);
@@ -292,10 +282,6 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
-            if (!mVisble) {
-                return false;
-            }
-
             try {
                 mJSTouchDispatcher.handleTouchEvent(event, getEventDispatcher());
                 super.onTouchEvent(event);
