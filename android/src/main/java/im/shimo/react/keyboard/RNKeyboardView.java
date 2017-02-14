@@ -1,6 +1,5 @@
 package im.shimo.react.keyboard;
 
-import javax.annotation.Nullable;
 
 import java.util.ArrayList;
 
@@ -30,12 +29,10 @@ import com.facebook.react.views.view.ReactViewGroup;
 public class RNKeyboardView extends ViewGroup implements LifecycleEventListener {
 
     private KeyboardRootViewGroup mHostView;
-    private @Nullable PopupWindow mWindow;
-    private int mHeight;
+    private PopupWindow mWindow;
     private InputMethodManager mInputMethodManager;
     private Rect mVisibleViewArea;
     private int mMinKeyboardHeightDetected;
-    private boolean mHeightHasChanged;
     private float mScale;
     private boolean mVisible;
 
@@ -47,7 +44,9 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
         mVisibleViewArea = new Rect();
         mMinKeyboardHeightDetected = (int) PixelUtil.toPixelFromDIP(60);
         mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
-        mWindow = new PopupWindow(mHostView, WindowManager.LayoutParams.MATCH_PARENT, mHeight);
+
+        mWindow = new PopupWindow(mHostView);
+        mWindow.setWidth(WindowManager.LayoutParams.MATCH_PARENT);
         mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
     }
 
@@ -59,9 +58,8 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
     @Override
     public void addView(View child, int index) {
         mHostView.addView(child, index);
-        showOrUpdate();
+        showPopupWindow();
     }
-
 
     @Override
     public int getChildCount() {
@@ -98,47 +96,32 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
 
     public void onDropInstance() {
         ((ReactContext) getContext()).removeLifecycleEventListener(this);
-        dismiss();
+        mWindow.dismiss();
     }
 
     public void setHeight(float height) {
-        mHeight = (int) (height * mScale);
-
-        if (mWindow != null) {
-            mHeightHasChanged = true;
-        }
+        mWindow.setHeight((int) (height * mScale));
     }
 
     public void setVisible(boolean visible) {
         mVisible = visible;
-        if (mWindow != null) {
-            if (visible) {
-                showPopupWindow();
-            } else {
-                mWindow.dismiss();
-            }
-        } else if (visible) {
-            showOrUpdate();
-        }
-    }
-
-    private void dismiss() {
-        if (mWindow != null) {
+        if (visible) {
+            showPopupWindow();
+        } else {
             mWindow.dismiss();
-            mWindow = null;
         }
     }
 
     @Override
     public void onHostResume() {
         // We show the PopupWindow again when the host resumes
-        showOrUpdate();
+        showPopupWindow();
     }
 
     @Override
     public void onHostPause() {
         // We dismiss the PopupWindow and reconstitute it onHostResume
-        dismiss();
+        mWindow.dismiss();
     }
 
     @Override
@@ -147,20 +130,8 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
         onDropInstance();
     }
 
-    protected void showOrUpdate() {
-        if (mWindow != null) {
-            if (mHeightHasChanged) {
-                mWindow.dismiss();
-                mWindow.setHeight(mHeight);
-                showPopupWindow();
-            }
-        } else if (mHostView.hasContent()) {
-            showPopupWindow();
-        }
-    }
-
     protected void showPopupWindow() {
-        if (mWindow != null && !mWindow.isShowing() && mHostView.hasContent()) {
+        if (!mWindow.isShowing() && mHostView.hasContent()) {
 
             if (checkKeyboardStatus()) {
                 hideContent();
@@ -169,7 +140,7 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
             }
 
             if (mVisible) {
-                mWindow.showAtLocation(mHostView, Gravity.BOTTOM, 0, 0);
+                mWindow.showAtLocation(getRootView(), Gravity.BOTTOM, 0, 0);
             }
 
         }
@@ -181,7 +152,7 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
     }
 
     public void openKeyboard() {
-        if (mWindow != null && !checkKeyboardStatus()) {
+        if (!checkKeyboardStatus()) {
             hideContent();
             mHostView.post(new Runnable() {
                 @Override
@@ -193,8 +164,7 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
     }
 
     public void closeKeyboard() {
-        if (mWindow != null && checkKeyboardStatus()) {
-
+        if (checkKeyboardStatus()) {
             mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
             getRootView().getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
@@ -207,12 +177,10 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
     }
 
     public void toggleKeyboard() {
-        if (mWindow != null) {
-            if (checkKeyboardStatus()) {
-                closeKeyboard();
-            } else {
-                openKeyboard();
-            }
+        if (checkKeyboardStatus()) {
+            closeKeyboard();
+        } else {
+            openKeyboard();
         }
     }
 
@@ -226,15 +194,11 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
     }
 
     private void hideContent() {
-        if (mWindow != null) {
-            mHostView.setContentVisible(false);
-        }
+        mHostView.setContentVisible(false);
     }
 
     private void showContent() {
-        if (mWindow != null) {
-            mHostView.setContentVisible(true);
-        }
+        mHostView.setContentVisible(true);
     }
 
 

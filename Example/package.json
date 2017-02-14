@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "react": "15.4.2",
-    "react-native": "0.41.1",
-    "react-native-keyboard-service": "../"
+    "react-native": "0.41.2",
+    "react-native-keyboard-view": "../"
   },
   "devDependencies": {
     "babel-jest": "18.0.0",
