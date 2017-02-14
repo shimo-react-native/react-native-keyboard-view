@@ -4,9 +4,7 @@ package im.shimo.react.keyboard;
 import java.util.ArrayList;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Rect;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -50,7 +48,6 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
         mWindow = new PopupWindow(mHostView);
         mWindow.setWidth(WindowManager.LayoutParams.MATCH_PARENT);
         mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
-        mWindow.setClippingEnabled(true);
     }
 
     @Override
@@ -63,7 +60,6 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
         mHostView.addView(child, index);
         showPopupWindow();
     }
-
 
     @Override
     public int getChildCount() {
@@ -144,7 +140,7 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
             }
 
             if (mVisible) {
-                mWindow.showAtLocation(mHostView, Gravity.BOTTOM, 0, 0);
+                mWindow.showAtLocation(getRootView(), Gravity.BOTTOM, 0, 0);
             }
 
         }

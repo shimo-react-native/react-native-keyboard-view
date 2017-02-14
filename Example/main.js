@@ -9,7 +9,7 @@ import {
     ScrollView
 } from 'react-native';
 
-import KeyboardView from './keyboard';
+import KeyboardView from 'react-native-keyboard-view';
 
 const KEYBOARD_VIEW = 'KEYBOARD_VIEW';
 

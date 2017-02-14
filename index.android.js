@@ -89,9 +89,7 @@ export default class extends Component {
         return false;
     }
 
-    async _didShow(e) {
-        const height = e.endCoordinates.height;
-
+    async _didShow({ endCoordinates: { height } }) {
         this._willHideKeyboardManually = false;
 
         if (!this.state.visible) {
