@@ -93,29 +93,28 @@ export default class extends Component {
         this._willHideKeyboardManually = false;
 
         if (!this.state.visible) {
-            await this._setAsVisible();
+            this.setState({
+                visible: true
+            });
             this._animatedTranslateValue.setValue(height / this.props.height);
         } else if (this.props.height !== height) {
+
             Animated.timing(this._animatedTranslateValue, {
                 toValue: height / this.props.height,
                 useNativeDriver: true,
                 duration: 120
-            }).start(() => this.setState({ height }));
+            }).start();
         }
     }
 
     _didHide() {
         if (this._willHideKeyboardManually) {
             this._willHideKeyboardManually = false;
-            this.setState({
-                height: this.props.height
-            }, () => {
-                Animated.timing(this._animatedTranslateValue, {
-                    toValue: 1,
-                    useNativeDriver: true,
-                    duration: 120
-                }).start();
-            });
+            Animated.timing(this._animatedTranslateValue, {
+                toValue: 1,
+                useNativeDriver: true,
+                duration: 120
+            }).start();
         } else {
             this.setState({
                 visible: false
@@ -128,17 +127,11 @@ export default class extends Component {
         return true;
     }
 
-    _setAsVisible() {
-        return new Promise((resolve) => {
-            this.setState({
-                visible: true
-            }, resolve);
-        });
-    }
-
     open() {
         if (!this.state.visible) {
-            this._setAsVisible();
+            this.setState({
+                visible: true
+            });
             this._animatedTranslateValue.stopAnimation();
             Animated.timing(this._animatedTranslateValue, {
                 toValue: 1,
@@ -162,7 +155,11 @@ export default class extends Component {
                     });
                 });
             } else {
-                this._animatedTranslateValue.setValue(0);
+                this.setState({
+                    visible: false
+                }, () => {
+                    this._animatedTranslateValue.setValue(0);
+                });
             }
         }
     }

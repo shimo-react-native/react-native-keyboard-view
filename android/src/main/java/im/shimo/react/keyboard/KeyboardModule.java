@@ -9,15 +9,15 @@ import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 
-@ReactModule(name = RNKeyboardModule.NAME)
-public class RNKeyboardModule extends ReactContextBaseJavaModule {
+@ReactModule(name = KeyboardModule.NAME)
+public class KeyboardModule extends ReactContextBaseJavaModule {
 
     /* package */ static final String FRAGMENT_TAG =
             "im.shimo.react.keyboard.RNKeyboardModule";
 
     /* package */ static final String NAME = "RNKeyboardModule";
 
-    RNKeyboardModule(ReactApplicationContext reactContext) {
+    KeyboardModule(ReactApplicationContext reactContext) {
         super(reactContext);
     }
 
@@ -30,7 +30,7 @@ public class RNKeyboardModule extends ReactContextBaseJavaModule {
     public void showKeyboard(final int tag) {
         getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
             public void execute (NativeViewHierarchyManager manager) {
-                RNKeyboardView view = (RNKeyboardView) manager.resolveView(tag);
+                KeyboardView view = (KeyboardView) manager.resolveView(tag);
                 view.openKeyboard();
             }
         });
@@ -40,7 +40,7 @@ public class RNKeyboardModule extends ReactContextBaseJavaModule {
     public void hideKeyboard(final int tag) {
         getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
             public void execute (NativeViewHierarchyManager manager) {
-                RNKeyboardView view = (RNKeyboardView) manager.resolveView(tag);
+                KeyboardView view = (KeyboardView) manager.resolveView(tag);
                 view.closeKeyboard();
             }
         });
@@ -50,7 +50,7 @@ public class RNKeyboardModule extends ReactContextBaseJavaModule {
     public void toggleKeyboard(final int tag) {
         getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
             public void execute (NativeViewHierarchyManager manager) {
-                RNKeyboardView view = (RNKeyboardView) manager.resolveView(tag);
+                KeyboardView view = (KeyboardView) manager.resolveView(tag);
                 view.toggleKeyboard();
             }
         });
@@ -60,7 +60,7 @@ public class RNKeyboardModule extends ReactContextBaseJavaModule {
     public void closeKeyboard(final int tag, final Promise promise) {
         getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
             public void execute (NativeViewHierarchyManager manager) {
-                RNKeyboardView view = (RNKeyboardView) manager.resolveView(tag);
+                KeyboardView view = (KeyboardView) manager.resolveView(tag);
                 promise.resolve(view.close());
             }
         });

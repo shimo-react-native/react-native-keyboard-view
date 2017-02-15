@@ -5,8 +5,8 @@ import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.annotations.ReactProp;
 
-@ReactModule(name = RNKeyboardViewManager.REACT_CLASS)
-public class RNKeyboardViewManager extends ViewGroupManager<RNKeyboardView> {
+@ReactModule(name = KeyboardViewManager.REACT_CLASS)
+public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
 
     protected static final String REACT_CLASS = "RNKeyboardView";
 
@@ -16,23 +16,23 @@ public class RNKeyboardViewManager extends ViewGroupManager<RNKeyboardView> {
     }
 
     @Override
-    public RNKeyboardView createViewInstance(ThemedReactContext context) {
-        return new RNKeyboardView(context);
+    public KeyboardView createViewInstance(ThemedReactContext context) {
+        return new KeyboardView(context);
     }
 
     @ReactProp(name = "height")
-    public void setHeight(RNKeyboardView view, float height) {
+    public void setHeight(KeyboardView view, float height) {
         view.setHeight(height);
     }
 
     @ReactProp(name = "visible")
-    public void setVisible(RNKeyboardView view, boolean visible) {
+    public void setVisible(KeyboardView view, boolean visible) {
         view.setVisible(visible);
 
     }
 
     @Override
-    public void onDropViewInstance(RNKeyboardView view) {
+    public void onDropViewInstance(KeyboardView view) {
         view.onDropInstance();
     }
 }
