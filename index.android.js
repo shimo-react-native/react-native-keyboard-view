@@ -24,7 +24,10 @@ export default class extends Component {
         height: PropTypes.number.isRequired,
         backgroundColor: PropTypes.string,
         renderStickyView: PropTypes.func,
-        stickyViewHeight: PropTypes.number
+        stickyViewHeight: PropTypes.number,
+        onShow: PropTypes.func,
+        onHide: PropTypes.func,
+        onKeyboardChanged: PropTypes.func
     };
 
     constructor(props, context) {
@@ -91,23 +94,31 @@ export default class extends Component {
 
     async _didShow({ endCoordinates: { height } }) {
         this._willHideKeyboardManually = false;
+        const { onKeyboardChanged, onShow } = this.props;
 
         if (!this.state.visible) {
+            onShow && onShow(false, height);
+
             this.setState({
                 visible: true
             });
             this._animatedTranslateValue.setValue(height / this.props.height);
-        } else if (this.props.height !== height) {
+        } else {
+            onKeyboardChanged && onKeyboardChanged(false, height);
 
-            Animated.timing(this._animatedTranslateValue, {
-                toValue: height / this.props.height,
-                useNativeDriver: true,
-                duration: 120
-            }).start();
+            if (this.props.height !== height) {
+                Animated.timing(this._animatedTranslateValue, {
+                    toValue: height / this.props.height,
+                    useNativeDriver: true,
+                    duration: 120
+                }).start();
+            }
         }
     }
 
     _didHide() {
+        const { onKeyboardChanged, onHide } = this.props;
+
         if (this._willHideKeyboardManually) {
             this._willHideKeyboardManually = false;
             Animated.timing(this._animatedTranslateValue, {
@@ -115,7 +126,10 @@ export default class extends Component {
                 useNativeDriver: true,
                 duration: 120
             }).start();
+
+            onKeyboardChanged && onKeyboardChanged(true, this.props.height);
         } else {
+            onHide && onHide(false);
             this.setState({
                 visible: false
             });
@@ -129,6 +143,9 @@ export default class extends Component {
 
     open() {
         if (!this.state.visible) {
+            const { onShow } = this.props;
+            onShow && onShow(true, this.props.height);
+
             this.setState({
                 visible: true
             });
@@ -143,6 +160,8 @@ export default class extends Component {
 
     async close() {
         if (this.state.visible) {
+            const { onHide } = this.props;
+            this._closing = true;
             if (!await this._callKeyboardService('closeKeyboard')) {
                 Animated.timing(this._animatedTranslateValue, {
                     toValue: 0,
@@ -153,12 +172,15 @@ export default class extends Component {
                     this.setState({
                         visible: false
                     });
+                    this._closing = false;
+                    onHide && onHide(true);
                 });
             } else {
                 this.setState({
                     visible: false
                 }, () => {
                     this._animatedTranslateValue.setValue(0);
+                    this._closing = false;
                 });
             }
         }
