@@ -10,12 +10,12 @@ import java.util.Collections;
 import java.util.List;
 
 
-public class RNKeyboardPackage implements ReactPackage {
+public class KeyboardPackage implements ReactPackage {
 
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
-        modules.add(new RNKeyboardModule(reactContext));
+        modules.add(new KeyboardModule(reactContext));
         return modules;
     }
 
@@ -27,7 +27,7 @@ public class RNKeyboardPackage implements ReactPackage {
     @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         List<ViewManager> modules = new ArrayList<>();
-        modules.add(new RNKeyboardViewManager());
+        modules.add(new KeyboardViewManager());
         return modules;
     }
 }

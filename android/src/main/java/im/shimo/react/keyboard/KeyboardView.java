@@ -5,28 +5,29 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.graphics.Rect;
+import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.PopupWindow;
 
+import com.facebook.react.ReactRootView;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.DisplayMetricsHolder;
 import com.facebook.react.uimanager.JSTouchDispatcher;
 import com.facebook.react.uimanager.PixelUtil;
-import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.EventDispatcher;
-import com.facebook.react.views.view.ReactViewGroup;
 
 
-public class RNKeyboardView extends ViewGroup implements LifecycleEventListener {
+public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     private KeyboardRootViewGroup mHostView;
     private PopupWindow mWindow;
@@ -35,11 +36,12 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
     private int mMinKeyboardHeightDetected;
     private float mScale;
     private boolean mVisible;
+    private @Nullable ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
 
-    public RNKeyboardView(Context context) {
+    public KeyboardView(Context context) {
         super(context);
         ((ReactContext) context).addLifecycleEventListener(this);
-        mHostView = new KeyboardRootViewGroup(context);
+        mHostView = new KeyboardRootViewGroup(context, this);
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mVisibleViewArea = new Rect();
         mMinKeyboardHeightDetected = (int) PixelUtil.toPixelFromDIP(60);
@@ -96,7 +98,7 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
 
     public void onDropInstance() {
         ((ReactContext) getContext()).removeLifecycleEventListener(this);
-        mWindow.dismiss();
+        dismissPopupWindow();
     }
 
     public void setHeight(float height) {
@@ -108,7 +110,7 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
         if (visible) {
             showPopupWindow();
         } else {
-            mWindow.dismiss();
+            dismissPopupWindow();
         }
     }
 
@@ -121,7 +123,7 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
     @Override
     public void onHostPause() {
         // We dismiss the PopupWindow and reconstitute it onHostResume
-        mWindow.dismiss();
+        dismissPopupWindow();
     }
 
     @Override
@@ -132,6 +134,25 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
 
     protected void showPopupWindow() {
         if (!mWindow.isShowing() && mHostView.hasContent()) {
+            if (mLayoutListener == null) {
+                mLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        if (checkKeyboardStatus()) {
+                            mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+                            mWindow.update();
+                            hideContent();
+                        } else {
+                            mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+                            mWindow.update();
+                            showContent();
+                        }
+
+                    }
+                };
+            }
+
+            getRootView().getViewTreeObserver().addOnGlobalLayoutListener(mLayoutListener);
 
             if (checkKeyboardStatus()) {
                 hideContent();
@@ -142,7 +163,15 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
             if (mVisible) {
                 mWindow.showAtLocation(getRootView(), Gravity.BOTTOM, 0, 0);
             }
+        }
+    }
 
+    protected void dismissPopupWindow() {
+        mWindow.dismiss();
+
+        if (mLayoutListener != null) {
+            getRootView().getViewTreeObserver().removeOnGlobalLayoutListener(mLayoutListener);
+            mLayoutListener = null;
         }
     }
 
@@ -153,40 +182,23 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
 
     public void openKeyboard() {
         if (!checkKeyboardStatus()) {
-            hideContent();
-            mHostView.post(new Runnable() {
-                @Override
-                public void run() {
-                    mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-                }
-            });
+            mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
         }
     }
 
     public void closeKeyboard() {
         if (checkKeyboardStatus()) {
             mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-            getRootView().getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    showContent();
-                    getRootView().getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                }
-            });
         }
     }
 
     public void toggleKeyboard() {
-        if (checkKeyboardStatus()) {
-            closeKeyboard();
-        } else {
-            openKeyboard();
-        }
+        mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
     }
 
     public boolean close() {
         if (checkKeyboardStatus()) {
-            mInputMethodManager.toggleSoftInput(0, InputMethodManager.HIDE_IMPLICIT_ONLY);
+            mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
             return true;
         }
 
@@ -201,81 +213,57 @@ public class RNKeyboardView extends ViewGroup implements LifecycleEventListener 
         mHostView.setContentVisible(true);
     }
 
+    private @Nullable ReactRootView mReactRootView;
 
-    static class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
+    private ReactRootView getReactRootView() {
+        if (mReactRootView == null) {
+            ViewParent parent = getParent();
 
-        private final JSTouchDispatcher mJSTouchDispatcher = new JSTouchDispatcher(this);
-
-        public KeyboardRootViewGroup(Context context) {
-            super(context);
-        }
-
-        public void setContentVisible(boolean visible) {
-            ViewGroup container = (ViewGroup) getChildAt(0);
-            if (visible) {
-                container.getChildAt(0).setVisibility(View.VISIBLE);
-            } else {
-                container.getChildAt(0).setVisibility(View.GONE);
+            while (parent != null && !(parent instanceof ReactRootView)) {
+                parent = parent.getParent();
             }
+
+            mReactRootView = (ReactRootView) parent;
         }
 
-        @Override
-        protected void onSizeChanged(final int w, final int h, int oldw, int oldh) {
-            super.onSizeChanged(w, h, oldw, oldh);
-            if (getChildCount() > 0) {
-                ((ReactContext) getContext()).runOnNativeModulesQueueThread(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
-                                        .updateNodeSize(getChildAt(0).getId(), w, h);
-                            }
-                        });
-            }
-        }
-
-        @Override
-        public boolean onInterceptTouchEvent(MotionEvent event) {
-            try {
-                mJSTouchDispatcher.handleTouchEvent(event, getEventDispatcher());
-                return super.onInterceptTouchEvent(event);
-            } catch (Exception e) {
-                return true;
-            }
-        }
-
-        @Override
-        public boolean onTouchEvent(MotionEvent event) {
-            try {
-                mJSTouchDispatcher.handleTouchEvent(event, getEventDispatcher());
-                super.onTouchEvent(event);
-                // In case when there is no children interested in handling touch event, we return true from
-                // the root view in order to receive subsequent events related to that gesture
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        }
-
-        @Override
-        public void onChildStartedNativeGesture(MotionEvent androidEvent) {
-            mJSTouchDispatcher.onChildStartedNativeGesture(androidEvent, getEventDispatcher());
-        }
-
-        @Override
-        public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-            // No-op - override in order to still receive events to onInterceptTouchEvent
-            // even when some other view disallow that
-        }
-
-        private EventDispatcher getEventDispatcher() {
-            ReactContext reactContext = (ReactContext) getContext();
-            return reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
-        }
-
-        public boolean hasContent() {
-            ViewGroup container = (ViewGroup) getChildAt(0);
-            return container != null && container.getChildCount() > 0;
-        }
+        return mReactRootView;
     }
+
+    private @Nullable JSTouchDispatcher mJSTouchDispatcher;
+
+    private int[] getOffset() {
+        int[] rootOffset = new int[2];
+        getReactRootView().getLocationInWindow(rootOffset);
+
+        int[] windowPosition = new int[2];
+        mWindow.getContentView().getLocationOnScreen(windowPosition);
+
+        int[] offset = new int[2];
+        offset[0] = windowPosition[0] - rootOffset[0];
+        offset[1] = windowPosition[1] - rootOffset[1];
+
+        return offset;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int[] offset = getOffset();
+        event.setLocation(event.getX() + offset[0], event.getY() + offset[1]);
+        getJSTouchDispatcher().handleTouchEvent(event, getEventDispatcher());
+        return false;
+    }
+
+    private JSTouchDispatcher getJSTouchDispatcher() {
+        if (mJSTouchDispatcher == null) {
+            mJSTouchDispatcher = new JSTouchDispatcher(getReactRootView());
+        }
+
+        return mJSTouchDispatcher;
+    }
+
+    private EventDispatcher getEventDispatcher() {
+        ReactContext reactContext = (ReactContext) getContext();
+        return reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
+    }
+
 }
