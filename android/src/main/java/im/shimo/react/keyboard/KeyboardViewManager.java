@@ -20,11 +20,6 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         return new KeyboardView(context);
     }
 
-    @ReactProp(name = "height")
-    public void setHeight(KeyboardView view, float height) {
-        view.setHeight(height);
-    }
-
     @ReactProp(name = "visible")
     public void setVisible(KeyboardView view, boolean visible) {
         view.setVisible(visible);
