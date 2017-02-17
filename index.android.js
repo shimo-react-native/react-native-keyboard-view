@@ -1,4 +1,4 @@
-import React, { Component, PropTypes, Children } from 'react';
+import React, { Component, PropTypes } from 'react';
 import { NativeModules, Keyboard, StyleSheet, BackAndroid, Easing, findNodeHandle, View,
     requireNativeComponent, Animated } from 'react-native';
 
