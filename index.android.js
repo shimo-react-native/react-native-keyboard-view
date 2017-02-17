@@ -114,6 +114,12 @@ export default class extends Component {
             onHide && onHide(false);
             this.setState({
                 visible: false
+            }, () => {
+
+                if (this._closing) {
+                    this._translateY.setValue(this.state.height);
+                    this._closing = false;
+                }
             });
         }
     }
@@ -163,13 +169,6 @@ export default class extends Component {
                     });
                     this._closing = false;
                     onHide && onHide(true);
-                });
-            } else {
-                this.setState({
-                    visible: false
-                }, () => {
-                    this._translateY.setValue(-this.state.height);
-                    this._closing = false;
                 });
             }
         }
