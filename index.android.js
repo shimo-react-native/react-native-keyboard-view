@@ -4,16 +4,21 @@ import { NativeModules, Keyboard, StyleSheet, BackAndroid, Easing, findNodeHandl
 
 const styles = StyleSheet.create({
     keyboard: {
-        position: 'absolute'
+        position: 'absolute',
+        height: 0,
+        width: 0
     },
     container: {
         position: 'absolute',
-        backgroundColor: '#fff',
-        flexDirection: 'column-reverse'
+        backgroundColor: 'transparent',
+        justifyContent: 'flex-end',
     },
 
     content: {
-        flex: 1
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        left: 0
     }
 });
 
@@ -35,34 +40,19 @@ export default class extends Component {
         this.state = {
             visible: false,
             contentEnabled: false,
-            height: props.height
+            height: 0
         };
-        this._animatedTranslateValue = new Animated.Value(0);
-        this._updateInterpolates(props);
+        this._translateY = new Animated.Value(0);
     }
 
     componentWillMount() {
         this._didShow = this._didShow.bind(this);
         this._didHide = this._didHide.bind(this);
         this._back = this._back.bind(this);
+        this._onContentLayout = this._onContentLayout.bind(this);
         Keyboard.addListener('keyboardDidShow', this._didShow);
         Keyboard.addListener('keyboardDidHide', this._didHide);
         BackAndroid.addEventListener('hardwareBackPress', this._back);
-    }
-
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.height !== this.props.height) {
-            this.setState({
-                height: nextProps.height
-            });
-        }
-    }
-
-    componentWillUpdate(nextProps, nextState) {
-        if (nextState.height !== this.state.height) {
-            this._updateInterpolates(nextProps);
-        }
     }
 
     componentWillUnmount() {
@@ -71,17 +61,9 @@ export default class extends Component {
         BackAndroid.removeEventListener('hardwareBackPress', this._back);
     }
 
-    _animatedTranslateValue = null;
-    _translateY = null;
     _willHideKeyboardManually = false;
+    _translateY = null;
     _closing = false;
-
-    _updateInterpolates(props) {
-        this._translateY = this._animatedTranslateValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: [props.height, 0]
-        });
-    }
 
     _back() {
         if (this.state.visible && !this._closing) {
@@ -102,13 +84,13 @@ export default class extends Component {
             this.setState({
                 visible: true
             });
-            this._animatedTranslateValue.setValue(height / this.props.height);
+            this._translateY.setValue(this.state.height - height);
         } else {
             onKeyboardChanged && onKeyboardChanged(false, height);
 
             if (this.props.height !== height) {
-                Animated.timing(this._animatedTranslateValue, {
-                    toValue: height / this.props.height,
+                Animated.timing(this._translateY, {
+                    toValue: this.state.height - height,
                     useNativeDriver: true,
                     duration: 120
                 }).start();
@@ -121,8 +103,8 @@ export default class extends Component {
 
         if (this._willHideKeyboardManually) {
             this._willHideKeyboardManually = false;
-            Animated.timing(this._animatedTranslateValue, {
-                toValue: 1,
+            Animated.timing(this._translateY, {
+                toValue: 0,
                 useNativeDriver: true,
                 duration: 120
             }).start();
@@ -132,7 +114,20 @@ export default class extends Component {
             onHide && onHide(false);
             this.setState({
                 visible: false
+            }, () => {
+
+                if (this._closing) {
+                    this._translateY.setValue(this.state.height);
+                    this._closing = false;
+                }
             });
+        }
+    }
+
+    _onContentLayout({ nativeEvent: { layout: { height, x } } }) {
+        this.setState({ height });
+        if (!this.state.visible) {
+            this._translateY.setValue(height);
         }
     }
 
@@ -149,9 +144,9 @@ export default class extends Component {
             this.setState({
                 visible: true
             });
-            this._animatedTranslateValue.stopAnimation();
-            Animated.timing(this._animatedTranslateValue, {
-                toValue: 1,
+            this._translateY.stopAnimation();
+            Animated.timing(this._translateY, {
+                toValue: 0,
                 duration: 160,
                 useNativeDriver: true
             }).start();
@@ -163,8 +158,8 @@ export default class extends Component {
             const { onHide } = this.props;
             this._closing = true;
             if (!await this._callKeyboardService('closeKeyboard')) {
-                Animated.timing(this._animatedTranslateValue, {
-                    toValue: 0,
+                Animated.timing(this._translateY, {
+                    toValue: this.state.height,
                     duration: 160,
                     useNativeDriver: true,
                     easing: Easing.inOut(Easing.ease)
@@ -174,13 +169,6 @@ export default class extends Component {
                     });
                     this._closing = false;
                     onHide && onHide(true);
-                });
-            } else {
-                this.setState({
-                    visible: false
-                }, () => {
-                    this._animatedTranslateValue.setValue(0);
-                    this._closing = false;
                 });
             }
         }
@@ -211,36 +199,22 @@ export default class extends Component {
     }
 
     render() {
-        const { backgroundColor, children, renderStickyView, stickyViewHeight } = this.props;
+        const { backgroundColor, children, renderStickyView } = this.props;
         const { visible, height } = this.state;
-
-        let content = children;
-
-        if (Children.count(children)) {
-            content = (
-                <Animated.View
-                    style={[
-                            styles.container,
-                            backgroundColor && { backgroundColor },
-                            {transform: [{ translateY: this._translateY }]}
-                        ]}
-                >
-                    <View style={[styles.content]}>
-                        {children}
-                    </View>
-                    {renderStickyView && renderStickyView()}
-                </Animated.View>
-            );
-        }
 
         return (
             <RNKeyboardView
                 ref="keyboardView"
                 onStartShouldSetResponder={this._shouldSetResponder}
                 style={styles.keyboard}
-                visible={visible}
-                height={height + (renderStickyView ? stickyViewHeight : 0)}>
-                {content}
+                visible={visible}>
+                <Animated.View style={[styles.container, {transform: [{translateY: this._translateY}]}]}>
+                    {renderStickyView && renderStickyView()}
+                    <View style={{backgroundColor, height}}/>
+                    <View style={styles.content} onLayout={this._onContentLayout}>
+                        {children}
+                    </View>
+                </Animated.View>
             </RNKeyboardView>
         );
     }

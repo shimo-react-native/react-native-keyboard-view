@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
+
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,7 +35,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     private InputMethodManager mInputMethodManager;
     private Rect mVisibleViewArea;
     private int mMinKeyboardHeightDetected;
-    private float mScale;
     private boolean mVisible;
     private @Nullable ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
 
@@ -45,7 +45,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mVisibleViewArea = new Rect();
         mMinKeyboardHeightDetected = (int) PixelUtil.toPixelFromDIP(60);
-        mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
 
         mWindow = new PopupWindow(mHostView);
         mWindow.setWidth(WindowManager.LayoutParams.MATCH_PARENT);
@@ -76,6 +75,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     @Override
     public void removeView(View child) {
         mHostView.removeView(child);
+        dismissPopupWindow();
     }
 
     @Override
@@ -99,10 +99,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     public void onDropInstance() {
         ((ReactContext) getContext()).removeLifecycleEventListener(this);
         dismissPopupWindow();
-    }
-
-    public void setHeight(float height) {
-        mWindow.setHeight((int) (height * mScale));
     }
 
     public void setVisible(boolean visible) {
@@ -133,7 +129,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     protected void showPopupWindow() {
-        if (!mWindow.isShowing() && mHostView.hasContent()) {
+        if (!mWindow.isShowing() && mHostView.isReady()) {
             if (mLayoutListener == null) {
                 mLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
@@ -161,6 +157,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
             }
 
             if (mVisible) {
+                mWindow.setHeight(getReactRootView().getHeight());
                 mWindow.showAtLocation(getRootView(), Gravity.BOTTOM, 0, 0);
             }
         }
@@ -222,7 +219,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
             while (parent != null && !(parent instanceof ReactRootView)) {
                 parent = parent.getParent();
             }
-
             mReactRootView = (ReactRootView) parent;
         }
 

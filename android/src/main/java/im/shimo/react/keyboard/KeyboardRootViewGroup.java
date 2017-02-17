@@ -1,6 +1,8 @@
 package im.shimo.react.keyboard;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
+
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +19,9 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
 
     private final JSTouchDispatcher mJSTouchDispatcher = new JSTouchDispatcher(this);
     private KeyboardView mDelegatedKeyboardView;
+    private int mTargetTag = -1;
+
+    private @Nullable ViewGroup mContainerView;
 
     public KeyboardRootViewGroup(Context context, KeyboardView delegate) {
         super(context);
@@ -24,12 +29,33 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
     }
 
     public void setContentVisible(boolean contentVisible) {
-        ViewGroup container = (ViewGroup) getChildAt(0);
-        if (contentVisible) {
-            container.getChildAt(0).setVisibility(View.VISIBLE);
-        } else {
-            container.getChildAt(0).setVisibility(View.GONE);
+        if (mContainerView != null && mContainerView.getChildCount() > 0) {
+            mContainerView.getChildAt(mContainerView.getChildCount() - 1).setVisibility(contentVisible ? View.VISIBLE : View.GONE);
         }
+    }
+
+    @Override
+    public void addView(View child, int index) {
+        // Assume the first child is the container ViewGroup
+        if (index == 0) {
+            mContainerView = (ViewGroup) child;
+        }
+
+        super.addView(child, index);
+    }
+
+
+    @Override
+    public void removeView(View child) {
+        if (child == mContainerView) {
+            mContainerView = null;
+        }
+        super.removeView(child);
+    }
+
+    @Override
+    public void removeViewAt(int index) {
+        removeView(getChildAt(index));
     }
 
     @Override
@@ -54,27 +80,44 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        try {
-            // Try to find the target view in KeyboardRootViewGroup.
-            // If something went wrong there, then delegate the onTouchEvent to ReactRootView.
-            TouchTargetHelper.findTargetTagAndCoordinatesForTouch(
-                    event.getX(),
-                    event.getY(),
-                    this,
+        boolean consumed = true;
+        // In case when there is no children interested in handling touch event, we return true from
+        // the root view in order to receive subsequent events related to that gesture
+
+
+        if (mContainerView != null) {
+            int action = event.getAction() & MotionEvent.ACTION_MASK;
+
+            int target = TouchTargetHelper.findTargetTagAndCoordinatesForTouch(
+                    event.getX() - mContainerView.getTranslationX(),
+                    event.getY() - mContainerView.getTranslationY(),
+                    mContainerView,
                     new float[2],
                     null
             );
 
-            mJSTouchDispatcher.handleTouchEvent(event, getEventDispatcher());
-            // In case when there is no children interested in handling touch event, we return true from
-            // the root view in order to receive subsequent events related to that gesture
-            return true;
-        } catch (Exception e) {
-            mDelegatedKeyboardView.onTouchEvent(event);
-            return false;
-        }
-    }
 
+            if (action == MotionEvent.ACTION_DOWN) {
+                if (mTargetTag != -1) {
+                    return false;
+                }
+
+                mTargetTag = target;
+            }
+            if (mTargetTag == mContainerView.getId()) {
+                mDelegatedKeyboardView.onTouchEvent(event);
+                consumed = false;
+            } else {
+                mJSTouchDispatcher.handleTouchEvent(event, getEventDispatcher());
+            }
+
+            if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
+                mTargetTag = -1;
+            }
+        }
+
+        return consumed;
+    }
 
     @Override
     public void onChildStartedNativeGesture(MotionEvent androidEvent) {
@@ -92,8 +135,7 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
         return reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
     }
 
-    public boolean hasContent() {
-        ViewGroup container = (ViewGroup) getChildAt(0);
-        return container != null && container.getChildCount() > 0;
+    public boolean isReady() {
+        return mContainerView != null && mContainerView.getChildCount() > 0;
     }
 }
