@@ -1,47 +1,24 @@
-# react-native-prompt-android
-A polyfill library for Alert.prompt on Android platform, working both on Android and iOS platform(iOS using [AlertIOS.prompt](http://facebook.github.io/react-native/docs/alertios.html#prompt))
-
+# react-native-keyboard-view
+KeyboardView Library for react-native
 
 ### Installation
 
 * Install from npm
 
 ```bash
-npm i react-native-prompt-android --save
+npm i react-native-keyboard-view --save
 ```
 
 * Link native library
 
 You can use react-native-cli:
 ```bash
-react-native link react-native-prompt-android
+react-native link react-native-keyboard-view
 ```
 
 Or rnpm:
 ```bash
-rnpm link react-native-prompt-android
+rnpm link react-native-keyboard-view
 ```
 
 ### Usage
-
-```
-import prompt from 'react-native-prompt-android';
-prompt(
-    'Enter password',
-    'Enter your password to claim your $1.5B in lottery winnings',
-    [
-     {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-     {text: 'OK', onPress: password => console.log('OK Pressed, password: ' + password)},
-    ],
-    {
-        type: 'secure-text',
-        cancelable: false,
-        defaultValue: 'test',
-        placeholder: 'placeholder'
-    }
-);
-```
-
-![Android Screen Shoot](./Example/android.png)
-
-![Android Screen Shoot](./Example/ios.png)
