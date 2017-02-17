@@ -222,7 +222,6 @@ export default class extends Component {
 
 const RNKeyboardView = requireNativeComponent('RNKeyboardView', null, {
     nativeOnly: {
-        height: true,
         visible: true
     }
 });
