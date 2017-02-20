@@ -5,6 +5,7 @@
 	};
 	objectVersion = 46;
 	objects = {
+
 /* Begin PBXBuildFile section */
 		00C302E51ABCBA2D00DB3ED1 /* libRCTActionSheet.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C302AC1ABCB8CE00DB3ED1 /* libRCTActionSheet.a */; };
 		00C302E71ABCBA2D00DB3ED1 /* libRCTGeolocation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C302BA1ABCB90400DB3ED1 /* libRCTGeolocation.a */; };
@@ -221,6 +222,20 @@
 			remoteGlobalIDString = 134814201AA4EA6300B7C361;
 			remoteInfo = RCTLinking;
 		};
+		7F8004641E5A77A300905D7C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50B944DD343D49EEAB2202B6 /* RNKeyboardView.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 101789301B283EE1006C41B8;
+			remoteInfo = RNKeyboardView;
+		};
+		7F8004661E5A77A300905D7C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 50B944DD343D49EEAB2202B6 /* RNKeyboardView.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1017893B1B283EE1006C41B8;
+			remoteInfo = RNKeyboardViewTests;
+		};
 		832341B41AAA6A8300B99B32 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */;
@@ -252,13 +267,13 @@
 		146833FF1AC3E56700842450 /* React.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = React.xcodeproj; path = "../node_modules/react-native/React/React.xcodeproj"; sourceTree = "<group>"; };
 		2D02E47B1E0B4A5D006451C7 /* keyboard-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "keyboard-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D02E4901E0B4A5D006451C7 /* keyboard-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "keyboard-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B944DD343D49EEAB2202B6 /* RNKeyboardView.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNKeyboardView.xcodeproj; path = "../node_modules/react-native-keyboard-view/ios/RNKeyboardView.xcodeproj"; sourceTree = "<group>"; };
 		5E91572D1DD0AC6500FF2AA8 /* RCTAnimation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTAnimation.xcodeproj; path = "../node_modules/react-native/Libraries/NativeAnimation/RCTAnimation.xcodeproj"; sourceTree = "<group>"; };
+		6C774428257E4B6EB0092565 /* libRNKeyboardView.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNKeyboardView.a; sourceTree = "<group>"; };
 		78C398B01ACF4ADC00677621 /* RCTLinking.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTLinking.xcodeproj; path = "../node_modules/react-native/Libraries/LinkingIOS/RCTLinking.xcodeproj"; sourceTree = "<group>"; };
 		7FC940D11E56BCAD0095A1D7 /* libRNKeyboardView.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libRNKeyboardView.a; path = "../node_modules/react-native-keyboard-view/ios/build/Debug-iphoneos/libRNKeyboardView.a"; sourceTree = "<group>"; };
 		7FC940D31E56BE060095A1D7 /* libRNKeyboardView.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libRNKeyboardView.a; path = "../node_modules/react-native-keyboard-view/ios/build/Debug-iphoneos/libRNKeyboardView.a"; sourceTree = "<group>"; };
 		832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTText.xcodeproj; path = "../node_modules/react-native/Libraries/Text/RCTText.xcodeproj"; sourceTree = "<group>"; };
-		50B944DD343D49EEAB2202B6 /* RNKeyboardView.xcodeproj */ = {isa = PBXFileReference; name = "RNKeyboardView.xcodeproj"; path = "../node_modules/react-native-keyboard-view/ios/RNKeyboardView.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
-		6C774428257E4B6EB0092565 /* libRNKeyboardView.a */ = {isa = PBXFileReference; name = "libRNKeyboardView.a"; path = "libRNKeyboardView.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -438,12 +453,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		7F8004471E5A77A200905D7C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7F8004651E5A77A300905D7C /* libRNKeyboardView.a */,
+				7F8004671E5A77A300905D7C /* RNKeyboardViewTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		7FC940CE1E56B4650095A1D7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				7FC940D31E56BE060095A1D7 /* libRNKeyboardView.a */,
 				7FC940D11E56BCAD0095A1D7 /* libRNKeyboardView.a */,
-				7FC940CF1E56B4650095A1D7 /* libRNKeyboardView.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -655,6 +678,10 @@
 					ProductGroup = 146834001AC3E56700842450 /* Products */;
 					ProjectRef = 146833FF1AC3E56700842450 /* React.xcodeproj */;
 				},
+				{
+					ProductGroup = 7F8004471E5A77A200905D7C /* Products */;
+					ProjectRef = 50B944DD343D49EEAB2202B6 /* RNKeyboardView.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -833,6 +860,20 @@
 			fileType = archive.ar;
 			path = libRCTLinking.a;
 			remoteRef = 78C398B81ACF4ADC00677621 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7F8004651E5A77A300905D7C /* libRNKeyboardView.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libRNKeyboardView.a;
+			remoteRef = 7F8004641E5A77A300905D7C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7F8004671E5A77A300905D7C /* RNKeyboardViewTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = RNKeyboardViewTests.xctest;
+			remoteRef = 7F8004661E5A77A300905D7C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		832341B51AAA6A8300B99B32 /* libRCTText.a */ = {

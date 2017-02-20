@@ -9,7 +9,7 @@ import {
     ScrollView
 } from 'react-native';
 
-import KeyboardView from 'react-native-keyboard-view';
+import KeyboardView from './Keyboard';
 
 const KEYBOARD_VIEW = 'KEYBOARD_VIEW';
 
@@ -129,8 +129,12 @@ class Keyboard extends Component {
                     ref={KEYBOARD_VIEW}
                     height={300}
                     stickyViewHeight={40}
+                    backgroundColor="#fff"
+                    onShow={(state, height) => console.log('onShow', state, height)}
+                    onHide={(state) => console.log('onHide', state)}
+                    onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
                     renderStickyView={this._renderStickyView}>
-                        <ScrollView style={{flex: 1}}>
+                        <ScrollView style={{flex: 1,  backgroundColor: '#fff'}}>
                             <View style={styles.keyboard}>
                                 <Text style={styles.keyboardText}>KEYBOARD REPLACEMENT</Text>
                             </View>

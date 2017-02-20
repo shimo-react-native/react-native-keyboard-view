@@ -7,8 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1017893C1B283EE1006C41B8 /* libRNKeyboardService.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 101789301B283EE1006C41B8 /* libRNKeyboardService.a */; };
-		7FE295451E03BDA2009E7610 /* RNKeyboardService.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FE295441E03BDA2009E7610 /* RNKeyboardService.m */; };
+		1017893C1B283EE1006C41B8 /* libRNKeyboardView.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 101789301B283EE1006C41B8 /* libRNKeyboardView.a */; };
+		7F80046B1E5A7FC000905D7C /* YYKeyboardManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */; };
+		7F80046E1E5A89A900905D7C /* RNKeyboardShadowView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F80046D1E5A89A900905D7C /* RNKeyboardShadowView.m */; };
+		7F8004711E5A8D6700905D7C /* RNKeyboardHostView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F8004701E5A8D6700905D7C /* RNKeyboardHostView.m */; };
+		7FE295451E03BDA2009E7610 /* RNKeyboardViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FE295441E03BDA2009E7610 /* RNKeyboardViewManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,10 +37,16 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		101789301B283EE1006C41B8 /* libRNKeyboardService.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNKeyboardService.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		1017893B1B283EE1006C41B8 /* RNKeyboardServiceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RNKeyboardServiceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		7FE295431E03BDA2009E7610 /* RNKeyboardService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKeyboardService.h; sourceTree = "<group>"; };
-		7FE295441E03BDA2009E7610 /* RNKeyboardService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeyboardService.m; sourceTree = "<group>"; };
+		101789301B283EE1006C41B8 /* libRNKeyboardView.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNKeyboardView.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		1017893B1B283EE1006C41B8 /* RNKeyboardViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RNKeyboardViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7F8004691E5A7FC000905D7C /* YYKeyboardManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYKeyboardManager.h; sourceTree = "<group>"; };
+		7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYKeyboardManager.m; sourceTree = "<group>"; };
+		7F80046C1E5A899600905D7C /* RNKeyboardShadowView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNKeyboardShadowView.h; sourceTree = "<group>"; };
+		7F80046D1E5A89A900905D7C /* RNKeyboardShadowView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeyboardShadowView.m; sourceTree = "<group>"; };
+		7F80046F1E5A8D5B00905D7C /* RNKeyboardHostView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNKeyboardHostView.h; sourceTree = "<group>"; };
+		7F8004701E5A8D6700905D7C /* RNKeyboardHostView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeyboardHostView.m; sourceTree = "<group>"; };
+		7FE295431E03BDA2009E7610 /* RNKeyboardViewManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKeyboardViewManager.h; sourceTree = "<group>"; };
+		7FE295441E03BDA2009E7610 /* RNKeyboardViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeyboardViewManager.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,7 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1017893C1B283EE1006C41B8 /* libRNKeyboardService.a in Frameworks */,
+				1017893C1B283EE1006C41B8 /* libRNKeyboardView.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,8 +71,14 @@
 		101789271B283EE1006C41B8 = {
 			isa = PBXGroup;
 			children = (
-				7FE295431E03BDA2009E7610 /* RNKeyboardService.h */,
-				7FE295441E03BDA2009E7610 /* RNKeyboardService.m */,
+				7F8004691E5A7FC000905D7C /* YYKeyboardManager.h */,
+				7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */,
+				7FE295431E03BDA2009E7610 /* RNKeyboardViewManager.h */,
+				7FE295441E03BDA2009E7610 /* RNKeyboardViewManager.m */,
+				7F80046C1E5A899600905D7C /* RNKeyboardShadowView.h */,
+				7F80046D1E5A89A900905D7C /* RNKeyboardShadowView.m */,
+				7F80046F1E5A8D5B00905D7C /* RNKeyboardHostView.h */,
+				7F8004701E5A8D6700905D7C /* RNKeyboardHostView.m */,
 				101789311B283EE1006C41B8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -71,8 +86,8 @@
 		101789311B283EE1006C41B8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				101789301B283EE1006C41B8 /* libRNKeyboardService.a */,
-				1017893B1B283EE1006C41B8 /* RNKeyboardServiceTests.xctest */,
+				101789301B283EE1006C41B8 /* libRNKeyboardView.a */,
+				1017893B1B283EE1006C41B8 /* RNKeyboardViewTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1017892F1B283EE1006C41B8 /* RNKeyboardService */ = {
+		1017892F1B283EE1006C41B8 /* RNKeyboardView */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 101789441B283EE1006C41B8 /* Build configuration list for PBXNativeTarget "RNKeyboardService" */;
+			buildConfigurationList = 101789441B283EE1006C41B8 /* Build configuration list for PBXNativeTarget "RNKeyboardView" */;
 			buildPhases = (
 				1017892C1B283EE1006C41B8 /* Sources */,
 				1017892D1B283EE1006C41B8 /* Frameworks */,
@@ -92,14 +107,14 @@
 			);
 			dependencies = (
 			);
-			name = RNKeyboardService;
+			name = RNKeyboardView;
 			productName = RNKeyboardService;
-			productReference = 101789301B283EE1006C41B8 /* libRNKeyboardService.a */;
+			productReference = 101789301B283EE1006C41B8 /* libRNKeyboardView.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		1017893A1B283EE1006C41B8 /* RNKeyboardServiceTests */ = {
+		1017893A1B283EE1006C41B8 /* RNKeyboardViewTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 101789471B283EE1006C41B8 /* Build configuration list for PBXNativeTarget "RNKeyboardServiceTests" */;
+			buildConfigurationList = 101789471B283EE1006C41B8 /* Build configuration list for PBXNativeTarget "RNKeyboardViewTests" */;
 			buildPhases = (
 				101789371B283EE1006C41B8 /* Sources */,
 				101789381B283EE1006C41B8 /* Frameworks */,
@@ -110,9 +125,9 @@
 			dependencies = (
 				1017893E1B283EE1006C41B8 /* PBXTargetDependency */,
 			);
-			name = RNKeyboardServiceTests;
+			name = RNKeyboardViewTests;
 			productName = RNKeyboardServiceTests;
-			productReference = 1017893B1B283EE1006C41B8 /* RNKeyboardServiceTests.xctest */;
+			productReference = 1017893B1B283EE1006C41B8 /* RNKeyboardViewTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -132,7 +147,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1017892B1B283EE1006C41B8 /* Build configuration list for PBXProject "RNKeyboardService" */;
+			buildConfigurationList = 1017892B1B283EE1006C41B8 /* Build configuration list for PBXProject "RNKeyboardView" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -144,8 +159,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1017892F1B283EE1006C41B8 /* RNKeyboardService */,
-				1017893A1B283EE1006C41B8 /* RNKeyboardServiceTests */,
+				1017892F1B283EE1006C41B8 /* RNKeyboardView */,
+				1017893A1B283EE1006C41B8 /* RNKeyboardViewTests */,
 			);
 		};
 /* End PBXProject section */
@@ -165,7 +180,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7FE295451E03BDA2009E7610 /* RNKeyboardService.m in Sources */,
+				7F80046E1E5A89A900905D7C /* RNKeyboardShadowView.m in Sources */,
+				7F8004711E5A8D6700905D7C /* RNKeyboardHostView.m in Sources */,
+				7F80046B1E5A7FC000905D7C /* YYKeyboardManager.m in Sources */,
+				7FE295451E03BDA2009E7610 /* RNKeyboardViewManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,7 +199,7 @@
 /* Begin PBXTargetDependency section */
 		1017893E1B283EE1006C41B8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 1017892F1B283EE1006C41B8 /* RNKeyboardService */;
+			target = 1017892F1B283EE1006C41B8 /* RNKeyboardView */;
 			targetProxy = 1017893D1B283EE1006C41B8 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -334,7 +352,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1017892B1B283EE1006C41B8 /* Build configuration list for PBXProject "RNKeyboardService" */ = {
+		1017892B1B283EE1006C41B8 /* Build configuration list for PBXProject "RNKeyboardView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				101789421B283EE1006C41B8 /* Debug */,
@@ -343,7 +361,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		101789441B283EE1006C41B8 /* Build configuration list for PBXNativeTarget "RNKeyboardService" */ = {
+		101789441B283EE1006C41B8 /* Build configuration list for PBXNativeTarget "RNKeyboardView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				101789451B283EE1006C41B8 /* Debug */,
@@ -352,7 +370,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		101789471B283EE1006C41B8 /* Build configuration list for PBXNativeTarget "RNKeyboardServiceTests" */ = {
+		101789471B283EE1006C41B8 /* Build configuration list for PBXNativeTarget "RNKeyboardViewTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				101789481B283EE1006C41B8 /* Debug */,
