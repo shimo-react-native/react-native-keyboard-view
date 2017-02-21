@@ -54,16 +54,19 @@ export default class extends Component {
     showKeyboard() {
         this._callKeyboardService('showKeyboard');
         this._visible = true;
+        this._onChangeFrame();
     }
 
     hideKeyboard() {
         this._callKeyboardService('hideKeyboard');
         this._visible = false;
+        this._onChangeFrame();
     }
 
     toggleKeyboard() {
         this._callKeyboardService('toggleKeyboard');
         this._visible = !this._visible;
+        this._onChangeFrame();
     }
 
     _callKeyboardService(method) {
@@ -72,6 +75,7 @@ export default class extends Component {
 
     _willShow({ endCoordinates: { height } }) {
         this._active = true;
+        this._lastFrameHeight = height;
         const { onShow } = this.props;
         onShow && onShow(false, height);
     }
@@ -84,9 +88,16 @@ export default class extends Component {
 
     _willChangeFrame({ endCoordinates: { height } }) {
         if (this._active) {
+            this._lastFrameHeight = height;
             const { onKeyboardChanged } = this.props;
             onKeyboardChanged && onKeyboardChanged(this._visible, height);
+            this._onChangeFrame(height);
         }
+    }
+
+    _onChangeFrame(height = this._lastFrameHeight) {
+        const { onKeyboardChanged } = this.props;
+        onKeyboardChanged && onKeyboardChanged(this._visible, height);
     }
 
     render() {
