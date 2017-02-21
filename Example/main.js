@@ -6,7 +6,8 @@ import {
     View,
     TextInput,
     TouchableHighlight,
-    ScrollView
+    ScrollView,
+    WebView
 } from 'react-native';
 
 import KeyboardView from 'react-native-keyboard-view';
@@ -125,12 +126,24 @@ class Keyboard extends Component {
                     placeholder="empty"
                     style={styles.input}
                 />
+                <View style={styles.webviewContainer}>
+                    <WebView
+                        style={styles.webview}
+                        source={require('./text.html')}
+                    />
+                </View>
                 <KeyboardView
                     ref={KEYBOARD_VIEW}
                     height={300}
-                    stickyViewHeight={40}
-                    renderStickyView={this._renderStickyView}>
-                        <ScrollView style={{flex: 1}}>
+                    backgroundColor="#fff"
+                    onShow={(state, height) => console.log('onShow', state, height)}
+                    onHide={(state) => console.log('onHide', state)}
+                    onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
+                    renderStickyView={this._renderStickyView}
+                    stickyViewInside={true}>
+                        <ScrollView
+                            keyboardShouldPersistTaps="always"
+                            style={{flex: 1,  backgroundColor: '#fff'}}>
                             <View style={styles.keyboard}>
                                 <Text style={styles.keyboardText}>KEYBOARD REPLACEMENT</Text>
                             </View>
@@ -161,6 +174,17 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         flexDirection: 'row',
         flexWrap: 'wrap'
+    },
+
+    webviewContainer: {
+        width: 100,
+        height: 30,
+        borderWidth: StyleSheet.hairlineWidth,
+        alignSelf: 'center'
+    },
+
+    webview: {
+        flex: 1
     },
 
     button: {
@@ -202,13 +226,13 @@ const styles = StyleSheet.create({
     },
 
     stickyView: {
-        height: 40,
+        height: 44,
         backgroundColor: 'red',
         flexDirection: 'row'
     },
 
     stickyViewButton: {
-        height: 40,
+        height: 44,
         marginHorizontal: 10,
         paddingHorizontal: 20,
         backgroundColor: '#aaa',

@@ -1,4 +1,4 @@
-import React, { Component, PropTypes, Children } from 'react';
+import React, { Component, PropTypes } from 'react';
 import { NativeModules, Keyboard, StyleSheet, BackAndroid, Easing, findNodeHandle, View,
     requireNativeComponent, Animated } from 'react-native';
 
@@ -29,7 +29,6 @@ export default class extends Component {
         height: PropTypes.number.isRequired,
         backgroundColor: PropTypes.string,
         renderStickyView: PropTypes.func,
-        stickyViewHeight: PropTypes.number,
         onShow: PropTypes.func,
         onHide: PropTypes.func,
         onKeyboardChanged: PropTypes.func
@@ -222,7 +221,6 @@ export default class extends Component {
 
 const RNKeyboardView = requireNativeComponent('RNKeyboardView', null, {
     nativeOnly: {
-        height: true,
         visible: true
     }
 });
