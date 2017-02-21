@@ -4,39 +4,33 @@
 #import "RCTTouchHandler.h"
 #import "RCTUIManager.h"
 #import "UIView+React.h"
-#import "YYKeyboardManager.h"
-
+#import <React/RCTUtils.h>
 #import <UIKit/UIKit.h>
 
 @implementation RNKeyboardHostView
 {
     __weak RCTBridge *_bridge;
-    RCTTouchHandler *_touchHandler;
     UIView *_containerView;
     UIView *_stickyView;
     BOOL _isPresented;
+    BOOL _isContainerVisible;
+    RCTTouchHandler *_stickyGestureHandler;
+    RCTTouchHandler *_containerGestureHandler;
 }
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge
 {
     if ((self = [super initWithFrame:CGRectZero])) {
         _bridge = bridge;
-        _touchHandler = [[RCTTouchHandler alloc] initWithBridge:bridge];
+        _stickyGestureHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
+        _containerGestureHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
         
-        NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-        [notificationCenter addObserver:self
-                                                 selector:@selector(keyboardWillShow:)
-                                                     name:UIKeyboardWillShowNotification
-                                                   object:nil];
-        [notificationCenter addObserver:self
+        [[NSNotificationCenter defaultCenter] addObserver:self
                                selector:@selector(keyboardDidHide:)
                                    name:UIKeyboardDidHideNotification
                                  object:nil];
-        [notificationCenter addObserver:self
-                               selector:@selector(keyboardWillChangeFrame:)
-                                   name:UIKeyboardWillChangeFrameNotification
-                                 object:nil];
-        
+        _isContainerVisible = NO;
+        [[YYKeyboardManager defaultManager] addObserver:self];
     }
     
     return self;
@@ -44,29 +38,32 @@
 
 - (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex
 {
-    [subview addGestureRecognizer:_touchHandler];
-    
     if (atIndex == 0) {
-        _containerView = subview;
-    } else if (atIndex == 1) {
         _stickyView = subview;
+        [_stickyView addGestureRecognizer:_stickyGestureHandler];
+    } else if (atIndex == 1) {
+        _containerView = subview;
+        [_containerView addGestureRecognizer:_containerGestureHandler];
     }
 }
 
 - (void)removeReactSubview:(UIView *)subview
 {
+    if (subview == _containerView) {
+        _containerView = nil;
+        [subview removeGestureRecognizer:_containerView];
+    } else if (subview == _stickyView) {
+        _stickyView = nil;
+        [subview removeGestureRecognizer:_stickyGestureHandler];
+    }
+    
     [super removeReactSubview:subview];
-    [subview removeGestureRecognizer:_touchHandler];
+    [subview removeFromSuperview];
 }
 
 - (void)didUpdateReactSubviews
 {
     // Do nothing, as subview (singular) is managed by `insertReactSubview:atIndex:`
-}
-
-- (void)keyboardWillShow:(NSNotification *)notification
-{
-    
 }
 
 - (void)keyboardDidHide:(NSNotification *)notification
@@ -76,78 +73,155 @@
     _isPresented = NO;
 }
 
-- (void)keyboardWillChangeFrame:(NSNotification *)notification
-{
+- (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
     YYKeyboardManager *manager = [YYKeyboardManager defaultManager];
+    UIView *keyboardWindow = [manager keyboardWindow];
     
-    if (!_isPresented) {
-        [[manager keyboardWindow] addSubview:_containerView];
-        [[manager keyboardWindow] addSubview:_stickyView];
+    BOOL fromVisible = transition.fromVisible;
+    BOOL toVisible = transition.toVisible;
+    
+    if (!fromVisible && !_isPresented) {
+        _containerView.hidden = !_isContainerVisible;
+        [keyboardWindow addSubview:_containerView];
+        [keyboardWindow addSubview:_stickyView];
         _isPresented = YES;
     }
     
-    NSDictionary *userInfo = notification.userInfo;
-    NSNumber *durationValue = userInfo[UIKeyboardAnimationDurationUserInfoKey];
-    NSNumber *curveValue = userInfo[UIKeyboardAnimationCurveUserInfoKey];
+    CGRect fromFrame = [manager convertRect:transition.fromFrame toView:nil];
+    CGRect toFrame =  [manager convertRect:transition.toFrame toView:nil];
     
-    NSValue *beginFrameValue = userInfo[UIKeyboardFrameBeginUserInfoKey];
-    CGRect keyboardBeginFrame = [beginFrameValue CGRectValue];
+    NSTimeInterval animationDuration = transition.animationDuration;
+    UIViewAnimationCurve curve = transition.animationCurve;
     
-    
-    [UIView performWithoutAnimation:^() {
-        [_bridge.uiManager setFrame:keyboardBeginFrame forView:_containerView];
-        [_containerView reactSetFrame:keyboardBeginFrame];
+    [self changeWithTransition:transition.animationDuration
+                       options:transition.animationCurve
+                     fromFrame:fromFrame
+                       toFrame:toFrame];
+}
 
-        if (_stickyView) {
-            CGRect rect = CGRectMake(
-                                     keyboardBeginFrame.origin.x,
-                                     keyboardBeginFrame.origin.y - _stickyView.frame.size.height,
-                                     keyboardBeginFrame.size.width,
-                                     _stickyView.frame.size.height
-                                     );
-            [_bridge.uiManager setFrame:rect forView:_stickyView];
-            [_stickyView reactSetFrame:rect];
+- (void)changeWithTransition:(NSTimeInterval)duration
+                     options:(UIViewAnimationOptions)options
+                   fromFrame:(CGRect)fromFrame
+                     toFrame:(CGRect)toFrame
+{
+    [UIView performWithoutAnimation:^() {
+        if (_containerView) {
+            CGRect containerBeginFrame = [self calculateContainerViewFrame:fromFrame];
+            [_bridge.uiManager setFrame:containerBeginFrame forView:_containerView];
+            [_containerView reactSetFrame:containerBeginFrame];
         }
         
-        
-        
+        if (_stickyView) {
+            CGRect stickyBeginFrame = [self calculateStickyViewFrame:fromFrame];
+            [_bridge.uiManager setFrame:stickyBeginFrame forView:_stickyView];
+            [_stickyView reactSetFrame:stickyBeginFrame];
+        }
     }];
     
-    
-    NSValue *endFrameValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-    CGRect keyboardEndFrame = [endFrameValue CGRectValue];
-    
-    [UIView animateWithDuration:durationValue.doubleValue
+    [UIView animateWithDuration:duration
                           delay:0
-                        options:(curveValue.intValue << 16)
+                        options:options
                      animations:^() {
-                         [_bridge.uiManager setFrame:keyboardEndFrame forView:_containerView];
-                         [_containerView reactSetFrame:keyboardEndFrame];
+                         if (_containerView) {
+                             CGRect containerEndFrame = [self calculateContainerViewFrame:toFrame];
+                             [_bridge.uiManager setFrame:containerEndFrame forView:_containerView];
+                             [_containerView reactSetFrame:containerEndFrame];
+                         }
                          
                          if (_stickyView) {
-                             CGRect rect = CGRectMake(
-                                                      keyboardEndFrame.origin.x,
-                                                      keyboardEndFrame.origin.y - _stickyView.frame.size.height,
-                                                      keyboardBeginFrame.size.width,
-                                                      _stickyView.frame.size.height
-                                                      );
-                             [_bridge.uiManager setFrame:rect forView:_stickyView];
-                             [_stickyView reactSetFrame:rect];
+                             CGRect stickyEndFrame = [self calculateStickyViewFrame:toFrame];
+                             [_bridge.uiManager setFrame:stickyEndFrame forView:_stickyView];
+                             [_stickyView reactSetFrame:stickyEndFrame];
                          }
                      }
                      completion:nil];
-    
 }
 
-- (void)invalidate
+- (void)openKeyboard
 {
-    // dismiss
+    if (!_isPresented) {
+        YYKeyboardManager *manager = [YYKeyboardManager defaultManager];
+        UIView *keyboardWindow = [manager keyboardWindow];
+        [keyboardWindow addSubview:_containerView];
+        [keyboardWindow addSubview:_stickyView];
+        
+        UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
+        [keyboardWindow addSubview:view];
+        
+        _isPresented = YES;
+        
+        
+        CGSize screenSize = RCTScreenSize();
+        CGSize keyboardSize = CGSizeMake(screenSize.width, _containerHeight);
+        CGRect fromFrame = {
+            .origin = CGPointMake(0, screenSize.height),
+            .size = keyboardSize
+        };
+        CGRect toFrame = {
+            .origin = CGPointMake(0, screenSize.height - _containerHeight),
+            .size = keyboardSize
+        };
+
+        [self changeWithTransition:0.25
+                           options:7
+                         fromFrame:fromFrame
+                           toFrame:toFrame];
+
+    }
+}
+
+- (void)closeKeyboard
+{
+    [self.window endEditing:YES];
+}
+
+- (void)showKeyboard
+{
+    if (_isContainerVisible) {
+        [self toggleKeyboard];
+    }
+}
+
+- (void)hideKeyboard
+{
+    if (!_isContainerVisible) {
+        [self toggleKeyboard];
+    }
+}
+
+- (void)toggleKeyboard
+{
+    BOOL toggle = !_isContainerVisible;
+    _isContainerVisible = toggle;
+    _containerView.hidden = !toggle;
+}
+
+- (CGRect)calculateStickyViewFrame:(CGRect)keyboardFrame
+{
+    return CGRectMake(
+                      keyboardFrame.origin.x,
+                      keyboardFrame.origin.y - (_stickyViewInside ? 0.0 : _stickyView.frame.size.height),
+                      keyboardFrame.size.width,
+                      _stickyView.frame.size.height
+                      );
+}
+
+- (CGRect)calculateContainerViewFrame:(CGRect)keyboardFrame
+{
+    float stickyViewOffset = _stickyViewInside ? _stickyView.frame.size.height : 0.0;
+    return _stickyViewInside ? CGRectMake(
+                                          keyboardFrame.origin.x,
+                                          keyboardFrame.origin.y + stickyViewOffset,
+                                          keyboardFrame.size.width,
+                                          keyboardFrame.size.height - stickyViewOffset
+                                          ) : keyboardFrame;
 }
 
 -(void)dealloc
 {
-    //Removing notification observers on dealloc.
+    //Removing all observers on dealloc.
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [[YYKeyboardManager defaultManager] removeObserver:self];
 }
 
 

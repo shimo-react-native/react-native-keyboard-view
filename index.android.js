@@ -29,7 +29,6 @@ export default class extends Component {
         height: PropTypes.number.isRequired,
         backgroundColor: PropTypes.string,
         renderStickyView: PropTypes.func,
-        stickyViewHeight: PropTypes.number,
         onShow: PropTypes.func,
         onHide: PropTypes.func,
         onKeyboardChanged: PropTypes.func
@@ -192,9 +191,6 @@ export default class extends Component {
             this._willHideKeyboardManually = true;
             this._callKeyboardService('toggleKeyboard');
         }
-
-
-
     }
 
     _callKeyboardService(method) {

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1017893C1B283EE1006C41B8 /* libRNKeyboardView.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 101789301B283EE1006C41B8 /* libRNKeyboardView.a */; };
 		7F80046B1E5A7FC000905D7C /* YYKeyboardManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */; };
-		7F80046E1E5A89A900905D7C /* RNKeyboardShadowView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F80046D1E5A89A900905D7C /* RNKeyboardShadowView.m */; };
 		7F8004711E5A8D6700905D7C /* RNKeyboardHostView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F8004701E5A8D6700905D7C /* RNKeyboardHostView.m */; };
 		7FE295451E03BDA2009E7610 /* RNKeyboardViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FE295441E03BDA2009E7610 /* RNKeyboardViewManager.m */; };
 /* End PBXBuildFile section */
@@ -41,8 +40,6 @@
 		1017893B1B283EE1006C41B8 /* RNKeyboardViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RNKeyboardViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F8004691E5A7FC000905D7C /* YYKeyboardManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYKeyboardManager.h; sourceTree = "<group>"; };
 		7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYKeyboardManager.m; sourceTree = "<group>"; };
-		7F80046C1E5A899600905D7C /* RNKeyboardShadowView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNKeyboardShadowView.h; sourceTree = "<group>"; };
-		7F80046D1E5A89A900905D7C /* RNKeyboardShadowView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeyboardShadowView.m; sourceTree = "<group>"; };
 		7F80046F1E5A8D5B00905D7C /* RNKeyboardHostView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNKeyboardHostView.h; sourceTree = "<group>"; };
 		7F8004701E5A8D6700905D7C /* RNKeyboardHostView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeyboardHostView.m; sourceTree = "<group>"; };
 		7FE295431E03BDA2009E7610 /* RNKeyboardViewManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKeyboardViewManager.h; sourceTree = "<group>"; };
@@ -75,8 +72,6 @@
 				7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */,
 				7FE295431E03BDA2009E7610 /* RNKeyboardViewManager.h */,
 				7FE295441E03BDA2009E7610 /* RNKeyboardViewManager.m */,
-				7F80046C1E5A899600905D7C /* RNKeyboardShadowView.h */,
-				7F80046D1E5A89A900905D7C /* RNKeyboardShadowView.m */,
 				7F80046F1E5A8D5B00905D7C /* RNKeyboardHostView.h */,
 				7F8004701E5A8D6700905D7C /* RNKeyboardHostView.m */,
 				101789311B283EE1006C41B8 /* Products */,
@@ -180,7 +175,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7F80046E1E5A89A900905D7C /* RNKeyboardShadowView.m in Sources */,
 				7F8004711E5A8D6700905D7C /* RNKeyboardHostView.m in Sources */,
 				7F80046B1E5A7FC000905D7C /* YYKeyboardManager.m in Sources */,
 				7FE295451E03BDA2009E7610 /* RNKeyboardViewManager.m in Sources */,
