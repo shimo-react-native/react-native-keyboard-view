@@ -16,6 +16,7 @@ export default class extends Component {
     static propTypes = {
         height: PropTypes.number.isRequired,
         stickyViewInside: PropTypes.bool,
+        initialState: PropTypes.bool,
         backgroundColor: PropTypes.string,
         renderStickyView: PropTypes.func,
         onShow: PropTypes.func,
@@ -26,7 +27,7 @@ export default class extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            contentVisible: false
+            contentVisible: props.initialState || false
         };
     }
 
