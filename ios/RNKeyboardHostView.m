@@ -11,54 +11,37 @@
 {
     __weak RCTBridge *_bridge;
     UIView *_containerView;
-    UIView *_stickyView;
     BOOL _isPresented;
-    BOOL _isContainerVisible;
-    RCTTouchHandler *_stickyGestureHandler;
-    RCTTouchHandler *_containerGestureHandler;
+    RCTTouchHandler *_touchHandler;
 }
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge
 {
     if ((self = [super initWithFrame:CGRectZero])) {
         _bridge = bridge;
-        _stickyGestureHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
-        _containerGestureHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                               selector:@selector(keyboardDidHide:)
-                                   name:UIKeyboardDidHideNotification
-                                 object:nil];
-        _isContainerVisible = NO;
-        [[YYKeyboardManager defaultManager] addObserver:self];
+        _touchHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
     }
-    
+
     return self;
 }
 
+
 - (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex
 {
-    if (atIndex == 0) {
-        _stickyView = subview;
-        [_stickyView addGestureRecognizer:_stickyGestureHandler];
-    } else if (atIndex == 1) {
-        _containerView = subview;
-        [_containerView addGestureRecognizer:_containerGestureHandler];
-    }
+    RCTAssert(_containerView == nil, @"Keyboard view can only have one subview");
+    [super insertReactSubview:subview atIndex:atIndex];
+    [subview addGestureRecognizer:_touchHandler];
+    _containerView = subview;
+
+    [[YYKeyboardManager defaultManager] addObserver:self];
 }
 
 - (void)removeReactSubview:(UIView *)subview
 {
-    if (subview == _containerView) {
-        _containerView = nil;
-        [subview removeGestureRecognizer:_containerView];
-    } else if (subview == _stickyView) {
-        _stickyView = nil;
-        [subview removeGestureRecognizer:_stickyGestureHandler];
-    }
-    
+    RCTAssert(subview == _containerView, @"Cannot remove view other than keyboard view");
     [super removeReactSubview:subview];
-    [subview removeFromSuperview];
+    [subview removeGestureRecognizer:_touchHandler];
+    _containerView = nil;
 }
 
 - (void)didUpdateReactSubviews
@@ -66,33 +49,26 @@
     // Do nothing, as subview (singular) is managed by `insertReactSubview:atIndex:`
 }
 
-- (void)keyboardDidHide:(NSNotification *)notification
-{
-    [_containerView removeFromSuperview];
-    [_stickyView removeFromSuperview];
-    _isPresented = NO;
-}
-
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
     YYKeyboardManager *manager = [YYKeyboardManager defaultManager];
     UIView *keyboardWindow = [manager keyboardWindow];
-    
+
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
-    
+
     if (!fromVisible && !_isPresented) {
-        _containerView.hidden = !_isContainerVisible;
         [keyboardWindow addSubview:_containerView];
-        [keyboardWindow addSubview:_stickyView];
         _isPresented = YES;
+    } else if (!toVisible) {
+        _isPresented = NO;
     }
-    
+
     CGRect fromFrame = [manager convertRect:transition.fromFrame toView:nil];
     CGRect toFrame =  [manager convertRect:transition.toFrame toView:nil];
-    
+
     NSTimeInterval animationDuration = transition.animationDuration;
     UIViewAnimationCurve curve = transition.animationCurve;
-    
+
     [self changeWithTransition:transition.animationDuration
                        options:transition.animationCurve
                      fromFrame:fromFrame
@@ -105,124 +81,65 @@
                      toFrame:(CGRect)toFrame
 {
     [UIView performWithoutAnimation:^() {
-        if (_containerView) {
-            CGRect containerBeginFrame = [self calculateContainerViewFrame:fromFrame];
-            [_bridge.uiManager setFrame:containerBeginFrame forView:_containerView];
-            [_containerView reactSetFrame:containerBeginFrame];
-        }
-        
-        if (_stickyView) {
-            CGRect stickyBeginFrame = [self calculateStickyViewFrame:fromFrame];
-            [_bridge.uiManager setFrame:stickyBeginFrame forView:_stickyView];
-            [_stickyView reactSetFrame:stickyBeginFrame];
-        }
+        CGRect beginFrame = [self calculateContainerFrame:fromFrame];
+        [self setFrameInSafeThread:beginFrame];
+        [_containerView reactSetFrame:beginFrame];
     }];
-    
+
     [UIView animateWithDuration:duration
                           delay:0
                         options:options
                      animations:^() {
-                         if (_containerView) {
-                             CGRect containerEndFrame = [self calculateContainerViewFrame:toFrame];
-                             [_bridge.uiManager setFrame:containerEndFrame forView:_containerView];
-                             [_containerView reactSetFrame:containerEndFrame];
-                         }
-                         
-                         if (_stickyView) {
-                             CGRect stickyEndFrame = [self calculateStickyViewFrame:toFrame];
-                             [_bridge.uiManager setFrame:stickyEndFrame forView:_stickyView];
-                             [_stickyView reactSetFrame:stickyEndFrame];
-                         }
+                        CGRect endFrame = [self calculateContainerFrame:toFrame];
+                         [self setFrameInSafeThread:endFrame];
+                         [_containerView reactSetFrame:endFrame];
                      }
                      completion:nil];
 }
 
-- (void)openKeyboard
+// Ensure _containerView is not unmounted before setFrame.
+// TODO: Check whether _containerView is unmounted or not in a more proper way
+-(void)setFrameInSafeThread:(CGRect)frame
 {
-    if (!_isPresented) {
-        YYKeyboardManager *manager = [YYKeyboardManager defaultManager];
-        UIView *keyboardWindow = [manager keyboardWindow];
-        [keyboardWindow addSubview:_containerView];
-        [keyboardWindow addSubview:_stickyView];
-        
-        UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
-        [keyboardWindow addSubview:view];
-        
-        _isPresented = YES;
-        
-        
-        CGSize screenSize = RCTScreenSize();
-        CGSize keyboardSize = CGSizeMake(screenSize.width, _containerHeight);
-        CGRect fromFrame = {
-            .origin = CGPointMake(0, screenSize.height),
-            .size = keyboardSize
-        };
-        CGRect toFrame = {
-            .origin = CGPointMake(0, screenSize.height - _containerHeight),
-            .size = keyboardSize
-        };
-
-        [self changeWithTransition:0.25
-                           options:7
-                         fromFrame:fromFrame
-                           toFrame:toFrame];
-
-    }
+    [_bridge.uiManager rootViewForReactTag:_containerView.reactTag withCompletion:^(UIView *view) {
+        if (view) {
+            [_bridge.uiManager setFrame:frame forView:_containerView];
+        }
+    }];
 }
 
-- (void)closeKeyboard
+-(CGRect)calculateContainerFrame:(CGRect)frame
+{
+    if (_stickyViewInside) {
+        return frame;
+    } else {
+        // Assume the first subview is the sticky view,
+        // and assign its height as offset.
+        float offset = _containerView.subviews[0].frame.size.height;
+        CGRect calculatedFrame = {
+            .origin = CGPointMake(frame.origin.x, frame.origin.y - offset),
+            .size = CGSizeMake(frame.size.width, frame.size.height + offset)
+        };
+        return calculatedFrame;
+    }
+
+}
+
+-(void)invalidate
+{
+    //Removing all observers.
+    [[YYKeyboardManager defaultManager] removeObserver:self];
+    _isPresented = NO;
+}
+
+-(void)openKeyboard
+{
+
+}
+
+-(void)closeKeyboard
 {
     [self.window endEditing:YES];
 }
-
-- (void)showKeyboard
-{
-    if (_isContainerVisible) {
-        [self toggleKeyboard];
-    }
-}
-
-- (void)hideKeyboard
-{
-    if (!_isContainerVisible) {
-        [self toggleKeyboard];
-    }
-}
-
-- (void)toggleKeyboard
-{
-    BOOL toggle = !_isContainerVisible;
-    _isContainerVisible = toggle;
-    _containerView.hidden = !toggle;
-}
-
-- (CGRect)calculateStickyViewFrame:(CGRect)keyboardFrame
-{
-    return CGRectMake(
-                      keyboardFrame.origin.x,
-                      keyboardFrame.origin.y - (_stickyViewInside ? 0.0 : _stickyView.frame.size.height),
-                      keyboardFrame.size.width,
-                      _stickyView.frame.size.height
-                      );
-}
-
-- (CGRect)calculateContainerViewFrame:(CGRect)keyboardFrame
-{
-    float stickyViewOffset = _stickyViewInside ? _stickyView.frame.size.height : 0.0;
-    return _stickyViewInside ? CGRectMake(
-                                          keyboardFrame.origin.x,
-                                          keyboardFrame.origin.y + stickyViewOffset,
-                                          keyboardFrame.size.width,
-                                          keyboardFrame.size.height - stickyViewOffset
-                                          ) : keyboardFrame;
-}
-
--(void)dealloc
-{
-    //Removing all observers on dealloc.
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [[YYKeyboardManager defaultManager] removeObserver:self];
-}
-
 
 @end

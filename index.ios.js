@@ -7,13 +7,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: 0,
         height: 0
-    },
-
-    stickyView: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0
     }
 });
 
@@ -30,6 +23,13 @@ export default class extends Component {
         onKeyboardChanged: PropTypes.func
     };
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            contentVisible: false
+        };
+    }
+
     componentWillMount() {
         this._willShow = this._willShow.bind(this);
         this._didHide = this._didHide.bind(this);
@@ -40,7 +40,6 @@ export default class extends Component {
         Keyboard.addListener('keyboardWillChangeFrame', this._willChangeFrame);
     }
 
-    _visible;
     _active;
 
     open() {
@@ -52,21 +51,27 @@ export default class extends Component {
     }
 
     showKeyboard() {
-        this._callKeyboardService('showKeyboard');
-        this._visible = true;
-        this._onChangeFrame();
+        this.setState({
+            contentVisible: false
+        }, () => {
+            this._onChangeFrame();
+        });
     }
 
     hideKeyboard() {
-        this._callKeyboardService('hideKeyboard');
-        this._visible = false;
-        this._onChangeFrame();
+        this.setState({
+            contentVisible: true
+        }, () => {
+            this._onChangeFrame();
+        });
     }
 
     toggleKeyboard() {
-        this._callKeyboardService('toggleKeyboard');
-        this._visible = !this._visible;
-        this._onChangeFrame();
+        this.setState({
+            contentVisible: !this.state.contentVisible
+        }, () => {
+            this._onChangeFrame();
+        });
     }
 
     _callKeyboardService(method) {
@@ -97,23 +102,28 @@ export default class extends Component {
 
     _onChangeFrame(height = this._lastFrameHeight) {
         const { onKeyboardChanged } = this.props;
-        onKeyboardChanged && onKeyboardChanged(this._visible, height);
+        onKeyboardChanged && onKeyboardChanged(this.state.contentVisible, height);
     }
 
     render() {
         const { backgroundColor, children, renderStickyView, height, stickyViewInside } = this.props;
+        const { contentVisible } = this.state;
+        const stickyView = renderStickyView && renderStickyView();
 
         return (
             <RNKeyboardView
                 ref="keyboardView"
                 style={styles.keyboard}
                 containerHeight={height}
-                stickyViewInside={stickyViewInside}>
-                <View style={styles.stickyView}>
-                    {renderStickyView && renderStickyView()}
-                </View>
-                <View style={{backgroundColor: backgroundColor || '#fff'}}>
-                    {children}
+                stickyViewInside={stickyView ? stickyViewInside : true}>
+                <View pointerEvents="box-none">
+                    {stickyView}
+                    <View
+                        style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible, flex: 1}}
+                        pointerEvents={contentVisible ? 'auto' : 'none'}
+                    >
+                        {children}
+                    </View>
                 </View>
             </RNKeyboardView>
         );
