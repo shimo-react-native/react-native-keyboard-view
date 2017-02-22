@@ -121,7 +121,7 @@ export default class extends Component {
                     {stickyView}
                     <View
                         style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible, flex: 1}}
-                        pointerEvents={contentVisible ? 'auto' : 'none'}
+                        pointerEvents={contentVisible ? 'box-none' : 'none'}
                     >
                         {children}
                     </View>
