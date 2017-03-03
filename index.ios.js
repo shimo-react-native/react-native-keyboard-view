@@ -14,8 +14,6 @@ export default class extends Component {
     static displayName = 'KeyboardView';
 
     static propTypes = {
-        height: PropTypes.number.isRequired,
-        stickyViewInside: PropTypes.bool,
         initialState: PropTypes.bool,
         backgroundColor: PropTypes.string,
         renderStickyView: PropTypes.func,
@@ -39,6 +37,12 @@ export default class extends Component {
         Keyboard.addListener('keyboardWillShow', this._willShow);
         Keyboard.addListener('keyboardDidHide', this._didHide);
         Keyboard.addListener('keyboardWillChangeFrame', this._willChangeFrame);
+    }
+
+    componentWillUnmount() {
+        Keyboard.removeListener('keyboardWillShow', this._willShow);
+        Keyboard.removeListener('keyboardDidHide', this._didHide);
+        Keyboard.removeListener('keyboardWillChangeFrame', this._willChangeFrame);
     }
 
     _active;
@@ -107,20 +111,18 @@ export default class extends Component {
     }
 
     render() {
-        const { backgroundColor, children, renderStickyView, height, stickyViewInside } = this.props;
+        const { backgroundColor, children, renderStickyView } = this.props;
         const { contentVisible } = this.state;
         const stickyView = renderStickyView && renderStickyView();
 
         return (
             <RNKeyboardView
                 ref="keyboardView"
-                style={styles.keyboard}
-                containerHeight={height}
-                stickyViewInside={stickyView ? stickyViewInside : true}>
+                style={styles.keyboard}>
                 <View pointerEvents="box-none">
                     {stickyView}
                     <View
-                        style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible, flex: 1}}
+                        style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible}}
                         pointerEvents={contentVisible ? 'box-none' : 'none'}
                     >
                         {children}
@@ -131,9 +133,4 @@ export default class extends Component {
     }
 }
 
-const RNKeyboardView = requireNativeComponent('RNKeyboardView', null, {
-    nativeOnly: {
-        stickyViewInside: true,
-        containerHeight: true
-    }
-});
+const RNKeyboardView = requireNativeComponent('RNKeyboardView');
