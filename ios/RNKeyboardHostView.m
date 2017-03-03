@@ -21,7 +21,6 @@
         _bridge = bridge;
         _touchHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
     }
-
     return self;
 }
 
@@ -32,7 +31,6 @@
     [super insertReactSubview:subview atIndex:atIndex];
     [subview addGestureRecognizer:_touchHandler];
     _containerView = subview;
-
     [[YYKeyboardManager defaultManager] addObserver:self];
 }
 
@@ -52,89 +50,81 @@
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
     YYKeyboardManager *manager = [YYKeyboardManager defaultManager];
     UIView *keyboardWindow = [manager keyboardWindow];
-
+    UIView *keyboardView = [manager keyboardView];
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
-
+    CGRect toFrame =  [manager convertRect:transition.toFrame toView:nil];
+    
+    if (!fromVisible && !toVisible) {
+        return;
+    }
+    
     if (!fromVisible && !_isPresented) {
         [keyboardWindow addSubview:_containerView];
         _isPresented = YES;
     } else if (!toVisible) {
         _isPresented = NO;
     }
-
-    CGRect fromFrame = [manager convertRect:transition.fromFrame toView:nil];
-    CGRect toFrame =  [manager convertRect:transition.toFrame toView:nil];
-
-    NSTimeInterval animationDuration = transition.animationDuration;
-    UIViewAnimationCurve curve = transition.animationCurve;
-
-    [self changeWithTransition:transition.animationDuration
-                       options:transition.animationCurve
-                     fromFrame:fromFrame
-                       toFrame:toFrame];
-}
-
-- (void)changeWithTransition:(NSTimeInterval)duration
-                     options:(UIViewAnimationOptions)options
-                   fromFrame:(CGRect)fromFrame
-                     toFrame:(CGRect)toFrame
-{
+    
+    // Set content height.
+    if (toVisible) {
+        [_bridge.uiManager setSize:toFrame.size forView:_containerView.subviews.lastObject];
+    }
+    
+    toFrame.size.height += [self getStickyViewHeight];
+    
     [UIView performWithoutAnimation:^() {
-        CGRect beginFrame = [self calculateContainerFrame:fromFrame];
-        [self setFrameInSafeThread:beginFrame];
-        [_containerView reactSetFrame:beginFrame];
+        if (!fromVisible) {
+            [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
+            [self setAdjustedContainerFrame:toFrame direction:YES];
+        }
     }];
-
-    [UIView animateWithDuration:duration
+    
+    [UIView animateWithDuration:transition.animationDuration
                           delay:0
-                        options:options
+                        options:transition.animationCurve
                      animations:^() {
-                        CGRect endFrame = [self calculateContainerFrame:toFrame];
-                         [self setFrameInSafeThread:endFrame];
-                         [_containerView reactSetFrame:endFrame];
+                         if (!fromVisible) {
+                             [self setAdjustedContainerFrame:toFrame direction:NO];
+                             [self setAdjustedKeyboardFrame:keyboardView.frame direction:NO];
+                         } else if (!toVisible) {
+                             [self setAdjustedContainerFrame:toFrame direction:YES];
+                             [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
+                         }
                      }
                      completion:nil];
 }
 
-// Ensure _containerView is not unmounted before setFrame.
-// TODO: Check whether _containerView is unmounted or not in a more proper way
--(void)setFrameInSafeThread:(CGRect)frame
+- (CGFloat)getStickyViewHeight
 {
-    [_bridge.uiManager rootViewForReactTag:_containerView.reactTag withCompletion:^(UIView *view) {
-        if (view) {
-            [_bridge.uiManager setFrame:frame forView:_containerView];
-        }
-    }];
+    NSArray<__kindof UIView *> *subviews = _containerView.subviews;
+    UIView *stickyView = subviews.count == 2 ? subviews[0] : nil;
+    return stickyView ? stickyView.frame.size.height : 0;
 }
 
--(CGRect)calculateContainerFrame:(CGRect)frame
+- (void)setAdjustedContainerFrame:(CGRect)frame direction:(BOOL)direction
 {
-    if (_stickyViewInside) {
-        return frame;
-    } else {
-        // Assume the first subview is the sticky view,
-        // and assign its height as offset.
-        float offset = _containerView.subviews[0].frame.size.height;
-        CGRect calculatedFrame = {
-            .origin = CGPointMake(frame.origin.x, frame.origin.y - offset),
-            .size = CGSizeMake(frame.size.width, frame.size.height + offset)
-        };
-        return calculatedFrame;
-    }
+    frame.origin.y = direction ? frame.size.height : 0;
+    [_containerView reactSetFrame:frame];
+}
 
+- (void)setAdjustedKeyboardFrame:(CGRect)frame direction:(BOOL)direction
+{
+    CGFloat offset = [self getStickyViewHeight];
+    UIView *keyboardView = [[YYKeyboardManager defaultManager] keyboardView];
+    
+    if (offset) {
+        frame.origin.y = frame.origin.y + (direction ? offset : -offset);
+    }
+    
+    [keyboardView setFrame:frame];
+ 
 }
 
 -(void)invalidate
 {
-    //Removing all observers.
     [[YYKeyboardManager defaultManager] removeObserver:self];
     _isPresented = NO;
-}
-
--(void)openKeyboard
-{
-
 }
 
 -(void)closeKeyboard
