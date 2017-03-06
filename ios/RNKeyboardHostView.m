@@ -53,33 +53,33 @@
     UIView *keyboardView = [manager keyboardView];
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
-    CGRect toFrame =  [manager convertRect:transition.toFrame toView:nil];
-    
+    CGRect toFrame = [manager convertRect:transition.toFrame toView:nil];
+
     if (!fromVisible && !toVisible) {
         return;
     }
-    
+
     if (!fromVisible && !_isPresented) {
         [keyboardWindow addSubview:_containerView];
         _isPresented = YES;
     } else if (!toVisible) {
         _isPresented = NO;
     }
-    
+
     // Set content height.
     if (toVisible) {
         [_bridge.uiManager setSize:toFrame.size forView:_containerView.subviews.lastObject];
     }
-    
+
     toFrame.size.height += [self getStickyViewHeight];
-    
+
     [UIView performWithoutAnimation:^() {
         if (!fromVisible) {
             [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
             [self setAdjustedContainerFrame:toFrame direction:YES];
         }
     }];
-    
+
     [UIView animateWithDuration:transition.animationDuration
                           delay:0
                         options:transition.animationCurve
@@ -92,7 +92,11 @@
                              [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
                          }
                      }
-                     completion:nil];
+                     completion:^(BOOL finished) {
+                         if (finished && !toVisible) {
+                             [_containerView removeFromSuperview];
+                         }
+                     }];
 }
 
 - (CGFloat)getStickyViewHeight
@@ -110,13 +114,13 @@
 {
     CGFloat offset = [self getStickyViewHeight];
     UIView *keyboardView = [[YYKeyboardManager defaultManager] keyboardView];
-    
+
     if (offset) {
         frame.origin.y = frame.origin.y + (direction ? offset : -offset);
     }
-    
+
     [keyboardView setFrame:frame];
- 
+
 }
 
 -(void)invalidate
@@ -127,7 +131,7 @@
 
 -(void)closeKeyboard
 {
-    [self.window endEditing:YES];
+    [[UIApplication sharedApplication].keyWindow endEditing:YES];
 }
 
 @end
