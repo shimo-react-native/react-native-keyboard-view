@@ -7,6 +7,10 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: 0,
         height: 0
+    },
+
+    cover: {
+        flex: 1
     }
 });
 
@@ -17,6 +21,7 @@ export default class extends Component {
         initialState: PropTypes.bool,
         backgroundColor: PropTypes.string,
         renderStickyView: PropTypes.func,
+        renderCover: PropTypes.func,
         onShow: PropTypes.func,
         onHide: PropTypes.func,
         onKeyboardChanged: PropTypes.func
@@ -111,16 +116,18 @@ export default class extends Component {
     }
 
     render() {
-        const { backgroundColor, children, renderStickyView } = this.props;
+        const { backgroundColor, children, renderStickyView, renderCover } = this.props;
         const { contentVisible } = this.state;
         const stickyView = renderStickyView && renderStickyView();
+        const cover = renderCover && renderCover();
 
         return (
             <RNKeyboardView
                 ref="keyboardView"
                 style={styles.keyboard}>
                 <View pointerEvents="box-none">
-                    {stickyView}
+                    <View style={styles.cover} pointerEvents="box-none">{cover}</View>
+                    <View>{stickyView}</View>
                     <View
                         style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible}}
                         pointerEvents={contentVisible ? 'box-none' : 'none'}

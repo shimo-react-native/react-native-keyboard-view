@@ -97,9 +97,7 @@
 
 - (CGFloat)getStickyViewHeight
 {
-    NSArray<__kindof UIView *> *subviews = _containerView.subviews;
-    UIView *stickyView = subviews.count == 2 ? subviews[0] : nil;
-    return stickyView ? stickyView.frame.size.height : 0;
+    return CGRectGetHeight(_containerView.subviews[1].bounds);
 }
 
 - (void)setAdjustedContainerFrame:(CGRect)frame direction:(BOOL)direction
