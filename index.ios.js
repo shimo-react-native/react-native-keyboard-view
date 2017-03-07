@@ -1,12 +1,13 @@
 import React, { Component, PropTypes } from 'react';
-import { NativeModules, StyleSheet, findNodeHandle, View, Keyboard,
+import { NativeModules, StyleSheet, findNodeHandle, View, Keyboard, Animated,
     requireNativeComponent } from 'react-native';
 
 const styles = StyleSheet.create({
     keyboard: {
         position: 'absolute',
         width: 0,
-        height: 0
+        height: 0,
+        opacity: 0
     },
 
     cover: {
@@ -24,7 +25,8 @@ export default class extends Component {
         renderCover: PropTypes.func,
         onShow: PropTypes.func,
         onHide: PropTypes.func,
-        onKeyboardChanged: PropTypes.func
+        onKeyboardChanged: PropTypes.func,
+        transform: PropTypes.array
     };
 
     constructor(props) {
@@ -116,15 +118,17 @@ export default class extends Component {
     }
 
     render() {
-        const { backgroundColor, children, renderStickyView, renderCover } = this.props;
+        const { backgroundColor, children, renderStickyView, renderCover, transform } = this.props;
         const { contentVisible } = this.state;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCover && renderCover();
+        const KeyboardView = transform ? AnimatedKeyboardView : RNKeyboardView;
 
         return (
-            <RNKeyboardView
+            <KeyboardView
                 ref="keyboardView"
-                style={styles.keyboard}>
+                synchronouslyUpdateTransform={!!transform}
+                style={[styles.keyboard, transform && {transform}]}>
                 <View pointerEvents="box-none">
                     <View style={styles.cover} pointerEvents="box-none">{cover}</View>
                     <View>{stickyView}</View>
@@ -135,9 +139,15 @@ export default class extends Component {
                         {children}
                     </View>
                 </View>
-            </RNKeyboardView>
+            </KeyboardView>
         );
     }
 }
 
-const RNKeyboardView = requireNativeComponent('RNKeyboardView');
+const RNKeyboardView = requireNativeComponent('RNKeyboardView', null, {
+    nativeOnly: {
+        synchronouslyUpdateTransform: true
+    }
+});
+
+const AnimatedKeyboardView = Animated.createAnimatedComponent(RNKeyboardView);
