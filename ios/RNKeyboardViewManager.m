@@ -56,7 +56,7 @@ RCT_EXPORT_MODULE()
     [_hostViews removeAllObjects];
 }
 
-RCT_EXPORT_VIEW_PROPERTY(containerHeight, CGFloat)
+RCT_EXPORT_VIEW_PROPERTY(synchronouslyUpdateTransform, BOOL)
 
 RCT_EXPORT_METHOD(closeKeyboard:(nonnull NSNumber *)reactTag)
 {
