@@ -54,10 +54,6 @@ export default class extends Component {
 
     _active;
 
-    open() {
-        this._callKeyboardService('openKeyboard');
-    }
-
     close() {
         this._callKeyboardService('closeKeyboard');
     }
