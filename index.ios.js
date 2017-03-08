@@ -2,6 +2,8 @@ import React, { Component, PropTypes } from 'react';
 import { NativeModules, StyleSheet, findNodeHandle, View, Keyboard, Animated,
     requireNativeComponent } from 'react-native';
 
+import Modal from 'react-native-root-modal';
+
 const styles = StyleSheet.create({
     keyboard: {
         position: 'absolute',
@@ -121,21 +123,25 @@ export default class extends Component {
         const KeyboardView = transform ? AnimatedKeyboardView : RNKeyboardView;
 
         return (
-            <KeyboardView
-                ref="keyboardView"
-                synchronouslyUpdateTransform={!!transform}
-                style={[styles.keyboard, transform && {transform}]}>
-                <View pointerEvents="box-none">
-                    <View style={styles.cover} pointerEvents="box-none">{cover}</View>
-                    <View>{stickyView}</View>
-                    <View
-                        style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible}}
-                        pointerEvents={contentVisible ? 'box-none' : 'none'}
-                    >
-                        {children}
+            <Modal visible={true} style={styles.keyboard}>
+                <KeyboardView
+                    ref="keyboardView"
+                    pointerEvents="none"
+                    synchronouslyUpdateTransform={!!transform}
+                    style={[styles.keyboard, transform && {transform}]}>
+                    <View pointerEvents="box-none">
+                        <View style={styles.cover} pointerEvents="box-none">{cover}</View>
+                        <View>{stickyView}</View>
+                        <View
+                            style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible}}
+                            pointerEvents={contentVisible ? 'box-none' : 'none'}
+                        >
+                            {children}
+                        </View>
                     </View>
-                </View>
-            </KeyboardView>
+                </KeyboardView>
+            </Modal>
+
         );
     }
 }

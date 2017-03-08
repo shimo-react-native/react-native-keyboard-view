@@ -1,6 +1,6 @@
 {
     "name": "react-native-keyboard-view",
-    "version": "0.0.1",
+    "version": "0.0.2-rc1",
     "description": "Keyboard view for react-native",
     "repository": {
         "type": "git",
@@ -18,7 +18,7 @@
         "lint": "eslint ./"
     },
     "dependencies": {
-        "react-native-root-modal": "1.0.7"
+        "react-native-root-modal": "1.0.8"
     },
     "devDependencies": {
         "babel-eslint": "^6.1.2",
