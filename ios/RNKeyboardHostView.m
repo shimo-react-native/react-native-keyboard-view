@@ -76,6 +76,10 @@
 }
 
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
+    if (!_containerView.subviews.count) {
+        return;
+    }
+    
     _keyboardWindow = [_manager keyboardWindow];
     UIView *keyboardView = [_manager keyboardView];
     BOOL fromVisible = transition.fromVisible;

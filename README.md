@@ -3,14 +3,16 @@ KeyboardView Library for react-native
 
 ## Supports:
 
-version:
+version: 
+
 only supports: react-native >= 0.42.0
 
 platform:
-ios √
-android (partial)
 
-![Example](./preview.gif)
+ios √ 
+android (partial) 
+
+![Example](https://github.com/shimohq/react-native-keyboard-view/raw/master/preview.gif)
 
 ### Installation
 
