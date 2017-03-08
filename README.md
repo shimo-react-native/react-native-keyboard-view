@@ -9,7 +9,7 @@ only supports: react-native >= 0.42.0
 
 platform:
 
-ios √ 
+ios √  
 android (partial) 
 
 ![Example](https://github.com/shimohq/react-native-keyboard-view/raw/master/preview.gif)
