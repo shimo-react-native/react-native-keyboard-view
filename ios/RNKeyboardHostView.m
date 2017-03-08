@@ -10,7 +10,9 @@
 @implementation RNKeyboardHostView
 {
     __weak RCTBridge *_bridge;
-    UIView *_containerView;
+    __weak UIView *_containerView;
+    __weak YYKeyboardManager *_manager;
+    __weak UIWindow *_keyboardWindow;
     BOOL _isPresented;
     RCTTouchHandler *_touchHandler;
 }
@@ -20,10 +22,22 @@
     if ((self = [super initWithFrame:CGRectZero])) {
         _bridge = bridge;
         _touchHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
+        _manager = [YYKeyboardManager defaultManager];
     }
     return self;
 }
 
+- (void)setSynchronouslyUpdateTransform:(BOOL)synchronouslyUpdateTransform
+{
+    if (_synchronouslyUpdateTransform == synchronouslyUpdateTransform) {
+        return;
+    }
+    
+    if (synchronouslyUpdateTransform) {
+        [self synchronousTransform];
+    }
+    _synchronouslyUpdateTransform = synchronouslyUpdateTransform;
+}
 
 - (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex
 {
@@ -31,7 +45,7 @@
     [super insertReactSubview:subview atIndex:atIndex];
     [subview addGestureRecognizer:_touchHandler];
     _containerView = subview;
-    [[YYKeyboardManager defaultManager] addObserver:self];
+    [_manager addObserver:self];
 }
 
 - (void)removeReactSubview:(UIView *)subview
@@ -47,39 +61,56 @@
     // Do nothing, as subview (singular) is managed by `insertReactSubview:atIndex:`
 }
 
+- (void)didSetProps:(NSArray<NSString *> *)changedProps
+{
+    if ([changedProps containsObject:@"transform"]) {
+        [self synchronousTransform];
+    }
+}
+
+- (void)synchronousTransform
+{
+    if (_manager.keyboardVisible && _synchronouslyUpdateTransform) {
+        _keyboardWindow.transform = self.transform;
+    }
+}
+
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
-    YYKeyboardManager *manager = [YYKeyboardManager defaultManager];
-    UIView *keyboardWindow = [manager keyboardWindow];
-    UIView *keyboardView = [manager keyboardView];
+    _keyboardWindow = [_manager keyboardWindow];
+    UIView *keyboardView = [_manager keyboardView];
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
-    CGRect toFrame =  [manager convertRect:transition.toFrame toView:nil];
+    CGRect toFrame = [_manager convertRect:transition.toFrame toView:nil];
+    
     
     if (!fromVisible && !toVisible) {
         return;
     }
-    
+
     if (!fromVisible && !_isPresented) {
-        [keyboardWindow addSubview:_containerView];
+        [UIView performWithoutAnimation:^() {
+            [self synchronousTransform];
+        }];
+        [_keyboardWindow addSubview:_containerView];
         _isPresented = YES;
     } else if (!toVisible) {
         _isPresented = NO;
     }
-    
+
     // Set content height.
     if (toVisible) {
         [_bridge.uiManager setSize:toFrame.size forView:_containerView.subviews.lastObject];
     }
-    
+
     toFrame.size.height += [self getStickyViewHeight];
-    
+
     [UIView performWithoutAnimation:^() {
         if (!fromVisible) {
             [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
             [self setAdjustedContainerFrame:toFrame direction:YES];
         }
     }];
-    
+
     [UIView animateWithDuration:transition.animationDuration
                           delay:0
                         options:transition.animationCurve
@@ -92,14 +123,16 @@
                              [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
                          }
                      }
-                     completion:nil];
+                     completion:^(BOOL finished) {
+                         if (finished && !toVisible) {
+                             [_containerView removeFromSuperview];
+                         }
+                     }];
 }
 
 - (CGFloat)getStickyViewHeight
 {
-    NSArray<__kindof UIView *> *subviews = _containerView.subviews;
-    UIView *stickyView = subviews.count == 2 ? subviews[0] : nil;
-    return stickyView ? stickyView.frame.size.height : 0;
+    return CGRectGetHeight(_containerView.subviews[1].bounds);
 }
 
 - (void)setAdjustedContainerFrame:(CGRect)frame direction:(BOOL)direction
@@ -111,25 +144,25 @@
 - (void)setAdjustedKeyboardFrame:(CGRect)frame direction:(BOOL)direction
 {
     CGFloat offset = [self getStickyViewHeight];
-    UIView *keyboardView = [[YYKeyboardManager defaultManager] keyboardView];
-    
+    UIView *keyboardView = [_manager keyboardView];
+
     if (offset) {
         frame.origin.y = frame.origin.y + (direction ? offset : -offset);
     }
-    
+
     [keyboardView setFrame:frame];
- 
+
 }
 
 -(void)invalidate
 {
-    [[YYKeyboardManager defaultManager] removeObserver:self];
+    [_manager removeObserver:self];
     _isPresented = NO;
 }
 
 -(void)closeKeyboard
 {
-    [self.window endEditing:YES];
+    [[UIApplication sharedApplication].keyWindow endEditing:YES];
 }
 
 @end

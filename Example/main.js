@@ -139,8 +139,7 @@ class Keyboard extends Component {
                     onShow={(state, height) => console.log('onShow', state, height)}
                     onHide={(state) => console.log('onHide', state)}
                     onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
-                    renderStickyView={this._renderStickyView}
-                    stickyViewInside={true}>
+                    renderStickyView={this._renderStickyView}>
                         <ScrollView
                             keyboardShouldPersistTaps="always"
                             style={{flex: 1,  backgroundColor: '#fff'}}>

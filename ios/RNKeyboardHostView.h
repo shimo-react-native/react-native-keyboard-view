@@ -7,7 +7,7 @@
 
 @interface RNKeyboardHostView : UIView <RCTInvalidating, YYKeyboardObserver>
 
-@property (nonatomic, assign) CGFloat containerHeight;
+@property (nonatomic, assign) BOOL synchronouslyUpdateTransform;
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
 
