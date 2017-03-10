@@ -32,7 +32,7 @@
     if (_synchronouslyUpdateTransform == synchronouslyUpdateTransform) {
         return;
     }
-    
+
     if (synchronouslyUpdateTransform) {
         [self synchronousTransform];
     }
@@ -79,14 +79,14 @@
     if (!_containerView.subviews.count) {
         return;
     }
-    
+
     _keyboardWindow = [_manager keyboardWindow];
     UIView *keyboardView = [_manager keyboardView];
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
     CGRect toFrame = [_manager convertRect:transition.toFrame toView:nil];
-    
-    
+
+
     if (!fromVisible && !toVisible) {
         return;
     }
@@ -160,6 +160,13 @@
 
 -(void)invalidate
 {
+    if ([_manager isKeyboardVisible]) {
+        [UIView performWithoutAnimation:^() {
+            [self closeKeyboard];
+            [_manager keyboardWindow].transform = CGAffineTransformIdentity;
+        }];
+    }
+
     [_manager removeObserver:self];
     _isPresented = NO;
 }
