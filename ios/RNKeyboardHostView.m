@@ -161,10 +161,13 @@
 -(void)invalidate
 {
     if ([_manager isKeyboardVisible]) {
-        [UIView performWithoutAnimation:^() {
-            [self closeKeyboard];
-            [_manager keyboardWindow].transform = CGAffineTransformIdentity;
-        }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [UIView performWithoutAnimation:^() {
+                [self closeKeyboard];
+                [_manager keyboardWindow].transform = CGAffineTransformIdentity;
+                [_containerView removeFromSuperview];
+            }];
+        });
     }
 
     [_manager removeObserver:self];
