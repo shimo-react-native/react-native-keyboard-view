@@ -3,9 +3,11 @@ package im.shimo.react.keyboard;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.JSTouchDispatcher;
@@ -21,17 +23,11 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
     private KeyboardView mDelegatedKeyboardView;
     private int mTargetTag = -1;
 
-    private @Nullable ViewGroup mContainerView;
+    private ViewGroup mContainerView;
 
     public KeyboardRootViewGroup(Context context, KeyboardView delegate) {
         super(context);
         mDelegatedKeyboardView = delegate;
-    }
-
-    public void setContentVisible(boolean contentVisible) {
-        if (mContainerView != null && mContainerView.getChildCount() > 0) {
-            mContainerView.getChildAt(mContainerView.getChildCount() - 1).setVisibility(contentVisible ? View.VISIBLE : View.GONE);
-        }
     }
 
     @Override
@@ -61,13 +57,13 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
     @Override
     protected void onSizeChanged(final int w, final int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        if (getChildCount() > 0) {
+        if (mContainerView != null) {
             ((ReactContext) getContext()).runOnNativeModulesQueueThread(
                     new Runnable() {
                         @Override
                         public void run() {
                             ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
-                                    .updateNodeSize(getChildAt(0).getId(), w, h);
+                                    .updateNodeSize(mContainerView.getId(), w, h);
                         }
                     });
         }
@@ -80,7 +76,6 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        boolean consumed = true;
         // In case when there is no children interested in handling touch event, we return true from
         // the root view in order to receive subsequent events related to that gesture
 
@@ -99,14 +94,13 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
 
             if (action == MotionEvent.ACTION_DOWN) {
                 if (mTargetTag != -1) {
-                    return false;
+                    return true;
                 }
 
                 mTargetTag = target;
             }
             if (mTargetTag == mContainerView.getId()) {
                 mDelegatedKeyboardView.onTouchEvent(event);
-                consumed = false;
             } else {
                 mJSTouchDispatcher.handleTouchEvent(event, getEventDispatcher());
             }
@@ -116,7 +110,7 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
             }
         }
 
-        return consumed;
+        return true;
     }
 
     @Override
@@ -135,7 +129,24 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
         return reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
     }
 
-    public boolean isReady() {
-        return mContainerView != null && mContainerView.getChildCount() > 0;
+    public void setContentHeight(final int contentHeight) {
+        ((ReactContext) getContext()).runOnNativeModulesQueueThread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        int content = getContentView().getId();
+                        ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
+                                .updateNodeSize(content, ViewGroup.LayoutParams.MATCH_PARENT, contentHeight);
+                    }
+                });
+
+    }
+
+    public View getContentView() {
+        return mContainerView.getChildAt(mContainerView.getChildCount() - 1);
+    }
+
+    public void setContentVisible(boolean contentVisible) {
+        getContentView().setVisibility(contentVisible ? View.VISIBLE : View.GONE);
     }
 }

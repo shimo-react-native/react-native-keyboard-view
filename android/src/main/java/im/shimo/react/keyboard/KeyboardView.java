@@ -4,7 +4,9 @@ package im.shimo.react.keyboard;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.Nullable;
 
 import android.view.Gravity;
@@ -30,12 +32,13 @@ import com.facebook.react.uimanager.events.EventDispatcher;
 
 public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
+    private @Nullable JSTouchDispatcher mJSTouchDispatcher;
     private KeyboardRootViewGroup mHostView;
     private PopupWindow mWindow;
     private InputMethodManager mInputMethodManager;
     private Rect mVisibleViewArea;
     private int mMinKeyboardHeightDetected;
-    private boolean mVisible;
+    private boolean mContentVisible;
     private @Nullable ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
 
     public KeyboardView(Context context) {
@@ -46,9 +49,25 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         mVisibleViewArea = new Rect();
         mMinKeyboardHeightDetected = (int) PixelUtil.toPixelFromDIP(60);
 
-        mWindow = new PopupWindow(mHostView);
-        mWindow.setWidth(WindowManager.LayoutParams.MATCH_PARENT);
-        mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+        mWindow = new PopupWindow(mHostView, WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+        mWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        mWindow.setAnimationStyle(0);
+
+        mLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if (checkKeyboardStatus()) {
+                    showPopupWindow();
+                    mHostView.setContentHeight(getKeyboardHeight());
+                    mHostView.setContentVisible(mContentVisible);
+                } else {
+                    dismissPopupWindow();
+                }
+
+            }
+        };
+
+        getRootView().getViewTreeObserver().addOnGlobalLayoutListener(mLayoutListener);
     }
 
     @Override
@@ -59,7 +78,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     @Override
     public void addView(View child, int index) {
         mHostView.addView(child, index);
-        showPopupWindow();
     }
 
     @Override
@@ -98,28 +116,18 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     public void onDropInstance() {
         ((ReactContext) getContext()).removeLifecycleEventListener(this);
+        getRootView().getViewTreeObserver().removeOnGlobalLayoutListener(mLayoutListener);
         dismissPopupWindow();
-    }
-
-    public void setVisible(boolean visible) {
-        mVisible = visible;
-        if (visible) {
-            showPopupWindow();
-        } else {
-            dismissPopupWindow();
-        }
     }
 
     @Override
     public void onHostResume() {
-        // We show the PopupWindow again when the host resumes
-        showPopupWindow();
+        // do nothing
     }
 
     @Override
     public void onHostPause() {
-        // We dismiss the PopupWindow and reconstitute it onHostResume
-        dismissPopupWindow();
+        // do nothing
     }
 
     @Override
@@ -129,58 +137,23 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     protected void showPopupWindow() {
-        if (!mWindow.isShowing() && mHostView.isReady()) {
-            if (mLayoutListener == null) {
-                mLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        if (checkKeyboardStatus()) {
-                            mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
-                            mWindow.update();
-                            hideContent();
-                        } else {
-                            mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
-                            mWindow.update();
-                            showContent();
-                        }
-
-                    }
-                };
-            }
-
-            getRootView().getViewTreeObserver().addOnGlobalLayoutListener(mLayoutListener);
-
-            if (checkKeyboardStatus()) {
-                hideContent();
-            } else {
-                showContent();
-            }
-
-            if (mVisible) {
-                mWindow.setHeight(getReactRootView().getHeight());
-                mWindow.showAtLocation(getRootView(), Gravity.BOTTOM, 0, 0);
-            }
+        if (!mWindow.isShowing()) {
+            mWindow.setInputMethodMode(mContentVisible ? PopupWindow.INPUT_METHOD_NOT_NEEDED : PopupWindow.INPUT_METHOD_NEEDED);
+            mWindow.showAtLocation(getRootView(), Gravity.FILL, 0, 0);
         }
     }
 
     protected void dismissPopupWindow() {
         mWindow.dismiss();
-
-        if (mLayoutListener != null) {
-            getRootView().getViewTreeObserver().removeOnGlobalLayoutListener(mLayoutListener);
-            mLayoutListener = null;
-        }
     }
 
-    protected boolean checkKeyboardStatus() {
+    private boolean checkKeyboardStatus() {
+        return getKeyboardHeight() > mMinKeyboardHeightDetected;
+    }
+
+    private int getKeyboardHeight() {
         getRootView().getWindowVisibleDisplayFrame(mVisibleViewArea);
-        return DisplayMetricsHolder.getWindowDisplayMetrics().heightPixels - mVisibleViewArea.bottom > mMinKeyboardHeightDetected;
-    }
-
-    public void openKeyboard() {
-        if (!checkKeyboardStatus()) {
-            mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-        }
+        return DisplayMetricsHolder.getWindowDisplayMetrics().heightPixels - mVisibleViewArea.bottom;
     }
 
     public void closeKeyboard() {
@@ -202,14 +175,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         return false;
     }
 
-    private void hideContent() {
-        mHostView.setContentVisible(false);
-    }
-
-    private void showContent() {
-        mHostView.setContentVisible(true);
-    }
-
     private @Nullable ReactRootView mReactRootView;
 
     private ReactRootView getReactRootView() {
@@ -224,8 +189,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
         return mReactRootView;
     }
-
-    private @Nullable JSTouchDispatcher mJSTouchDispatcher;
 
     private int[] getOffset() {
         int[] rootOffset = new int[2];
@@ -262,4 +225,19 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         return reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
     }
 
+    public void setContentVisible(boolean contentVisible) {
+        if (mContentVisible != contentVisible) {
+            mContentVisible = contentVisible;
+
+            if (mContentVisible) {
+                mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+                mWindow.update();
+            } else {
+                mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+                mWindow.update();
+            }
+
+            mHostView.setContentVisible(mContentVisible);
+        }
+    }
 }

@@ -9,9 +9,7 @@ const styles = StyleSheet.create({
         width: 0
     },
     container: {
-        position: 'absolute',
-        backgroundColor: 'transparent',
-        justifyContent: 'flex-end',
+        backgroundColor: 'transparent'
     },
 
     content: {
@@ -26,7 +24,6 @@ export default class extends Component {
     static displayName = 'KeyboardView';
 
     static propTypes = {
-        height: PropTypes.number.isRequired,
         backgroundColor: PropTypes.string,
         renderStickyView: PropTypes.func,
         onShow: PropTypes.func,
@@ -34,186 +31,94 @@ export default class extends Component {
         onKeyboardChanged: PropTypes.func
     };
 
-    constructor(props, context) {
-        super(props, context);
+    constructor(props) {
+        super(props);
         this.state = {
-            visible: false,
-            contentEnabled: false,
-            height: 0
+            contentVisible: props.initialState || false
         };
-        this._translateY = new Animated.Value(0);
     }
 
     componentWillMount() {
         this._didShow = this._didShow.bind(this);
         this._didHide = this._didHide.bind(this);
-        this._back = this._back.bind(this);
-        this._onContentLayout = this._onContentLayout.bind(this);
         Keyboard.addListener('keyboardDidShow', this._didShow);
         Keyboard.addListener('keyboardDidHide', this._didHide);
-        BackAndroid.addEventListener('hardwareBackPress', this._back);
     }
 
     componentWillUnmount() {
         Keyboard.removeListener('keyboardDidShow', this._didShow);
         Keyboard.removeListener('keyboardDidHide', this._didHide);
-        BackAndroid.removeEventListener('hardwareBackPress', this._back);
     }
 
-    _willHideKeyboardManually = false;
-    _translateY = null;
-    _closing = false;
+    _active = false;
 
-    _back() {
-        if (this.state.visible && !this._closing) {
-            this.close();
-            return true;
-        }
-
-        return false;
-    }
-
-    async _didShow({ endCoordinates: { height } }) {
-        this._willHideKeyboardManually = false;
-        const { onKeyboardChanged, onShow } = this.props;
-
-        if (!this.state.visible) {
-            onShow && onShow(false, height);
-
-            this.setState({
-                visible: true
-            });
-            this._translateY.setValue(this.state.height - height);
-        } else {
-            onKeyboardChanged && onKeyboardChanged(false, height);
-
-            if (this.props.height !== height) {
-                Animated.timing(this._translateY, {
-                    toValue: this.state.height - height,
-                    useNativeDriver: true,
-                    duration: 120
-                }).start();
-            }
-        }
+    _didShow({ endCoordinates: { height } }) {
+        this._active = true;
+        this._lastFrameHeight = height;
+        const { onShow } = this.props;
+        onShow && onShow(false, height);
     }
 
     _didHide() {
-        const { onKeyboardChanged, onHide } = this.props;
-
-        if (this._willHideKeyboardManually) {
-            this._willHideKeyboardManually = false;
-            Animated.timing(this._translateY, {
-                toValue: 0,
-                useNativeDriver: true,
-                duration: 120
-            }).start();
-
-            onKeyboardChanged && onKeyboardChanged(true, this.props.height);
-        } else {
-            onHide && onHide(false);
-            this.setState({
-                visible: false
-            }, () => {
-
-                if (this._closing) {
-                    this._translateY.setValue(this.state.height);
-                    this._closing = false;
-                }
-            });
-        }
+        this._active = false;
+        const { onHide } = this.props;
+        onHide && onHide(this._visible);
     }
 
-    _onContentLayout({ nativeEvent: { layout: { height, x } } }) {
-        this.setState({ height });
-        if (!this.state.visible) {
-            this._translateY.setValue(height);
-        }
-    }
-
-    // We don't want any responder events bubbling out of the KeyboardView.
-    _shouldSetResponder(): boolean {
-        return true;
-    }
-
-    open() {
-        if (!this.state.visible) {
-            const { onShow } = this.props;
-            onShow && onShow(true, this.props.height);
-
-            this.setState({
-                visible: true
-            });
-            this._translateY.stopAnimation();
-            Animated.timing(this._translateY, {
-                toValue: 0,
-                duration: 160,
-                useNativeDriver: true
-            }).start();
-        }
-    }
-
-    async close() {
-        if (this.state.visible) {
-            const { onHide } = this.props;
-            this._closing = true;
-            if (!await this._callKeyboardService('closeKeyboard')) {
-                Animated.timing(this._translateY, {
-                    toValue: this.state.height,
-                    duration: 160,
-                    useNativeDriver: true,
-                    easing: Easing.inOut(Easing.ease)
-                }).start(() => {
-                    this.setState({
-                        visible: false
-                    });
-                    this._closing = false;
-                    onHide && onHide(true);
-                });
-            }
-        }
+    close() {
+        NativeModules.RNKeyboardModule.closeKeyboard(findNodeHandle(this.refs.keyboardView));
     }
 
     showKeyboard() {
-        if (this.state.visible) {
-            this._callKeyboardService('showKeyboard');
-        }
+        this.setState({
+            contentVisible: false
+        }, () => {
+            this._onChangeFrame();
+        });
     }
 
     hideKeyboard() {
-        if (this.state.visible) {
-            this._willHideKeyboardManually = true;
-            this._callKeyboardService('hideKeyboard');
-        }
+        this.setState({
+            contentVisible: true
+        }, () => {
+            this._onChangeFrame();
+        });
     }
 
     toggleKeyboard() {
-        if (this.state.visible) {
-            this._willHideKeyboardManually = true;
-            this._callKeyboardService('toggleKeyboard');
-        }
+        this.setState({
+            contentVisible: !this.state.contentVisible
+        }, () => {
+            this._onChangeFrame();
+        });
     }
 
-    _callKeyboardService(method) {
-        return NativeModules.RNKeyboardModule[method](findNodeHandle(this.refs.keyboardView));
+    _onChangeFrame(height = this._lastFrameHeight) {
+        const { onKeyboardChanged } = this.props;
+        onKeyboardChanged && onKeyboardChanged(this.state.contentVisible, height);
     }
 
     render() {
-        const { backgroundColor, children, renderStickyView } = this.props;
-        const { visible, height } = this.state;
+        const { backgroundColor, children, renderStickyView, renderCover } = this.props;
+        const { contentVisible } = this.state;
+        const stickyView = renderStickyView && renderStickyView();
+        const cover = renderCover && renderCover();
 
         return (
             <RNKeyboardView
                 ref="keyboardView"
-                onStartShouldSetResponder={this._shouldSetResponder}
-                style={styles.keyboard}
-                visible={visible}>
-                <Animated.View style={[styles.container, {transform: [{translateY: this._translateY}]}]}>
-                    {renderStickyView && renderStickyView()}
-                    <View style={{backgroundColor, height}}/>
-                    <View style={styles.content} onLayout={this._onContentLayout}>
+                contentVisible={contentVisible}
+                style={styles.keyboard}>
+                <View pointerEvents="box-none" >
+                    <View style={styles.cover} pointerEvents="box-none">{cover}</View>
+                    <View>{stickyView}</View>
+                    <View
+
+                        style={{backgroundColor: backgroundColor || '#fff'}}
+                    >
                         {children}
                     </View>
-                </Animated.View>
+                </View>
             </RNKeyboardView>
         );
     }
@@ -221,6 +126,6 @@ export default class extends Component {
 
 const RNKeyboardView = requireNativeComponent('RNKeyboardView', null, {
     nativeOnly: {
-        visible: true
+        contentVisible: true
     }
 });

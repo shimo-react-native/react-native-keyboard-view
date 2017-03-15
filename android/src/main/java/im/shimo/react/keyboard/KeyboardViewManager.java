@@ -1,6 +1,8 @@
 package im.shimo.react.keyboard;
 
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.uimanager.LayoutShadowNode;
+import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.annotations.ReactProp;
@@ -20,14 +22,20 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         return new KeyboardView(context);
     }
 
-    @ReactProp(name = "visible")
-    public void setVisible(KeyboardView view, boolean visible) {
-        view.setVisible(visible);
-
+    @Override
+    public LayoutShadowNode createShadowNodeInstance() {
+        return new KeyboardViewShadowView();
     }
 
     @Override
     public void onDropViewInstance(KeyboardView view) {
+        super.onDropViewInstance(view);
         view.onDropInstance();
+    }
+
+    @ReactProp(name = "contentVisible")
+    public void setContentVisible(KeyboardView view, boolean contentVisible) {
+        view.setContentVisible(contentVisible);
+
     }
 }
