@@ -13,7 +13,7 @@ import com.facebook.react.uimanager.UIManagerModule;
 public class KeyboardModule extends ReactContextBaseJavaModule {
 
     /* package */ static final String FRAGMENT_TAG =
-            "im.shimo.react.keyboard.RNKeyboardModule";
+            "im.shimo.react.keyboard.KeyboardModule";
 
     /* package */ static final String NAME = "RNKeyboardModule";
 
@@ -24,36 +24,6 @@ public class KeyboardModule extends ReactContextBaseJavaModule {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @ReactMethod
-    public void showKeyboard(final int tag) {
-        getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
-            public void execute (NativeViewHierarchyManager manager) {
-                KeyboardView view = (KeyboardView) manager.resolveView(tag);
-                view.openKeyboard();
-            }
-        });
-    }
-
-    @ReactMethod
-    public void hideKeyboard(final int tag) {
-        getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
-            public void execute (NativeViewHierarchyManager manager) {
-                KeyboardView view = (KeyboardView) manager.resolveView(tag);
-                view.closeKeyboard();
-            }
-        });
-    }
-
-    @ReactMethod
-    public void toggleKeyboard(final int tag) {
-        getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
-            public void execute (NativeViewHierarchyManager manager) {
-                KeyboardView view = (KeyboardView) manager.resolveView(tag);
-                view.toggleKeyboard();
-            }
-        });
     }
 
     @ReactMethod

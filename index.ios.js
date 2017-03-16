@@ -57,7 +57,7 @@ export default class extends Component {
     _active;
 
     close() {
-        this._callKeyboardService('closeKeyboard');
+        NativeModules.RNKeyboardViewManager.closeKeyboard(findNodeHandle(this.refs.keyboardView));
     }
 
     showKeyboard() {
@@ -82,10 +82,6 @@ export default class extends Component {
         }, () => {
             this._onChangeFrame();
         });
-    }
-
-    _callKeyboardService(method) {
-        return NativeModules.RNKeyboardViewManager[method](findNodeHandle(this.refs.keyboardView));
     }
 
     _willShow({ endCoordinates: { height } }) {
