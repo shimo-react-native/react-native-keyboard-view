@@ -69,7 +69,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
                     showPopupWindow();
                     mHostView.setContentHeight(getKeyboardHeight());
                 } else {
-                    mContentVisible = false;
                     dismissPopupWindow();
                 }
 
@@ -126,6 +125,11 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     public void onDropInstance() {
         ((ReactContext) getContext()).removeLifecycleEventListener(this);
         getRootView().getViewTreeObserver().removeOnGlobalLayoutListener(mLayoutListener);
+
+        if (mWindow.isShowing() && !mContentVisible) {
+            toggleKeyboard();
+        }
+
         dismissPopupWindow();
     }
 
@@ -153,6 +157,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     protected void dismissPopupWindow() {
         mWindow.dismiss();
+        mContentVisible = false;
     }
 
     private boolean checkKeyboardStatus() {
@@ -186,7 +191,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
             return true;
         } else {
             dismissPopupWindow();
-            mContentVisible = false;
             return false;
         }
     }
