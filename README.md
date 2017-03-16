@@ -3,14 +3,12 @@ KeyboardView Library for react-native
 
 ## Supports:
 
-version: 
-
 only supports: react-native >= 0.42.0
 
 platform:
 
 ios √  
-android (partial) 
+android √   
 
 ![Example](https://github.com/shimohq/react-native-keyboard-view/raw/master/preview.gif)
 
@@ -31,7 +29,6 @@ react-native link react-native-keyboard-view
 
 ### Usage
 
-iOS:
 
 ```javascript
 import KeyboardView from 'react-native-keyboard-view';
@@ -73,34 +70,3 @@ class Example extends Component {
 
 ```
 
-Android: (not finished yet)
-
-```javascript
-import KeyboardView from 'react-native-keyboard-view';
-
-<KeyboardView
-    ref="keyboard"
-    height={300}
-    backgroundColor="#fff"
-    onShow={(state, height) => console.log('onShow', state, height)}
-    onHide={(state) => console.log('onHide', state)}
-    onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
-    renderStickyView={this._renderStickyView}>
-        <ScrollView
-            keyboardShouldPersistTaps="always"
-            style={{flex: 1,  backgroundColor: '#fff'}}>
-            <View style={styles.keyboard}>
-                <Text style={styles.keyboardText}>KEYBOARD REPLACEMENT</Text>
-            </View>
-            <TouchableHighlight
-                style={styles.button}
-                onPress={this._blur.bind(this)}
-                underlayColor="#ccc"
-            >
-                <View style={styles.buttonContent}>
-                    <Text style={styles.buttonText}>BLUR</Text>
-                </View>
-            </TouchableHighlight>
-        </ScrollView>
-</KeyboardView>
-```
