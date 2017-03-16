@@ -98,7 +98,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     @Override
     public void removeViewAt(int index) {
-        removeView(getChildAt(index));
+      removeView(getChildAt(index));
     }
 
     @Override
@@ -226,18 +226,22 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     public void setContentVisible(boolean contentVisible) {
+
         if (mContentVisible != contentVisible) {
             mContentVisible = contentVisible;
 
-            if (mContentVisible) {
-                mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
-                mWindow.update();
-            } else {
-                mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
-                mWindow.update();
-            }
+            if (mWindow.isShowing()) {
+                if (mContentVisible) {
+                    mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+                    mWindow.update();
+                } else {
+                    mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+                    mWindow.update();
+                }
 
-            mHostView.setContentVisible(mContentVisible);
+
+                mHostView.setContentVisible(mContentVisible);
+            }
         }
     }
 }

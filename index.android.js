@@ -8,15 +8,15 @@ const styles = StyleSheet.create({
         height: 0,
         width: 0
     },
+
+    // Add a transparent background to keep the component structure in native side.
+    // Android will automaticly composite empty group view.
     container: {
         backgroundColor: 'transparent'
     },
 
-    content: {
-        position: 'absolute',
-        right: 0,
-        bottom: 0,
-        left: 0
+    cover: {
+        flex: 1
     }
 });
 
@@ -109,13 +109,10 @@ export default class extends Component {
                 ref="keyboardView"
                 contentVisible={contentVisible}
                 style={styles.keyboard}>
-                <View pointerEvents="box-none" >
-                    <View style={styles.cover} pointerEvents="box-none">{cover}</View>
+                <View pointerEvents="box-none" style={styles.container}>
+                    <View style={[styles.container, styles.cover]} pointerEvents="box-none">{cover}</View>
                     <View>{stickyView}</View>
-                    <View
-
-                        style={{backgroundColor: backgroundColor || '#fff'}}
-                    >
+                    <View style={{backgroundColor: backgroundColor || '#fff'}}>
                         {children}
                     </View>
                 </View>
