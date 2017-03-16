@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
-import { NativeModules, Keyboard, StyleSheet, BackAndroid, Easing, findNodeHandle, View,
-    requireNativeComponent, Animated } from 'react-native';
+import { NativeModules, Keyboard, StyleSheet, BackAndroid, findNodeHandle, View,
+    requireNativeComponent } from 'react-native';
 
 const styles = StyleSheet.create({
     keyboard: {
@@ -34,60 +34,82 @@ export default class extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            contentVisible: props.initialState || false
+            contentVisible: false
         };
     }
 
     componentWillMount() {
         this._didShow = this._didShow.bind(this);
         this._didHide = this._didHide.bind(this);
+        this._back = this._back.bind(this);
+
         Keyboard.addListener('keyboardDidShow', this._didShow);
         Keyboard.addListener('keyboardDidHide', this._didHide);
+        BackAndroid.addEventListener('hardwareBackPress', this._back);
     }
 
     componentWillUnmount() {
         Keyboard.removeListener('keyboardDidShow', this._didShow);
         Keyboard.removeListener('keyboardDidHide', this._didHide);
+        BackAndroid.removeEventListener('hardwareBackPress', this._back);
     }
 
     _active = false;
+    _willToggleKeyboardManually = false;
+
+    _back() {
+        if (this.state.contentVisible) {
+            this.close();
+            return true;
+        }
+
+        return false;
+    }
 
     _didShow({ endCoordinates: { height } }) {
-        this._active = true;
-        this._lastFrameHeight = height;
-        const { onShow } = this.props;
-        onShow && onShow(false, height);
+        if (!this._willToggleKeyboardManually) {
+            this._active = true;
+            this._lastFrameHeight = height;
+            const { onShow } = this.props;
+            onShow && onShow(false, height);
+        } else {
+            this._willToggleKeyboardManually = false;
+        }
     }
 
     _didHide() {
-        this._active = false;
-        const { onHide } = this.props;
-        onHide && onHide(this._visible);
+        if (!this._willToggleKeyboardManually) {
+            this._active = false;
+            const { onHide } = this.props;
+            onHide && onHide(this.state.onKeyboardChanged);
+            this.setState({contentVisible: false});
+        } else {
+            this._willToggleKeyboardManually = false;
+        }
     }
 
-    close() {
-        NativeModules.RNKeyboardModule.closeKeyboard(findNodeHandle(this.refs.keyboardView));
+    async close() {
+        if (!await NativeModules.RNKeyboardModule.closeKeyboard(findNodeHandle(this.refs.keyboardView))) {
+            this._didHide();
+        }
     }
 
     showKeyboard() {
-        this.setState({
-            contentVisible: false
-        }, () => {
-            this._onChangeFrame();
-        });
+        this._changeContentVisible(false);
     }
 
     hideKeyboard() {
-        this.setState({
-            contentVisible: true
-        }, () => {
-            this._onChangeFrame();
-        });
+        this._changeContentVisible(true);
     }
 
     toggleKeyboard() {
+        this._changeContentVisible(!this.state.contentVisible);
+    }
+
+    _changeContentVisible(contentVisible) {
+        this._willToggleKeyboardManually = true;
         this.setState({
-            contentVisible: !this.state.contentVisible
+            contentVisible
         }, () => {
             this._onChangeFrame();
         });

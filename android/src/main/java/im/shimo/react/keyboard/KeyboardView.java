@@ -39,6 +39,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     private Rect mVisibleViewArea;
     private int mMinKeyboardHeightDetected;
     private boolean mContentVisible;
+    private boolean mToggleKeyboardManually;
     private @Nullable ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
 
     public KeyboardView(Context context) {
@@ -51,16 +52,24 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
         mWindow = new PopupWindow(mHostView, WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
         mWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        mWindow.setAnimationStyle(0);
+        mWindow.setAnimationStyle(R.style.DialogAnimationSlide);
+
+        mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+        mWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST);
 
         mLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
+                if (mToggleKeyboardManually) {
+                    mToggleKeyboardManually = false;
+                    return;
+                }
+
                 if (checkKeyboardStatus()) {
                     showPopupWindow();
                     mHostView.setContentHeight(getKeyboardHeight());
-                    mHostView.setContentVisible(mContentVisible);
                 } else {
+                    mContentVisible = false;
                     dismissPopupWindow();
                 }
 
@@ -98,7 +107,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     @Override
     public void removeViewAt(int index) {
-      removeView(getChildAt(index));
+        removeView(getChildAt(index));
     }
 
     @Override
@@ -138,7 +147,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     protected void showPopupWindow() {
         if (!mWindow.isShowing()) {
-            mWindow.setInputMethodMode(mContentVisible ? PopupWindow.INPUT_METHOD_NOT_NEEDED : PopupWindow.INPUT_METHOD_NEEDED);
             mWindow.showAtLocation(getRootView(), Gravity.FILL, 0, 0);
         }
     }
@@ -156,9 +164,15 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         return DisplayMetricsHolder.getWindowDisplayMetrics().heightPixels - mVisibleViewArea.bottom;
     }
 
+    public void openKeyboard() {
+        if (!checkKeyboardStatus()) {
+            toggleKeyboard();
+        }
+    }
+
     public void closeKeyboard() {
         if (checkKeyboardStatus()) {
-            mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+            toggleKeyboard();
         }
     }
 
@@ -168,11 +182,13 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     public boolean close() {
         if (checkKeyboardStatus()) {
-            mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+            toggleKeyboard();
             return true;
+        } else {
+            dismissPopupWindow();
+            mContentVisible = false;
+            return false;
         }
-
-        return false;
     }
 
     private @Nullable ReactRootView mReactRootView;
@@ -226,21 +242,21 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     public void setContentVisible(boolean contentVisible) {
-
         if (mContentVisible != contentVisible) {
             mContentVisible = contentVisible;
 
             if (mWindow.isShowing()) {
-                if (mContentVisible) {
-                    mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
-                    mWindow.update();
-                } else {
-                    mWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
-                    mWindow.update();
-                }
-
-
-                mHostView.setContentVisible(mContentVisible);
+                mHostView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mToggleKeyboardManually = true;
+                        if (mContentVisible) {
+                            closeKeyboard();
+                        } else {
+                            openKeyboard();
+                        }
+                    }
+                });
             }
         }
     }

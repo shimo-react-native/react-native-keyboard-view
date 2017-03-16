@@ -1,12 +1,10 @@
 package im.shimo.react.keyboard;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
 
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.JSTouchDispatcher;
@@ -133,19 +131,11 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
                 new Runnable() {
                     @Override
                     public void run() {
-                        int content = getContentView().getId();
+                        int content = mContainerView.getChildAt(mContainerView.getChildCount() - 1).getId();
                         ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
                                 .updateNodeSize(content, ViewGroup.LayoutParams.MATCH_PARENT, contentHeight);
                     }
                 });
 
-    }
-
-    public View getContentView() {
-        return mContainerView.getChildAt(mContainerView.getChildCount() - 1);
-    }
-
-    public void setContentVisible(boolean contentVisible) {
-        getContentView().setVisibility(contentVisible ? View.VISIBLE : View.GONE);
     }
 }
