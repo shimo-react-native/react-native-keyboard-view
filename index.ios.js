@@ -54,7 +54,6 @@ export default class extends Component {
         Keyboard.removeListener('keyboardWillChangeFrame', this._willChangeFrame);
     }
 
-    _active;
 
     close() {
         NativeModules.RNKeyboardViewManager.closeKeyboard(findNodeHandle(this.refs.keyboardView));
@@ -85,23 +84,23 @@ export default class extends Component {
     }
 
     _willShow({ endCoordinates: { height } }) {
-        this._active = true;
         this._lastFrameHeight = height;
         const { onShow } = this.props;
-        onShow && onShow(false, height);
+        onShow && onShow(this.state.contentVisible, height);
     }
 
     _didHide() {
-        this._active = false;
         const { onHide } = this.props;
-        onHide && onHide(this._visible);
+        onHide && onHide(this.state.contentVisible, 0);
     }
 
-    _willChangeFrame({ endCoordinates: { height } }) {
-        if (this._active) {
+    _willChangeFrame({
+        endCoordinates: { height, screenY },
+        startCoordinates: { height: startHeight, screenY: startScreenY}
+    }) {
+        // Do not trigger onKeyboardChanged callback on keyboard show and hide
+        if (screenY + startHeight !== startScreenY && screenY !== startHeight + startScreenY) {
             this._lastFrameHeight = height;
-            const { onKeyboardChanged } = this.props;
-            onKeyboardChanged && onKeyboardChanged(this._visible, height);
             this._onChangeFrame(height);
         }
     }
