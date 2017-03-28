@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { NativeModules, StyleSheet, findNodeHandle, View, Keyboard, Animated,
+import { NativeModules, StyleSheet, View, Keyboard, Animated,
     requireNativeComponent } from 'react-native';
 
 import Modal from 'react-native-root-modal';
@@ -31,6 +31,8 @@ export default class extends Component {
         transform: PropTypes.array
     };
 
+    static dismiss = () => { NativeModules.RNKeyboardViewManager.closeKeyboard(); };
+
     constructor(props) {
         super(props);
         this.state = {
@@ -42,6 +44,7 @@ export default class extends Component {
         this._willShow = this._willShow.bind(this);
         this._didHide = this._didHide.bind(this);
         this._willChangeFrame = this._willChangeFrame.bind(this);
+        this._onStickyViewLayout = this._onStickyViewLayout.bind(this);
 
         Keyboard.addListener('keyboardWillShow', this._willShow);
         Keyboard.addListener('keyboardDidHide', this._didHide);
@@ -56,7 +59,7 @@ export default class extends Component {
 
 
     close() {
-        NativeModules.RNKeyboardViewManager.closeKeyboard(findNodeHandle(this.refs.keyboardView));
+        NativeModules.RNKeyboardViewManager.closeKeyboard();
     }
 
     showKeyboard() {
@@ -83,15 +86,20 @@ export default class extends Component {
         });
     }
 
+    _active = false;
+    _stickyViewHeight = 0;
+
     _willShow({ endCoordinates: { height } }) {
+        this._active = true;
         this._lastFrameHeight = height;
         const { onShow } = this.props;
-        onShow && onShow(this.state.contentVisible, height);
+        onShow && onShow(this.state.contentVisible, height + this._stickyViewHeight);
     }
 
     _didHide() {
+        this._active = false;
         const { onHide } = this.props;
-        onHide && onHide(this.state.contentVisible, 0);
+        onHide && onHide(this.state.contentVisible, this._stickyViewHeight);
     }
 
     _willChangeFrame({
@@ -107,7 +115,16 @@ export default class extends Component {
 
     _onChangeFrame(height = this._lastFrameHeight) {
         const { onKeyboardChanged } = this.props;
-        onKeyboardChanged && onKeyboardChanged(this.state.contentVisible, height);
+        onKeyboardChanged && onKeyboardChanged(this.state.contentVisible, height + this._stickyViewHeight);
+    }
+
+    _onStickyViewLayout({ nativeEvent: { layout: { height } } }) {
+        if (this._stickyViewHeight !== height) {
+            this._stickyViewHeight = height;
+            if (this._active) {
+                this._onChangeFrame();
+            }
+        }
     }
 
     render() {
@@ -120,13 +137,12 @@ export default class extends Component {
         return (
             <Modal visible={true} style={styles.keyboard}>
                 <KeyboardView
-                    ref="keyboardView"
                     pointerEvents="none"
                     synchronouslyUpdateTransform={!!transform}
                     style={[styles.keyboard, transform && {transform}]}>
                     <View pointerEvents="box-none">
                         <View style={styles.cover} pointerEvents="box-none">{cover}</View>
-                        <View>{stickyView}</View>
+                        <View onLayout={this._onStickyViewLayout}>{stickyView}</View>
                         <View
                             style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible}}
                             pointerEvents={contentVisible ? 'box-none' : 'none'}

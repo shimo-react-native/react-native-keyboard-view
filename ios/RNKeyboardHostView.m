@@ -174,9 +174,4 @@
     _isPresented = NO;
 }
 
--(void)closeKeyboard
-{
-    [[UIApplication sharedApplication].keyWindow endEditing:YES];
-}
-
 @end

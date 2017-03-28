@@ -11,6 +11,4 @@
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
 
-- (void)closeKeyboard;
-
 @end
