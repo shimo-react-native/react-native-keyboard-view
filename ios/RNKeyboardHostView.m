@@ -163,7 +163,7 @@
     if ([_manager isKeyboardVisible]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [UIView performWithoutAnimation:^() {
-                [self closeKeyboard];
+                [[UIApplication sharedApplication].keyWindow endEditing:YES];
                 [_manager keyboardWindow].transform = CGAffineTransformIdentity;
                 [_containerView removeFromSuperview];
             }];
