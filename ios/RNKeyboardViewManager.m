@@ -60,7 +60,9 @@ RCT_EXPORT_VIEW_PROPERTY(synchronouslyUpdateTransform, BOOL)
 
 RCT_EXPORT_METHOD(closeKeyboard)
 {
-    [[UIApplication sharedApplication].keyWindow endEditing:YES];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[UIApplication sharedApplication].keyWindow endEditing:YES];
+    });
 }
 
 @end
