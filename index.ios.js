@@ -140,15 +140,18 @@ export default class extends Component {
                     pointerEvents="none"
                     synchronouslyUpdateTransform={!!transform}
                     style={[styles.keyboard, transform && {transform}]}>
-                    <View pointerEvents="box-none">
-                        <View style={styles.cover} pointerEvents="box-none">{cover}</View>
-                        <View onLayout={this._onStickyViewLayout}>{stickyView}</View>
+                    <View pointerEvents="box-none" >
                         <View
                             style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible}}
                             pointerEvents={contentVisible ? 'box-none' : 'none'}
                         >
                             {children}
                         </View>
+                    </View>
+                    <View pointerEvents="box-none" >
+                        <View style={styles.cover} pointerEvents="box-none">{cover}</View>
+                        <View onLayout={this._onStickyViewLayout}>{stickyView}</View>
+                        <View pointerEvents="none" />
                     </View>
                 </KeyboardView>
             </Modal>
