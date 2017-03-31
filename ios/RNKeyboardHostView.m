@@ -48,11 +48,11 @@
     [super insertReactSubview:subview atIndex:atIndex];
     if (atIndex == 0) {
         RCTAssert(_containerView == nil, @"KeyboardView ContainerView is already existed.");
-        [subview addGestureRecognizer:_containerTouchHandler];
+        [_containerTouchHandler attachToView:subview];
         _containerView = subview;
     } else if (atIndex == 1) {
         RCTAssert(_stickyView == nil, @"KeyboardView StickyView is already existed.");
-        [subview addGestureRecognizer:_stickyViewTouchHandler];
+        [_stickyViewTouchHandler attachToView:subview];
         _stickyView = subview;
     }
 }
@@ -61,10 +61,10 @@
 {
     [super removeReactSubview:subview];
     if (subview == _containerView) {
-        [subview removeGestureRecognizer:_containerTouchHandler];
+        [_containerTouchHandler detachFromView:subview];
         _containerView = nil;
     } else if (subview == _stickyView) {
-        [subview removeGestureRecognizer:_stickyViewTouchHandler];
+        [_stickyViewTouchHandler detachFromView:subview];
         _stickyView = nil;
     }
 }
@@ -184,11 +184,11 @@
                 [_manager keyboardWindow].transform = _stickyView.transform = CGAffineTransformIdentity;
                 
                 [_containerView removeFromSuperview];
-                [_containerView removeGestureRecognizer:_containerTouchHandler];
+                [_containerTouchHandler detachFromView:_containerView];
                 _containerView = nil;
                 
                 [_stickyView removeFromSuperview];
-                [_stickyView removeGestureRecognizer:_stickyViewTouchHandler];
+                [_stickyViewTouchHandler detachFromView:_stickyView];
                 _stickyView = nil;
             }];
         });
