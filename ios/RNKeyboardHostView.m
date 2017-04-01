@@ -11,18 +11,22 @@
 {
     __weak RCTBridge *_bridge;
     __weak UIView *_containerView;
+    __weak UIView *_stickyView;
     __weak YYKeyboardManager *_manager;
     __weak UIWindow *_keyboardWindow;
     BOOL _isPresented;
-    RCTTouchHandler *_touchHandler;
+    RCTTouchHandler *_containerTouchHandler;
+    RCTTouchHandler *_stickyViewTouchHandler;
 }
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge
 {
     if ((self = [super initWithFrame:CGRectZero])) {
         _bridge = bridge;
-        _touchHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
+        _containerTouchHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
+        _stickyViewTouchHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
         _manager = [YYKeyboardManager defaultManager];
+        [_manager addObserver:self];
     }
     return self;
 }
@@ -41,19 +45,28 @@
 
 - (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex
 {
-    RCTAssert(_containerView == nil, @"Keyboard view can only have one subview");
     [super insertReactSubview:subview atIndex:atIndex];
-    [subview addGestureRecognizer:_touchHandler];
-    _containerView = subview;
-    [_manager addObserver:self];
+    if (atIndex == 0) {
+        RCTAssert(_containerView == nil, @"KeyboardView ContainerView is already existed.");
+        [_containerTouchHandler attachToView:subview];
+        _containerView = subview;
+    } else if (atIndex == 1) {
+        RCTAssert(_stickyView == nil, @"KeyboardView StickyView is already existed.");
+        [_stickyViewTouchHandler attachToView:subview];
+        _stickyView = subview;
+    }
 }
 
 - (void)removeReactSubview:(UIView *)subview
 {
-    RCTAssert(subview == _containerView, @"Cannot remove view other than keyboard view");
     [super removeReactSubview:subview];
-    [subview removeGestureRecognizer:_touchHandler];
-    _containerView = nil;
+    if (subview == _containerView) {
+        [_containerTouchHandler detachFromView:subview];
+        _containerView = nil;
+    } else if (subview == _stickyView) {
+        [_stickyViewTouchHandler detachFromView:subview];
+        _stickyView = nil;
+    }
 }
 
 - (void)didUpdateReactSubviews
@@ -71,12 +84,12 @@
 - (void)synchronousTransform
 {
     if (_manager.keyboardVisible && _synchronouslyUpdateTransform) {
-        _keyboardWindow.transform = self.transform;
+        _keyboardWindow.transform = _stickyView.transform = self.transform;
     }
 }
 
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
-    if (!_containerView.subviews.count) {
+    if (!_containerView || !_stickyView) {
         return;
     }
 
@@ -96,6 +109,7 @@
             [self synchronousTransform];
         }];
         [_keyboardWindow addSubview:_containerView];
+        [self.window addSubview:_stickyView];
         _isPresented = YES;
     } else if (!toVisible) {
         _isPresented = NO;
@@ -103,7 +117,8 @@
 
     // Set content height.
     if (toVisible) {
-        [_bridge.uiManager setSize:toFrame.size forView:_containerView.subviews.lastObject];
+        [_bridge.uiManager setSize:toFrame.size forView:_containerView.subviews.firstObject];
+        [_bridge.uiManager setSize:toFrame.size forView:_stickyView.subviews.lastObject];
     }
 
     toFrame.size.height += [self getStickyViewHeight];
@@ -130,19 +145,21 @@
                      completion:^(BOOL finished) {
                          if (finished && !toVisible) {
                              [_containerView removeFromSuperview];
+                             [_stickyView removeFromSuperview];
                          }
                      }];
 }
 
 - (CGFloat)getStickyViewHeight
 {
-    return CGRectGetHeight(_containerView.subviews[1].bounds);
+    return CGRectGetHeight(_stickyView.subviews[1].bounds);
 }
 
 - (void)setAdjustedContainerFrame:(CGRect)frame direction:(BOOL)direction
 {
     frame.origin.y = direction ? frame.size.height : 0;
     [_containerView reactSetFrame:frame];
+    [_stickyView reactSetFrame:frame];
 }
 
 - (void)setAdjustedKeyboardFrame:(CGRect)frame direction:(BOOL)direction
@@ -163,20 +180,22 @@
     if ([_manager isKeyboardVisible]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [UIView performWithoutAnimation:^() {
-                [self closeKeyboard];
-                [_manager keyboardWindow].transform = CGAffineTransformIdentity;
+                [[UIApplication sharedApplication].keyWindow endEditing:YES];
+                [_manager keyboardWindow].transform = _stickyView.transform = CGAffineTransformIdentity;
+                
                 [_containerView removeFromSuperview];
+                [_containerTouchHandler detachFromView:_containerView];
+                _containerView = nil;
+                
+                [_stickyView removeFromSuperview];
+                [_stickyViewTouchHandler detachFromView:_stickyView];
+                _stickyView = nil;
             }];
         });
     }
 
     [_manager removeObserver:self];
     _isPresented = NO;
-}
-
--(void)closeKeyboard
-{
-    [[UIApplication sharedApplication].keyWindow endEditing:YES];
 }
 
 @end

@@ -58,12 +58,11 @@ RCT_EXPORT_MODULE()
 
 RCT_EXPORT_VIEW_PROPERTY(synchronouslyUpdateTransform, BOOL)
 
-RCT_EXPORT_METHOD(closeKeyboard:(nonnull NSNumber *)reactTag)
+RCT_EXPORT_METHOD(closeKeyboard)
 {
-    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
-        RNKeyboardHostView *view = viewRegistry[reactTag];
-        [view closeKeyboard];
-    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[UIApplication sharedApplication].keyWindow endEditing:YES];
+    });
 }
 
 @end
