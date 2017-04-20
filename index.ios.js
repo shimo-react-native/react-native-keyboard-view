@@ -153,12 +153,12 @@ export default class extends Component {
         const KeyboardView = transform ? AnimatedKeyboardView : RNKeyboardView;
 
         return (
-            <Modal visible={true} style={styles.keyboard}>
+            <Modal visible={this.props.visible} style={styles.keyboard}>
                 <KeyboardView
                     pointerEvents="none"
                     synchronouslyUpdateTransform={!!transform}
                     style={[styles.keyboard, transform && {transform}]}>
-                    <View pointerEvents={visible ? 'box-none' : 'none'} style={!visible && styles.hide}>
+                    <View pointerEvents="box-none">
                         <View
                             style={[{backgroundColor: backgroundColor || '#fff'}, !contentVisible && styles.hide]}
                             pointerEvents={contentVisible ? 'box-none' : 'none'}
@@ -166,7 +166,7 @@ export default class extends Component {
                             {children}
                         </View>
                     </View>
-                    <View pointerEvents={visible ? 'box-none' : 'none'} style={!visible && styles.hide}>
+                    <View pointerEvents="box-none">
                         <View style={styles.cover} pointerEvents="box-none">{cover}</View>
                         <View onLayout={this._onStickyViewLayout}>{stickyView}</View>
                         <View pointerEvents="none" />

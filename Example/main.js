@@ -134,33 +134,32 @@ class Keyboard extends Component {
                         source={require('./text.html')}
                     />*/}
                 </View>
-                {this.state.visible && (
-                    <KeyboardView
-                        ref={KEYBOARD_VIEW}
-                        backgroundColor="#fff"
-                        onShow={(state, height) => console.log('onShow', state, height)}
-                        onHide={(state) => console.log('onHide', state)}
-                        onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
-                        renderCover={() => <View pointerEvents="none" style={{flex: 1, backgroundColor: 'rgba(0, 0,0, 0.2)'}} />}
-                        renderStickyView={this._renderStickyView}>
-                        <ScrollView
-                            keyboardShouldPersistTaps="always"
-                            style={{flex: 1,  backgroundColor: '#fff'}}>
-                            <View style={styles.keyboard}>
-                                <Text style={styles.keyboardText}>KEYBOARD REPLACEMENT</Text>
+                <KeyboardView
+                    ref={KEYBOARD_VIEW}
+                    visible={this.state.visible}
+                    backgroundColor="#fff"
+                    onShow={(state, height) => console.log('onShow', state, height)}
+                    onHide={(state) => console.log('onHide', state)}
+                    onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
+                    renderCover={() => <View pointerEvents="none" style={{flex: 1, backgroundColor: 'rgba(0, 0,0, 0.2)'}} />}
+                    renderStickyView={this._renderStickyView}>
+                    <ScrollView
+                        keyboardShouldPersistTaps="always"
+                        style={{flex: 1,  backgroundColor: '#fff'}}>
+                        <View style={styles.keyboard}>
+                            <Text style={styles.keyboardText}>KEYBOARD REPLACEMENT</Text>
+                        </View>
+                        <TouchableHighlight
+                            style={styles.button}
+                            onPress={this._blur.bind(this)}
+                            underlayColor="#ccc"
+                        >
+                            <View style={styles.buttonContent}>
+                                <Text style={styles.buttonText}>BLUR</Text>
                             </View>
-                            <TouchableHighlight
-                                style={styles.button}
-                                onPress={this._blur.bind(this)}
-                                underlayColor="#ccc"
-                            >
-                                <View style={styles.buttonContent}>
-                                    <Text style={styles.buttonText}>BLUR</Text>
-                                </View>
-                            </TouchableHighlight>
-                        </ScrollView>
-                    </KeyboardView>
-                )}
+                        </TouchableHighlight>
+                    </ScrollView>
+                </KeyboardView>
             </View>
         );
     }

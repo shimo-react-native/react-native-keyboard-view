@@ -79,11 +79,42 @@
     }
 }
 
+- (void)didMoveToSuperview
+{
+    if (!self.superview || _isPresented) {
+        return;
+    }
+
+    dispatch_async(RCTGetUIManagerQueue(), ^{
+        [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+            if ([_manager isKeyboardVisible]) {
+                _keyboardWindow = [_manager keyboardWindow];
+                CGRect keyboardFrame = [_manager keyboardFrame];
+                [self present];
+                [_bridge.uiManager setSize:keyboardFrame.size forView:_contentView.subviews.firstObject];
+                [_bridge.uiManager setSize:keyboardFrame.size forView:_stickyView.subviews.lastObject];
+                [self setAdjustedContainerFrame:keyboardFrame direction:NO];
+            }
+        }];
+        [_bridge.uiManager partialBatchDidFlush];
+    });
+}
+
 - (void)synchronousTransform
 {
     if (_manager.keyboardVisible && _synchronouslyUpdateTransform) {
         _keyboardWindow.transform = _stickyView.transform = self.transform;
     }
+}
+
+- (void)present
+{
+    [UIView performWithoutAnimation:^() {
+        [self synchronousTransform];
+    }];
+    [_keyboardWindow addSubview:_contentView];
+    [self.window addSubview:_stickyView];
+    _isPresented = YES;
 }
 
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
@@ -92,7 +123,7 @@
     }
 
     _keyboardWindow = [_manager keyboardWindow];
-    UIView *keyboardView = [_manager keyboardView];
+    CGRect keyboardFrame = [_manager keyboardFrame];
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
     CGRect toFrame = [_manager convertRect:transition.toFrame toView:nil];
@@ -103,12 +134,7 @@
     }
 
     if (!fromVisible && !_isPresented) {
-        [UIView performWithoutAnimation:^() {
-            [self synchronousTransform];
-        }];
-        [_keyboardWindow addSubview:_contentView];
-        [self.window addSubview:_stickyView];
-        _isPresented = YES;
+        [self present];
     } else if (!toVisible) {
         _isPresented = NO;
     }
@@ -121,12 +147,12 @@
 
     toFrame.size.height += [self getStickyViewHeight];
 
-    [UIView performWithoutAnimation:^() {
-        if (!fromVisible) {
-            [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
+    if (!fromVisible) {
+        [UIView performWithoutAnimation:^() {
+            [self setAdjustedKeyboardFrame:keyboardFrame direction:YES];
             [self setAdjustedContainerFrame:toFrame direction:YES];
-        }
-    }];
+        }];
+    }
 
     [UIView animateWithDuration:transition.animationDuration
                           delay:0
@@ -134,10 +160,10 @@
                      animations:^() {
                          if (!fromVisible) {
                              [self setAdjustedContainerFrame:toFrame direction:NO];
-                             [self setAdjustedKeyboardFrame:keyboardView.frame direction:NO];
+                             [self setAdjustedKeyboardFrame:keyboardFrame direction:NO];
                          } else if (!toVisible) {
                              [self setAdjustedContainerFrame:toFrame direction:YES];
-                             [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
+                             [self setAdjustedKeyboardFrame:keyboardFrame direction:YES];
                          }
                      }
                      completion:^(BOOL finished) {
@@ -173,12 +199,11 @@
 
 }
 
--(void)invalidate
+- (void)invalidate
 {
     if ([_manager isKeyboardVisible]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [UIView performWithoutAnimation:^() {
-                [[UIApplication sharedApplication].keyWindow endEditing:YES];
                 [_manager keyboardWindow].transform = _stickyView.transform = CGAffineTransformIdentity;
 
                 [_contentView removeFromSuperview];
