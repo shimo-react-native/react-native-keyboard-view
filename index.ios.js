@@ -14,6 +14,10 @@ const styles = StyleSheet.create({
 
     cover: {
         flex: 1
+    },
+
+    hide: {
+        opacity: 0
     }
 });
 
@@ -22,6 +26,7 @@ export default class extends Component {
 
     static propTypes = {
         initialState: PropTypes.bool,
+        visible: PropTypes.bool,
         backgroundColor: PropTypes.string,
         renderStickyView: PropTypes.func,
         renderCover: PropTypes.func,
@@ -31,12 +36,17 @@ export default class extends Component {
         transform: PropTypes.array
     };
 
+    static defaultProps = {
+        visible: true
+    };
+
     static dismiss = () => { NativeModules.RNKeyboardViewManager.closeKeyboard(); };
 
     constructor(props) {
         super(props);
         this.state = {
-            contentVisible: props.initialState || false
+            contentVisible: props.initialState || false,
+            visible: props.visible
         };
     }
 
@@ -49,6 +59,14 @@ export default class extends Component {
         Keyboard.addListener('keyboardWillShow', this._willShow);
         Keyboard.addListener('keyboardDidHide', this._didHide);
         Keyboard.addListener('keyboardWillChangeFrame', this._willChangeFrame);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.visible !== this.props.visible) {
+            this.setState({
+                visible: nextProps.visible
+            });
+        }
     }
 
     componentWillUnmount() {
@@ -129,7 +147,7 @@ export default class extends Component {
 
     render() {
         const { backgroundColor, children, renderStickyView, renderCover, transform } = this.props;
-        const { contentVisible } = this.state;
+        const { contentVisible, visible } = this.state;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCover && renderCover();
         const KeyboardView = transform ? AnimatedKeyboardView : RNKeyboardView;
@@ -140,15 +158,15 @@ export default class extends Component {
                     pointerEvents="none"
                     synchronouslyUpdateTransform={!!transform}
                     style={[styles.keyboard, transform && {transform}]}>
-                    <View pointerEvents="box-none" >
+                    <View pointerEvents={visible ? 'box-none' : 'none'} style={!visible && styles.hide}>
                         <View
-                            style={{backgroundColor: backgroundColor || '#fff', opacity: +contentVisible}}
+                            style={[{backgroundColor: backgroundColor || '#fff'}, !contentVisible && styles.hide]}
                             pointerEvents={contentVisible ? 'box-none' : 'none'}
                         >
                             {children}
                         </View>
                     </View>
-                    <View pointerEvents="box-none" >
+                    <View pointerEvents={visible ? 'box-none' : 'none'} style={!visible && styles.hide}>
                         <View style={styles.cover} pointerEvents="box-none">{cover}</View>
                         <View onLayout={this._onStickyViewLayout}>{stickyView}</View>
                         <View pointerEvents="none" />

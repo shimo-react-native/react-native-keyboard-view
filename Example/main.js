@@ -6,8 +6,7 @@ import {
     View,
     TextInput,
     TouchableHighlight,
-    ScrollView,
-    WebView
+    ScrollView
 } from 'react-native';
 
 import KeyboardView from 'react-native-keyboard-view';
@@ -16,8 +15,11 @@ const KEYBOARD_VIEW = 'KEYBOARD_VIEW';
 
 class Keyboard extends Component {
 
-    _open() {
-        this.refs[KEYBOARD_VIEW].open();
+    constructor(props) {
+        super(props);
+        this.state = {
+            visible: true
+        };
     }
 
     _close() {
@@ -67,15 +69,6 @@ class Keyboard extends Component {
                 <View style={styles.actions}>
                     <TouchableHighlight
                         style={styles.button}
-                        onPress={this._open.bind(this)}
-                        underlayColor="#ccc"
-                    >
-                        <View style={styles.buttonContent}>
-                            <Text style={styles.buttonText}>OPEN</Text>
-                        </View>
-                    </TouchableHighlight>
-                    <TouchableHighlight
-                        style={styles.button}
                         onPress={this._close.bind(this)}
                         underlayColor="#ccc"
                     >
@@ -119,6 +112,15 @@ class Keyboard extends Component {
                             <Text style={styles.buttonText}>BLUR</Text>
                         </View>
                     </TouchableHighlight>
+                    <TouchableHighlight
+                        style={styles.button}
+                        onPress={() => this.setState({visible: !this.state.visible})}
+                        underlayColor="#ccc"
+                    >
+                        <View style={styles.buttonContent}>
+                            <Text style={styles.buttonText}>TOGGLE VISIBLE</Text>
+                        </View>
+                    </TouchableHighlight>
                 </View>
                 <TextInput
                     ref="input"
@@ -127,19 +129,20 @@ class Keyboard extends Component {
                     style={styles.input}
                 />
                 <View style={styles.webviewContainer}>
-                    <WebView
+                    {/*<WebView
                         style={styles.webview}
                         source={require('./text.html')}
-                    />
+                    />*/}
                 </View>
-                <KeyboardView
-                    ref={KEYBOARD_VIEW}
-                    height={300}
-                    backgroundColor="#fff"
-                    onShow={(state, height) => console.log('onShow', state, height)}
-                    onHide={(state) => console.log('onHide', state)}
-                    onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
-                    renderStickyView={this._renderStickyView}>
+                {this.state.visible && (
+                    <KeyboardView
+                        ref={KEYBOARD_VIEW}
+                        backgroundColor="#fff"
+                        onShow={(state, height) => console.log('onShow', state, height)}
+                        onHide={(state) => console.log('onHide', state)}
+                        onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
+                        renderCover={() => <View pointerEvents="none" style={{flex: 1, backgroundColor: 'rgba(0, 0,0, 0.2)'}} />}
+                        renderStickyView={this._renderStickyView}>
                         <ScrollView
                             keyboardShouldPersistTaps="always"
                             style={{flex: 1,  backgroundColor: '#fff'}}>
@@ -156,7 +159,8 @@ class Keyboard extends Component {
                                 </View>
                             </TouchableHighlight>
                         </ScrollView>
-                </KeyboardView>
+                    </KeyboardView>
+                )}
             </View>
         );
     }
@@ -172,7 +176,8 @@ const styles = StyleSheet.create({
     actions: {
         justifyContent: 'space-around',
         flexDirection: 'row',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        marginTop: -50
     },
 
     webviewContainer: {
