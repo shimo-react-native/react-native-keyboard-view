@@ -45,6 +45,7 @@
 
 - (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex
 {
+    [super insertReactSubview:subview atIndex:atIndex];
     if (atIndex == 0) {
         RCTAssert(_contentView == nil, @"KeyboardView ContainerView is already existed.");
         [_containerTouchHandler attachToView:subview];
@@ -58,6 +59,7 @@
 
 - (void)removeReactSubview:(UIView *)subview
 {
+    [super removeReactSubview:subview];
     if (subview == _contentView) {
         [_containerTouchHandler detachFromView:subview];
         _contentView = nil;
@@ -84,9 +86,10 @@
     if (!self.superview || _isPresented) {
         return;
     }
-
+    
+    __block RCTUIManager *uiManager = _bridge.uiManager;
     dispatch_async(RCTGetUIManagerQueue(), ^{
-        [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        [uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
             if ([_manager isKeyboardVisible]) {
                 _keyboardWindow = [_manager keyboardWindow];
                 CGRect keyboardFrame = [_manager keyboardFrame];
@@ -96,7 +99,8 @@
                 [self setAdjustedContainerFrame:keyboardFrame direction:NO];
             }
         }];
-        [_bridge.uiManager partialBatchDidFlush];
+        [uiManager setUnsafeFlushUIChangesBeforeBatchEnds:YES];
+        [uiManager partialBatchDidFlush];
     });
 }
 
@@ -123,7 +127,7 @@
     }
 
     _keyboardWindow = [_manager keyboardWindow];
-    CGRect keyboardFrame = [_manager keyboardFrame];
+    UIView *keyboardView = [_manager keyboardView];
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
     CGRect toFrame = [_manager convertRect:transition.toFrame toView:nil];
@@ -149,7 +153,7 @@
 
     if (!fromVisible) {
         [UIView performWithoutAnimation:^() {
-            [self setAdjustedKeyboardFrame:keyboardFrame direction:YES];
+            [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
             [self setAdjustedContainerFrame:toFrame direction:YES];
         }];
     }
@@ -160,10 +164,10 @@
                      animations:^() {
                          if (!fromVisible) {
                              [self setAdjustedContainerFrame:toFrame direction:NO];
-                             [self setAdjustedKeyboardFrame:keyboardFrame direction:NO];
+                             [self setAdjustedKeyboardFrame:keyboardView.frame direction:NO];
                          } else if (!toVisible) {
                              [self setAdjustedContainerFrame:toFrame direction:YES];
-                             [self setAdjustedKeyboardFrame:keyboardFrame direction:YES];
+                             [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
                          }
                      }
                      completion:^(BOOL finished) {
