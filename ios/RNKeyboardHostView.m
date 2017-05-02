@@ -209,14 +209,8 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             [UIView performWithoutAnimation:^() {
                 [_manager keyboardWindow].transform = _stickyView.transform = CGAffineTransformIdentity;
-
                 [_contentView removeFromSuperview];
-                [_containerTouchHandler detachFromView:_contentView];
-                _contentView = nil;
-
                 [_stickyView removeFromSuperview];
-                [_stickyViewTouchHandler detachFromView:_stickyView];
-                _stickyView = nil;
             }];
         });
     }
