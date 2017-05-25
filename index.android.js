@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { NativeModules, Keyboard, StyleSheet, BackAndroid, findNodeHandle, View,
+import { NativeModules, Keyboard, StyleSheet, BackHandler, findNodeHandle, View,
     requireNativeComponent } from 'react-native';
 
 const styles = StyleSheet.create({
@@ -45,13 +45,13 @@ export default class extends Component {
 
         Keyboard.addListener('keyboardDidShow', this._didShow);
         Keyboard.addListener('keyboardDidHide', this._didHide);
-        BackAndroid.addEventListener('hardwareBackPress', this._back);
+        BackHandler.addEventListener('hardwareBackPress', this._back);
     }
 
     componentWillUnmount() {
         Keyboard.removeListener('keyboardDidShow', this._didShow);
         Keyboard.removeListener('keyboardDidHide', this._didHide);
-        BackAndroid.removeEventListener('hardwareBackPress', this._back);
+        BackHandler.removeEventListener('hardwareBackPress', this._back);
     }
 
     _active = false;
