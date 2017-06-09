@@ -1,6 +1,5 @@
 package im.shimo.react.keyboard;
 
-import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -11,11 +10,7 @@ import com.facebook.react.uimanager.UIManagerModule;
 
 @ReactModule(name = KeyboardModule.NAME)
 public class KeyboardModule extends ReactContextBaseJavaModule {
-
-    /* package */ static final String FRAGMENT_TAG =
-            "im.shimo.react.keyboard.KeyboardModule";
-
-    /* package */ static final String NAME = "RNKeyboardModule";
+    /* package */ static final String NAME = "RNKeyboardViewManager";
 
     KeyboardModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -27,11 +22,12 @@ public class KeyboardModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void closeKeyboard(final int tag, final Promise promise) {
-        getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
-            public void execute (NativeViewHierarchyManager manager) {
-                KeyboardView view = (KeyboardView) manager.resolveView(tag);
-                promise.resolve(view.close());
+    public void dismiss() {
+        UIManagerModule uiManager = getReactApplicationContext().getNativeModule(UIManagerModule.class);
+        uiManager.addUIBlock(new UIBlock() {
+            @Override
+            public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+                KeyboardView.dismiss();
             }
         });
     }

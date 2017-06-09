@@ -45,8 +45,7 @@ export default class extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            contentVisible: props.initialState || false,
-            visible: props.visible
+            contentVisible: props.initialState || false
         };
     }
 
@@ -61,23 +60,10 @@ export default class extends Component {
         Keyboard.addListener('keyboardWillChangeFrame', this._willChangeFrame);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.visible !== this.props.visible) {
-            this.setState({
-                visible: nextProps.visible
-            });
-        }
-    }
-
     componentWillUnmount() {
         Keyboard.removeListener('keyboardWillShow', this._willShow);
         Keyboard.removeListener('keyboardDidHide', this._didHide);
         Keyboard.removeListener('keyboardWillChangeFrame', this._willChangeFrame);
-    }
-
-
-    close() {
-        NativeModules.RNKeyboardViewManager.closeKeyboard();
     }
 
     showKeyboard() {
@@ -146,19 +132,19 @@ export default class extends Component {
     }
 
     render() {
-        const { backgroundColor, children, renderStickyView, renderCover, transform } = this.props;
-        const { contentVisible, visible } = this.state;
+        const { backgroundColor, children, renderStickyView, renderCover, transform, visible } = this.props;
+        const { contentVisible } = this.state;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCover && renderCover();
         const KeyboardView = transform ? AnimatedKeyboardView : RNKeyboardView;
 
         return (
-            <Modal visible={this.props.visible} style={styles.keyboard}>
+            <Modal visible={true} style={styles.keyboard}>
                 <KeyboardView
                     pointerEvents="none"
                     synchronouslyUpdateTransform={!!transform}
                     style={[styles.keyboard, transform && {transform}]}>
-                    <View pointerEvents="box-none">
+                    <View pointerEvents={visible ? 'box-none' : 'none'} style={!visible && styles.hide}>
                         <View
                             style={[{backgroundColor: backgroundColor || '#fff'}, !contentVisible && styles.hide]}
                             pointerEvents={contentVisible ? 'box-none' : 'none'}
@@ -166,7 +152,7 @@ export default class extends Component {
                             {children}
                         </View>
                     </View>
-                    <View pointerEvents="box-none">
+                    <View pointerEvents={visible ? 'box-none' : 'none'} style={!visible && styles.hide}>
                         <View style={styles.cover} pointerEvents="box-none">{cover}</View>
                         <View onLayout={this._onStickyViewLayout}>{stickyView}</View>
                         <View pointerEvents="none" />

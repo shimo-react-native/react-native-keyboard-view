@@ -17,6 +17,10 @@ const styles = StyleSheet.create({
 
     cover: {
         flex: 1
+    },
+
+    hide: {
+        display: 'none'
     }
 });
 
@@ -37,6 +41,8 @@ export default class extends Component {
             contentVisible: false
         };
     }
+
+    static dismiss = () => { NativeModules.RNKeyboardViewManager.dismiss(); };
 
     componentWillMount() {
         this._didShow = this._didShow.bind(this);
@@ -121,7 +127,7 @@ export default class extends Component {
     }
 
     render() {
-        const { backgroundColor, children, renderStickyView, renderCover } = this.props;
+        const { backgroundColor, children, renderStickyView, renderCover, visible } = this.props;
         const { contentVisible } = this.state;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCover && renderCover();
@@ -131,7 +137,7 @@ export default class extends Component {
                 ref="keyboardView"
                 contentVisible={contentVisible}
                 style={styles.keyboard}>
-                <View pointerEvents="box-none" style={styles.container}>
+                <View pointerEvents="box-none" style={[styles.container, !visible && styles.hide]}>
                     <View style={[styles.container, styles.cover]} pointerEvents="box-none">{cover}</View>
                     <View>{stickyView}</View>
                     <View style={{backgroundColor: backgroundColor || '#fff'}}>

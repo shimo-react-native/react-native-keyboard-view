@@ -6,6 +6,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.JSTouchDispatcher;
 import com.facebook.react.uimanager.RootView;
@@ -17,14 +18,13 @@ import com.facebook.react.views.view.ReactViewGroup;
 class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
 
     private final JSTouchDispatcher mJSTouchDispatcher = new JSTouchDispatcher(this);
-    private KeyboardView mDelegatedKeyboardView;
     private int mTargetTag = -1;
-
+    private Callback mOnTouchOutsideCallback;
     private ViewGroup mContainerView;
 
-    public KeyboardRootViewGroup(Context context, KeyboardView delegate) {
+    public KeyboardRootViewGroup(Context context, Callback onTouchOutsideCallback) {
         super(context);
-        mDelegatedKeyboardView = delegate;
+        mOnTouchOutsideCallback = onTouchOutsideCallback;
     }
 
     @Override
@@ -97,7 +97,7 @@ class KeyboardRootViewGroup extends ReactViewGroup implements RootView {
                 mTargetTag = target;
             }
             if (mTargetTag == mContainerView.getId()) {
-                mDelegatedKeyboardView.onTouchEvent(event);
+                mOnTouchOutsideCallback.invoke(event);
             } else {
                 mJSTouchDispatcher.handleTouchEvent(event, getEventDispatcher());
             }
