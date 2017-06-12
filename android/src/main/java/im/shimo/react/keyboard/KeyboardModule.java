@@ -1,19 +1,21 @@
 package im.shimo.react.keyboard;
 
+import android.content.Context;
+import android.view.inputmethod.InputMethodManager;
+
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
-import com.facebook.react.uimanager.NativeViewHierarchyManager;
-import com.facebook.react.uimanager.UIBlock;
-import com.facebook.react.uimanager.UIManagerModule;
 
 @ReactModule(name = KeyboardModule.NAME)
 public class KeyboardModule extends ReactContextBaseJavaModule {
-    /* package */ static final String NAME = "RNKeyboardViewManager";
+    /* package */ static final String NAME = "KeyboardViewModule";
+    private InputMethodManager mInputMethodManager;
 
     KeyboardModule(ReactApplicationContext reactContext) {
         super(reactContext);
+        mInputMethodManager = (InputMethodManager) reactContext.getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
     @Override
@@ -23,12 +25,6 @@ public class KeyboardModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void dismiss() {
-        UIManagerModule uiManager = getReactApplicationContext().getNativeModule(UIManagerModule.class);
-        uiManager.addUIBlock(new UIBlock() {
-            @Override
-            public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
-                KeyboardView.dismiss();
-            }
-        });
+        mInputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
     }
 }

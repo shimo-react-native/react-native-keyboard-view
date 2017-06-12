@@ -4,12 +4,12 @@ import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.LayoutShadowNode;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
-import com.facebook.react.uimanager.annotations.ReactProp;
 
 @ReactModule(name = KeyboardViewManager.REACT_CLASS)
 public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
 
-    protected static final String REACT_CLASS = "RNKeyboardView";
+    protected static final String REACT_CLASS = "KeyboardView";
+    private KeyboardState mKeyboardState;
 
     @Override
     public String getName() {
@@ -18,7 +18,11 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
 
     @Override
     public KeyboardView createViewInstance(ThemedReactContext context) {
-        return new KeyboardView(context);
+        if (mKeyboardState == null && context.getCurrentActivity() != null) {
+            mKeyboardState = new KeyboardState(context.getCurrentActivity().findViewById(android.R.id.content));
+        }
+
+        return new KeyboardView(context, mKeyboardState);
     }
 
     @Override
@@ -30,11 +34,5 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     public void onDropViewInstance(KeyboardView view) {
         super.onDropViewInstance(view);
         view.onDropInstance();
-    }
-
-    @ReactProp(name = "contentVisible")
-    public void setContentVisible(KeyboardView view, boolean contentVisible) {
-        view.setContentVisible(contentVisible);
-
     }
 }

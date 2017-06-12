@@ -28,6 +28,8 @@ public class KeyboardPackage implements ReactPackage {
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         List<ViewManager> modules = new ArrayList<>();
         modules.add(new KeyboardViewManager());
+        modules.add(new KeyboardContentViewManager());
+        modules.add(new KeyboardCoverViewManager());
         return modules;
     }
 }
