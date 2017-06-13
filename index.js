@@ -22,7 +22,9 @@ export default class extends Component {
         onHide: PropTypes.func
     };
 
-    static dismiss = NativeModules.KeyboardViewModule.dismiss;
+    static dismiss = Platform.OS === 'ios' ?
+        NativeModules.RNKeyboardViewManager.dismiss :
+        NativeModules.KeyboardViewModule.dismiss;
 
     componentWillMount() {
         Keyboard.addListener('keyboardDidShow', this._didShow);
@@ -44,6 +46,11 @@ export default class extends Component {
         onHide && onHide();
     };
 
+
+    _shouldSetResponder() {
+        return true;
+    }
+
     render() {
         const { children, renderStickyView, renderCover, transform } = this.props;
         const stickyView = renderStickyView && renderStickyView();
@@ -59,6 +66,7 @@ export default class extends Component {
             <KeyboardView
                 style={[styles.offSteam, transform && { transform }]}
                 synchronouslyUpdateTransform={!!transform}
+                onStartShouldSetResponder={this._shouldSetResponder}
             >
                 {hasContent && (
                     <KeyboardContentView style={styles.offSteam}>{children}</KeyboardContentView>
@@ -74,10 +82,20 @@ export default class extends Component {
     }
 }
 
-const KeyboardView = requireNativeComponent('KeyboardView', null, Platform.OS === 'ios' ? {
-    nativeOnly: {
-        synchronouslyUpdateTransform: true
-    }
-} : null);
-const KeyboardContentView = requireNativeComponent('KeyboardContentView');
-const KeyboardCoverView = requireNativeComponent('KeyboardCoverView');
+let KeyboardView,
+    KeyboardContentView,
+    KeyboardCoverView;
+
+if (Platform.OS === 'ios') {
+    KeyboardView = requireNativeComponent('RNKeyboardView', null, {
+        nativeOnly: {
+            synchronouslyUpdateTransform: true
+        }
+    });
+    KeyboardContentView = requireNativeComponent('RNKeyboardContentView');
+    KeyboardCoverView = requireNativeComponent('RNKeyboardCoverView');
+} else {
+    KeyboardView = requireNativeComponent('KeyboardView');
+    KeyboardContentView = requireNativeComponent('KeyboardContentView');
+    KeyboardCoverView = requireNativeComponent('KeyboardCoverView');
+}
