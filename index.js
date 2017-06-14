@@ -5,11 +5,16 @@ const styles = StyleSheet.create({
     offSteam: {
         position: 'absolute',
         height: 0,
-        width: 0
+        width: 0,
+        overflow: 'hidden'
     },
 
     cover: {
         flex: 1
+    },
+
+    contentView: {
+        justifyContent: 'flex-end'
     }
 });
 
@@ -51,11 +56,34 @@ export default class extends Component {
         return true;
     }
 
+    _getContentView(children) {
+        if (Platform.OS === 'ios') {
+            return (
+                <KeyboardContentView style={styles.contentView} pointerEvents="box-none">
+                    <View>{children}</View>
+                </KeyboardContentView>
+            );
+        } else {
+            return (
+                <KeyboardContentView style={styles.offSteam}>{children}</KeyboardContentView>
+            );
+        }
+    }
+
+    _getCoverView(cover, stickyView) {
+        return (
+            <KeyboardCoverView style={styles.offSteam} pointerEvents="box-none">
+                <View style={styles.cover} pointerEvents="box-none">{cover}</View>
+                <View>{stickyView}</View>
+            </KeyboardCoverView>
+        );
+    }
+
     render() {
         const { children, renderStickyView, renderCover, transform } = this.props;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCover && renderCover();
-        const hasCover = !!Children.count(cover) || !!Children.count(stickyView);
+        const hasCover = (!!Children.count(cover) || !!Children.count(stickyView));
         const hasContent = Children.count(children) > 0;
 
         if (!hasContent && !hasCover) {
@@ -67,16 +95,10 @@ export default class extends Component {
                 style={[styles.offSteam, transform && { transform }]}
                 synchronouslyUpdateTransform={!!transform}
                 onStartShouldSetResponder={this._shouldSetResponder}
+                pointerEvents="none"
             >
-                {hasContent && (
-                    <KeyboardContentView style={styles.offSteam}>{children}</KeyboardContentView>
-                )}
-                {hasCover && (
-                    <KeyboardCoverView style={styles.offSteam}>
-                        <View style={styles.cover} pointerEvents="box-none">{cover}</View>
-                        <View>{stickyView}</View>
-                    </KeyboardCoverView>
-                )}
+                {hasContent && this._getContentView(children)}
+                {hasCover && this._getCoverView(cover, stickyView)}
             </KeyboardView>
         );
     }
@@ -99,3 +121,5 @@ if (Platform.OS === 'ios') {
     KeyboardContentView = requireNativeComponent('KeyboardContentView');
     KeyboardCoverView = requireNativeComponent('KeyboardCoverView');
 }
+
+
