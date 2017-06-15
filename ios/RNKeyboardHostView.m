@@ -63,19 +63,17 @@
 - (void)removeReactSubview:(__kindof UIView *)subview
 {
     if ([subview class] == [RNKeyboardContentView class]) {
-        _contentView.transform = CGAffineTransformIdentity;
         [_contentView removeFromSuperview];
         _contentView = nil;
     } else if ([subview class] == [RNKeyboardCoverView class]) {
-        _coverView.transform = CGAffineTransformIdentity;
         [_coverView removeFromSuperview];
         _coverView = nil;
     }
-    
+
     if (!_contentView && !_coverView) {
         [self destroy];
     }
-    
+
     [super removeReactSubview:subview];
 }
 
@@ -96,7 +94,7 @@
     if (!self.superview && _hasPresented) {
         [self destroy];
     }if (self.superview && !_hasPresented && [_manager isKeyboardVisible]) {
-        [self refreshLayout];        
+        [self refreshLayout];
     }
 }
 
@@ -125,31 +123,31 @@
     [UIView performWithoutAnimation:^() {
         [self synchronousTransform];
     }];
-    
+
     [_keyboardWindow addSubview:_contentView];
     [self.window addSubview:_coverView];
-    
+
     _hasPresented = YES;
 }
 
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition
 {
-    
+
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
     _keyboardState = toVisible;
-    
+
     if ((!fromVisible && !toVisible) || (!_coverView && !_contentView)) {
         return;
     }
-    
+
     _keyboardWindow = [_manager keyboardWindow];
     _keyboardWindow.transform = self.transform;
-    
+
     if (!fromVisible && !_hasPresented) {
         [self present];
     }
-    
+
     if (toVisible) {
         [self layoutContents];
     }
@@ -159,7 +157,7 @@
             [self setAdjustedContainerFrame:YES];
         }];
     }
-    
+
     [UIView animateWithDuration:transition.animationDuration
                           delay:0
                         options:transition.animationOption
@@ -184,16 +182,16 @@
     CGRect keyboardFrame = [_manager keyboardFrame];
     CGSize screenSize = RCTScreenSize();
     float coverHeight = screenSize.height - CGRectGetHeight(keyboardFrame);
-    
+
     dispatch_async(RCTGetUIManagerQueue(), ^{
         RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
         YGValue top = { .value = coverHeight, .unit = YGUnitPoint };
         _contentShadowView.top = top;
         _contentShadowView.size = keyboardFrame.size;
-        
+
         RCTShadowView *_coverShadowView = [self getShadowView:_coverView];
         _coverShadowView.size = CGSizeMake(screenSize.width, coverHeight);
-        
+
         [_bridge.uiManager setNeedsLayout];
     });
 
@@ -209,11 +207,11 @@
 - (void)setAdjustedContainerFrame:(BOOL)direction
 {
     CGSize size = [_manager keyboardFrame].size;
-    
+
     CGRect contentFrame = _contentView.frame;
     contentFrame.origin.y += direction ? size.height : 0;
     [_contentView reactSetFrame:contentFrame];
-    
+
     CGRect coverFrame = _coverView.frame;
     coverFrame.origin.y = direction ? size.height : 0;
     [_coverView reactSetFrame:coverFrame];
@@ -230,7 +228,7 @@
         [_coverView removeFromSuperview];
         _coverView = nil;
     });
-    
+
     [self destroy];
 }
 
