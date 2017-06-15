@@ -1,5 +1,6 @@
 import React, { Component, PropTypes, Children } from 'react';
-import { NativeModules, Keyboard, StyleSheet, View, requireNativeComponent, Platform } from 'react-native';
+import { NativeModules, Keyboard, StyleSheet, View, requireNativeComponent, Platform, Animated } from 'react-native';
+import Modal from 'react-native-root-modal'
 
 const styles = StyleSheet.create({
     offSteam: {
@@ -31,6 +32,10 @@ export default class extends Component {
         NativeModules.RNKeyboardViewManager.dismiss :
         NativeModules.KeyboardViewModule.dismiss;
 
+    static dismissWithoutAnimation = Platform.OS === 'ios' ?
+        NativeModules.RNKeyboardViewManager.dismissWithoutAnimation :
+        null;
+
     componentWillMount() {
         Keyboard.addListener('keyboardDidShow', this._didShow);
         Keyboard.addListener('keyboardDidHide', this._didHide);
@@ -59,7 +64,10 @@ export default class extends Component {
     _getContentView(children) {
         if (Platform.OS === 'ios') {
             return (
-                <KeyboardContentView style={styles.contentView} pointerEvents="box-none">
+                <KeyboardContentView
+                    style={styles.contentView}
+                    pointerEvents="box-none"
+                >
                     <View>{children}</View>
                 </KeyboardContentView>
             );
@@ -72,7 +80,10 @@ export default class extends Component {
 
     _getCoverView(cover, stickyView) {
         return (
-            <KeyboardCoverView style={styles.offSteam} pointerEvents="box-none">
+            <KeyboardCoverView
+                style={styles.offSteam}
+                pointerEvents="box-none"
+            >
                 <View style={styles.cover} pointerEvents="box-none">{cover}</View>
                 <View>{stickyView}</View>
             </KeyboardCoverView>
@@ -90,17 +101,23 @@ export default class extends Component {
             return null;
         }
 
-        return (
-            <KeyboardView
+        const KeyboardComponent = (Platform.OS === 'ios' && transform) ? AnimatedKeyboardView : KeyboardView;
+        const keyboard = (
+            <KeyboardComponent
                 style={[styles.offSteam, transform && { transform }]}
                 synchronouslyUpdateTransform={!!transform}
-                onStartShouldSetResponder={this._shouldSetResponder}
-                pointerEvents="none"
             >
                 {hasContent && this._getContentView(children)}
                 {hasCover && this._getCoverView(cover, stickyView)}
-            </KeyboardView>
+            </KeyboardComponent>
         );
+
+        return Platform.OS === 'ios' ? (
+            <Modal style={styles.offSteam} visible={true}>
+                {keyboard}
+            </Modal>
+        ) : keyboard;
+
     }
 }
 
@@ -122,4 +139,4 @@ if (Platform.OS === 'ios') {
     KeyboardCoverView = requireNativeComponent('KeyboardCoverView');
 }
 
-
+const AnimatedKeyboardView = Animated.createAnimatedComponent(KeyboardView);

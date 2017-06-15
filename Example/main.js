@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     },
 
     actions: {
-        justifyContent: 'space-around',
+        justifyContent: 'center',
         flexDirection: 'row',
         flexWrap: 'wrap',
         marginTop: -200

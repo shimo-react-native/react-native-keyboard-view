@@ -4,10 +4,11 @@
 #import "RNKeyboardHostView.h"
 #import "RCTShadowView.h"
 #import "RCTUtils.h"
+#import "YYKeyboardManager.h"
 
 @implementation RNKeyboardViewManager
 {
-      NSHashTable *_hostViews;
+    NSHashTable *_hostViews;
 }
 
 RCT_EXPORT_MODULE()
@@ -31,6 +32,18 @@ RCT_EXPORT_METHOD(dismiss)
     dispatch_async(dispatch_get_main_queue(), ^{
         [[UIApplication sharedApplication].keyWindow endEditing:YES];
     });
+}
+
+
+RCT_EXPORT_METHOD(dismissWithoutAnimation)
+{
+    if ([YYKeyboardManager defaultManager].isKeyboardVisible) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [UIView animateWithDuration:0 animations:^{
+                [[UIApplication sharedApplication].keyWindow endEditing:YES];
+            }];
+        });
+    }
 }
 
 @end
