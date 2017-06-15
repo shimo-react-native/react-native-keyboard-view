@@ -9,7 +9,7 @@
 #import "RNKeyboardCoverView.h"
 #import "RNKeyboardContentView.h"
 #import "RCTUtils.h"
-
+#import "RCTShadowView.h"
 
 @implementation RNKeyboardHostView
 {
@@ -72,8 +72,7 @@
     }
     
     if (!_contentView && !_coverView) {
-        [_manager removeObserver:self];
-        _hasPresented = NO;
+        [self destroy];
     }
     
     [super removeReactSubview:subview];
@@ -94,8 +93,7 @@
 - (void)didMoveToSuperview
 {
     if (!self.superview && _hasPresented) {
-        [_manager removeObserver:self];
-        _hasPresented = NO;
+        [self destroy];
     }if (self.superview && !_hasPresented && [_manager isKeyboardVisible]) {
         [self refreshLayout];        
     }
@@ -110,7 +108,6 @@
             [self layoutContents];
             [self setAdjustedContainerFrame:NO];
         }];
-        [_bridge.uiManager partialBatchDidFlush];
     });
 }
 
@@ -150,7 +147,9 @@
     
     if (!fromVisible && !_hasPresented) {
         [self present];
-    } else if (toVisible) {
+    }
+    
+    if (toVisible) {
         [self layoutContents];
     }
 
@@ -183,24 +182,27 @@
 {
     CGRect keyboardFrame = [_manager keyboardFrame];
     CGSize screenSize = RCTScreenSize();
-    [self setViewSize:_contentView
+    [self setSize:_contentView
                  size:screenSize];
-    [self setViewSize:_contentView.subviews.firstObject
+    [self setSize:_contentView.subviews.firstObject
                  size:keyboardFrame.size];
-    [self setViewSize:_coverView
+    [self setSize:_coverView
                  size:CGSizeMake(screenSize.width, screenSize.height - CGRectGetHeight(keyboardFrame))];
 }
 
-- (void)setViewSize:(__kindof UIView*)view size:(CGSize)size {
-    // We should ensure shadowView exists first.
-    // In certain cases the shaowView will be removed after `setViewSize` has been called.
+- (void)setSize:(__kindof UIView*)view size:(CGSize)size
+{
+    NSMutableDictionary<NSNumber *, RCTShadowView *> *shadowViewRegistry = [_bridge.uiManager valueForKey:@"shadowViewRegistry"];
+    NSNumber *reactTag = view.reactTag;
     dispatch_async(RCTGetUIManagerQueue(), ^{
-        if ([_bridge.uiManager viewNameForReactTag:view.reactTag]) {
-            // Then set setSize.
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [_bridge.uiManager setSize:size forView:view];
-            });
+        RCTShadowView *shadowView = shadowViewRegistry[reactTag];
+        
+        if (CGSizeEqualToSize(size, shadowView.size)) {
+            return;
         }
+        
+        shadowView.size = size;
+        [_bridge.uiManager setNeedsLayout];
     });
 }
 
@@ -220,13 +222,18 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIView performWithoutAnimation:^() {
             _keyboardWindow.transform = CGAffineTransformIdentity;
-            [_contentView removeFromSuperview];
-            _contentView = nil;
-            [_coverView removeFromSuperview];
-            _coverView = nil;
         }];
+        [_contentView removeFromSuperview];
+        _contentView = nil;
+        [_coverView removeFromSuperview];
+        _coverView = nil;
     });
     
+    [self destroy];
+}
+
+- (void)destroy
+{
     _hasPresented = NO;
     [_manager removeObserver:self];
 }
