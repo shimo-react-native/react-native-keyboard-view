@@ -62,20 +62,11 @@ export default class extends Component {
     }
 
     _getContentView(children) {
-        if (Platform.OS === 'ios') {
-            return (
-                <KeyboardContentView
-                    style={styles.contentView}
-                    pointerEvents="box-none"
-                >
-                    <View>{children}</View>
-                </KeyboardContentView>
-            );
-        } else {
-            return (
-                <KeyboardContentView style={styles.offSteam}>{children}</KeyboardContentView>
-            );
-        }
+        return (
+            <KeyboardContentView style={styles.offSteam}>
+                {children}
+            </KeyboardContentView>
+        );
     }
 
     _getCoverView(cover, stickyView) {
@@ -90,12 +81,16 @@ export default class extends Component {
         );
     }
 
+    _hasChildren(children) {
+        return children && Children.count(children) > 0;
+    }
+
     render() {
         const { children, renderStickyView, renderCover, transform } = this.props;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCover && renderCover();
-        const hasCover = (!!Children.count(cover) || !!Children.count(stickyView));
-        const hasContent = Children.count(children) > 0;
+        const hasCover = this._hasChildren(cover) || this._hasChildren(stickyView);
+        const hasContent = this._hasChildren(children);
 
         if (!hasContent && !hasCover) {
             return null;

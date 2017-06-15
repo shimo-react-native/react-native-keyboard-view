@@ -183,38 +183,39 @@
 {
     CGRect keyboardFrame = [_manager keyboardFrame];
     CGSize screenSize = RCTScreenSize();
-    [self setSize:_contentView
-                 size:screenSize];
-    [self setSize:_contentView.subviews.firstObject
-                 size:keyboardFrame.size];
-    [self setSize:_coverView
-                 size:CGSizeMake(screenSize.width, screenSize.height - CGRectGetHeight(keyboardFrame))];
+    float coverHeight = screenSize.height - CGRectGetHeight(keyboardFrame);
+    
+    dispatch_async(RCTGetUIManagerQueue(), ^{
+        RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
+        YGValue top = { .value = coverHeight, .unit = YGUnitPoint };
+        _contentShadowView.top = top;
+        _contentShadowView.size = keyboardFrame.size;
+        
+        RCTShadowView *_coverShadowView = [self getShadowView:_coverView];
+        _coverShadowView.size = CGSizeMake(screenSize.width, coverHeight);
+        
+        [_bridge.uiManager setNeedsLayout];
+    });
+
 }
 
-- (void)setSize:(__kindof UIView*)view size:(CGSize)size
+- (RCTShadowView *)getShadowView:(UIView *)view
 {
     NSMutableDictionary<NSNumber *, RCTShadowView *> *shadowViewRegistry = [_bridge.uiManager valueForKey:@"shadowViewRegistry"];
     NSNumber *reactTag = view.reactTag;
-    dispatch_async(RCTGetUIManagerQueue(), ^{
-        RCTShadowView *shadowView = shadowViewRegistry[reactTag];
-        
-        if (CGSizeEqualToSize(size, shadowView.size)) {
-            return;
-        }
-        
-        shadowView.size = size;
-        [_bridge.uiManager setNeedsLayout];
-    });
+    return shadowViewRegistry[reactTag];
 }
 
 - (void)setAdjustedContainerFrame:(BOOL)direction
 {
     CGSize size = [_manager keyboardFrame].size;
-    CGRect contentFrame = CGRectMake(0, direction ? size.height : 0, size.width, size.height);
+    
+    CGRect contentFrame = _contentView.frame;
+    contentFrame.origin.y += direction ? size.height : 0;
     [_contentView reactSetFrame:contentFrame];
     
     CGRect coverFrame = _coverView.frame;
-    coverFrame.origin = contentFrame.origin;
+    coverFrame.origin.y = direction ? size.height : 0;
     [_coverView reactSetFrame:coverFrame];
 }
 
