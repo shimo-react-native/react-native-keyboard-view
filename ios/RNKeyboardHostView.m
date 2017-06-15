@@ -1,15 +1,16 @@
 #import "RNKeyboardHostView.h"
 
-#import "RCTAssert.h"
-#import "RCTTouchHandler.h"
-#import "RCTUIManager.h"
-#import "UIView+React.h"
+#import <React/RCTAssert.h>
+#import <React/RCTTouchHandler.h>
+#import <React/RCTUIManager.h>
+#import <React/UIView+React.h>
 #import <React/RCTUtils.h>
 #import <UIKit/UIKit.h>
+#import <React/RCTUtils.h>
+#import <React/RCTShadowView.h>
+
 #import "RNKeyboardCoverView.h"
 #import "RNKeyboardContentView.h"
-#import "RCTUtils.h"
-#import "RCTShadowView.h"
 
 @implementation RNKeyboardHostView
 {

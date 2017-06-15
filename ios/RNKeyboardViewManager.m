@@ -1,9 +1,9 @@
 #import <React/RCTBridge.h>
 #import <React/RCTUIManager.h>
+#import <React/RCTShadowView.h>
+#import <React/RCTUtils.h>
 #import "RNKeyboardViewManager.h"
 #import "RNKeyboardHostView.h"
-#import "RCTShadowView.h"
-#import "RCTUtils.h"
 #import "YYKeyboardManager.h"
 
 @implementation RNKeyboardViewManager

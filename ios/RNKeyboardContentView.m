@@ -1,7 +1,7 @@
 #import "RNKeyboardContentView.h"
-#import "RCTTouchHandler.h"
-#import "RCTShadowView.h"
-#import "RCTUtils.h"
+#import <React/RCTTouchHandler.h>
+#import <React/RCTShadowView.h>
+#import <React/RCTUtils.h>
 
 @interface RNKeyboardShdowView : RCTShadowView
 
