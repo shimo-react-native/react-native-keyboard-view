@@ -13,7 +13,7 @@ public class KeyboardState {
     private Rect mVisibleViewArea;
     private int mMinKeyboardHeightDetected = (int) PixelUtil.toPixelFromDIP(60);
     private int mKeyboardHeight = 0;
-    private boolean mKeyboardStatus = false;
+    private boolean mKeyboardShowing = false;
     private ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
     private static ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
 
@@ -34,11 +34,11 @@ public class KeyboardState {
                     mKeyboardHeight = keyboardHeight;
                 }
 
-                mKeyboardStatus = mKeyboardHeight > mMinKeyboardHeightDetected;
+                mKeyboardShowing = mKeyboardHeight > mMinKeyboardHeightDetected;
 
                 for (int i = 0; i < mOnKeyboardChangeListeners.size(); i++) {
                     OnKeyboardChangeListener listener = mOnKeyboardChangeListeners.get(i);
-                    if (mKeyboardStatus) {
+                    if (mKeyboardShowing) {
                         listener.onKeyboardShown(DisplayMetricsHolder.getWindowDisplayMetrics().widthPixels, mKeyboardHeight);
                     } else {
                         listener.onKeyboardClosed();
@@ -68,8 +68,8 @@ public class KeyboardState {
         return DisplayMetricsHolder.getWindowDisplayMetrics().widthPixels;
     }
 
-    public boolean getKeyboardStatus() {
-        return mKeyboardStatus;
+    public boolean isKeyboardShowing() {
+        return mKeyboardShowing;
     }
 
     public interface OnKeyboardChangeListener {

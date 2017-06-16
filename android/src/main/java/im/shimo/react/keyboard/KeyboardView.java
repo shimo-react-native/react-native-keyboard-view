@@ -69,7 +69,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         if (child instanceof KeyboardContentView) {
             mContentView = child;
             mChildCount++;
-            if (mKeyboardState != null && mKeyboardState.getKeyboardStatus()) {
+            if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
                 showPopupWindow(mKeyboardState.getKeyboardWidth(), mKeyboardState.getKeyboardHeight());
             }
         } else if (child instanceof KeyboardCoverView) {
@@ -81,7 +81,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
                 }
             });
             mChildCount++;
-            if (mKeyboardState != null && mKeyboardState.getKeyboardStatus()) {
+            if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
                 showCover(mKeyboardState.getKeyboardWidth(), mKeyboardState.getKeyboardHeight());
             }
         }
