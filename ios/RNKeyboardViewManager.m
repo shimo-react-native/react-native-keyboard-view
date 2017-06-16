@@ -39,8 +39,11 @@ RCT_EXPORT_METHOD(dismissWithoutAnimation)
 {
     if ([YYKeyboardManager defaultManager].isKeyboardVisible) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [UIView animateWithDuration:0 animations:^{
+            [UIView performWithoutAnimation:^{
                 [[UIApplication sharedApplication].keyWindow endEditing:YES];
+            }];
+            [UIView animateWithDuration:0 animations:^{
+                
             }];
         });
     }
