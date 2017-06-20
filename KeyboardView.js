@@ -16,8 +16,14 @@ const styles = StyleSheet.create({
 
     contentView: {
         justifyContent: 'flex-end'
+    },
+
+    hide: {
+        opacity: 0
     }
 });
+
+const isIOS = Platform.OS === 'ios';
 
 export default class extends Component {
     static displayName = 'KeyboardView';
@@ -28,13 +34,13 @@ export default class extends Component {
         onHide: PropTypes.func
     };
 
-    static dismiss = Platform.OS === 'ios' ?
-        NativeModules.RNKeyboardViewManager.dismiss :
-        NativeModules.KeyboardViewModule.dismiss;
+    static dismiss = isIOS ?
+      NativeModules.RNKeyboardViewManager.dismiss :
+      NativeModules.KeyboardViewModule.dismiss;
 
-    static dismissWithoutAnimation = Platform.OS === 'ios' ?
-        NativeModules.RNKeyboardViewManager.dismissWithoutAnimation :
-        null;
+    static dismissWithoutAnimation = isIOS ?
+      NativeModules.RNKeyboardViewManager.dismissWithoutAnimation :
+      null;
 
     componentWillMount() {
         Keyboard.addListener('keyboardDidShow', this._didShow);
@@ -61,23 +67,38 @@ export default class extends Component {
         return true;
     }
 
-    _getContentView(children) {
+    _getContentView(children, visible) {
+        if (!isIOS && !visible) {
+            return null;
+        }
+
+        const hide = (isIOS && !visible) ? styles.hide : null;
+
         return (
-            <KeyboardContentView style={styles.offSteam}>
-                {children}
-            </KeyboardContentView>
+          <KeyboardContentView
+            style={[styles.offSteam, hide]}
+            pointerEvents="box-none"
+          >
+              {children}
+          </KeyboardContentView>
         );
     }
 
-    _getCoverView(cover, stickyView) {
+    _getCoverView(cover, stickyView, visible, transform) {
+        if (!isIOS && !visible) {
+            return null;
+        }
+
+        const hide = (isIOS && !visible) ? styles.hide : null;
+
         return (
-            <KeyboardCoverView
-                style={styles.offSteam}
-                pointerEvents="box-none"
-            >
-                <View style={styles.cover} pointerEvents="box-none">{cover}</View>
-                <View>{stickyView}</View>
-            </KeyboardCoverView>
+          <KeyboardCoverView
+            style={[styles.offSteam, hide]}
+            pointerEvents="box-none"
+          >
+              <View style={styles.cover} pointerEvents="box-none">{cover}</View>
+              <View>{stickyView}</View>
+          </KeyboardCoverView>
         );
     }
 
@@ -96,36 +117,43 @@ export default class extends Component {
             return null;
         }
 
-        const KeyboardComponent = (Platform.OS === 'ios' && transform) ? AnimatedKeyboardView : KeyboardView;
-        const keyboard = (
-            <KeyboardComponent
-                style={[styles.offSteam, transform && { transform }]}
-                synchronouslyUpdateTransform={!!transform}
-            >
-                {hasContent && this._getContentView(children)}
-                {hasCover && this._getCoverView(cover, stickyView)}
-            </KeyboardComponent>
-        );
-
-        return Platform.OS === 'ios' ? (
-            <Modal style={styles.offSteam} visible={true}>
-                {keyboard}
-            </Modal>
-        ) : keyboard;
-
+        if (isIOS) {
+            return (
+              <Modal style={styles.offSteam} visible={true}>
+                  <KeyboardView
+                    style={[styles.offSteam, transform && { transform }]}
+                    synchronouslyUpdateTransform={!!transform}
+                  >
+                      {this._getContentView(children, hasContent)}
+                      {this._getCoverView(cover, stickyView, hasCover)}
+                  </KeyboardView>
+              </Modal>
+            );
+        } else {
+            return (
+              <KeyboardView
+                style={styles.offSteam}
+              >
+                  {this._getContentView(children, hasContent)}
+                  {this._getCoverView(cover, stickyView, hasCover)}
+              </KeyboardView>
+            );
+        }
     }
 }
 
 let KeyboardView,
-    KeyboardContentView,
-    KeyboardCoverView;
+  KeyboardContentView,
+  KeyboardCoverView;
 
-if (Platform.OS === 'ios') {
+if (isIOS) {
     KeyboardView = requireNativeComponent('RNKeyboardView', null, {
         nativeOnly: {
             synchronouslyUpdateTransform: true
         }
     });
+
+    KeyboardView = Animated.createAnimatedComponent(KeyboardView);
     KeyboardContentView = requireNativeComponent('RNKeyboardContentView');
     KeyboardCoverView = requireNativeComponent('RNKeyboardCoverView');
 } else {
@@ -133,5 +161,3 @@ if (Platform.OS === 'ios') {
     KeyboardContentView = requireNativeComponent('KeyboardContentView');
     KeyboardCoverView = requireNativeComponent('KeyboardCoverView');
 }
-
-const AnimatedKeyboardView = Animated.createAnimatedComponent(KeyboardView);
