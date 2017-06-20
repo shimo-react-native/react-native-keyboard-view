@@ -56,6 +56,16 @@
     
     if (_contentView && _coverView) {
         [_manager addObserver:self];
+        
+        if (!_isPresented && [_manager isKeyboardVisible]) {
+            [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+                _keyboardWindow = [_manager keyboardWindow];
+                [self present];
+                [self layoutContents];
+            }];
+            [_bridge.uiManager setNeedsLayout];
+        }
+        
     }
     
     [super insertReactSubview:subview atIndex:atIndex];
@@ -91,14 +101,6 @@
     if (!self.superview && _isPresented) {
         [_manager removeObserver:self];
         _isPresented = NO;
-    } else if (self.superview && !_isPresented && [_manager isKeyboardVisible]) {
-        dispatch_async(RCTGetUIManagerQueue(), ^{
-            [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
-                _keyboardWindow = [_manager keyboardWindow];
-                [self present];
-                [self layoutContents];
-            }];
-        });
     }
 }
 
@@ -173,6 +175,7 @@
     CGRect keyboardFrame = [_manager keyboardFrame];
     CGSize screenSize = RCTScreenSize();
     float coverHeight = screenSize.height - CGRectGetHeight(keyboardFrame);
+    CGRect contentFrame = CGRectMake(0, coverHeight, keyboardFrame.size.width, keyboardFrame.size.height);
     
     dispatch_sync(RCTGetUIManagerQueue(), ^{
         RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
@@ -182,14 +185,15 @@
         _coverShadowView.size = CGSizeMake(screenSize.width, coverHeight);
         [_bridge.uiManager setNeedsLayout];
         
+        // setFrame twice or it will won't work,
+        // don't know why.
         dispatch_async(dispatch_get_main_queue(), ^{
-            [_contentView setFrame:CGRectMake(0, coverHeight, keyboardFrame.size.width, keyboardFrame.size.height)];
+            [_contentView setFrame:contentFrame];
         });
     });
     
     [UIView performWithoutAnimation:^{
-        [_contentView setFrame:CGRectMake(0, coverHeight, keyboardFrame.size.width, keyboardFrame.size.height)];
-    
+        [_contentView setFrame:contentFrame];
     }];
 }
 
