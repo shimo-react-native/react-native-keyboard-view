@@ -1,31 +1,14 @@
 #import <React/RCTBridge.h>
 #import <React/RCTUIManager.h>
+#import <React/RCTShadowView.h>
+#import <React/RCTUtils.h>
 #import "RNKeyboardViewManager.h"
 #import "RNKeyboardHostView.h"
-#import "RCTShadowView.h"
-#import "RCTUtils.h"
-
-@interface RNKeyboardShdowView : RCTShadowView
-
-@end
-
-@implementation RNKeyboardShdowView
-
-- (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex
-{
-    [super insertReactSubview:subview atIndex:atIndex];
-    if ([subview isKindOfClass:[RCTShadowView class]]) {
-        RCTShadowView *shadowView = (RCTShadowView *)subview;
-        shadowView.size = RCTScreenSize();
-        [shadowView setJustifyContent:YGJustifyFlexEnd];
-    }
-}
-
-@end
+#import "YYKeyboardManager.h"
 
 @implementation RNKeyboardViewManager
 {
-      NSHashTable *_hostViews;
+    NSHashTable *_hostViews;
 }
 
 RCT_EXPORT_MODULE()
@@ -42,27 +25,28 @@ RCT_EXPORT_MODULE()
     return view;
 }
 
-- (RCTShadowView *)shadowView
-{
-    return [RNKeyboardShdowView new];
-}
-
-
-- (void)invalidate
-{
-    for (RNKeyboardHostView *hostView in _hostViews) {
-        [hostView invalidate];
-    }
-    [_hostViews removeAllObjects];
-}
-
 RCT_EXPORT_VIEW_PROPERTY(synchronouslyUpdateTransform, BOOL)
 
-RCT_EXPORT_METHOD(closeKeyboard)
+RCT_EXPORT_METHOD(dismiss)
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         [[UIApplication sharedApplication].keyWindow endEditing:YES];
     });
+}
+
+
+RCT_EXPORT_METHOD(dismissWithoutAnimation)
+{
+    if ([YYKeyboardManager defaultManager].isKeyboardVisible) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [UIView performWithoutAnimation:^{
+                [[UIApplication sharedApplication].keyWindow endEditing:YES];
+            }];
+            [UIView animateWithDuration:0 animations:^{
+                
+            }];
+        });
+    }
 }
 
 @end

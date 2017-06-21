@@ -36,7 +36,7 @@ import KeyboardView from 'react-native-keyboard-view';
 class Example extends Component {
     
     close() {
-        this.refs.keyboard.close();
+        KeyboardView.dismiss();
     };
     
     _renderStickyView() {
@@ -54,14 +54,11 @@ class Example extends Component {
     render() {
         return (
             <KeyboardView
-                ref="keyboard"
-                onShow={(state, height) => console.log('onShow', state, height)}
-                onHide={(state) => console.log('onHide', state)}
-                onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
+                onShow={() => console.log('onShow')}
+                onHide={() => console.log('onHide')}
                 renderStickyView={this._renderStickyView}
                 renderCover={this._renderCover}
-                backgroundColor="rgba(0, 0, 0, 0.25)"
-                initialState={true}>
+            >
                 <View style={{flex: 1}} />
             </KeyboardView>
         );

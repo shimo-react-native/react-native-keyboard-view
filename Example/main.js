@@ -6,7 +6,8 @@ import {
     View,
     TextInput,
     TouchableHighlight,
-    ScrollView
+    ScrollView,
+    WebView
 } from 'react-native';
 
 import KeyboardView from 'react-native-keyboard-view';
@@ -18,24 +19,31 @@ class Keyboard extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            visible: true
+            visible: true,
+            contentVisible: false
         };
     }
 
     _close() {
-        this.refs[KEYBOARD_VIEW].close();
+        KeyboardView.dismiss();
     }
 
     _toggle() {
-        this.refs[KEYBOARD_VIEW].toggleKeyboard();
+        this.setState({
+            contentVisible: !this.state.contentVisible
+        });
     }
 
     _hide() {
-        this.refs[KEYBOARD_VIEW].hideKeyboard();
+        this.setState({
+            contentVisible: false
+        });
     }
 
     _show() {
-        this.refs[KEYBOARD_VIEW].showKeyboard();
+        this.setState({
+            contentVisible: true
+        });
     }
 
     _blur() {
@@ -64,6 +72,7 @@ class Keyboard extends Component {
     }
 
     render() {
+
         return (
             <View style={styles.container}>
                 <View style={styles.actions}>
@@ -82,7 +91,7 @@ class Keyboard extends Component {
                         underlayColor="#ccc"
                     >
                         <View style={styles.buttonContent}>
-                            <Text style={styles.buttonText}>TOGGLE KEYBOARD</Text>
+                            <Text style={styles.buttonText}>TOGGLE CONTENT</Text>
                         </View>
                     </TouchableHighlight>
                     <TouchableHighlight
@@ -91,7 +100,7 @@ class Keyboard extends Component {
                         underlayColor="#ccc"
                     >
                         <View style={styles.buttonContent}>
-                            <Text style={styles.buttonText}>HIDE KEYBOARD</Text>
+                            <Text style={styles.buttonText}>HIDE CONTENT</Text>
                         </View>
                     </TouchableHighlight>
                     <TouchableHighlight
@@ -100,7 +109,7 @@ class Keyboard extends Component {
                         underlayColor="#ccc"
                     >
                         <View style={styles.buttonContent}>
-                            <Text style={styles.buttonText}>SHOW KEYBOARD</Text>
+                            <Text style={styles.buttonText}>SHOW CONTENT</Text>
                         </View>
                     </TouchableHighlight>
                     <TouchableHighlight
@@ -122,43 +131,44 @@ class Keyboard extends Component {
                         </View>
                     </TouchableHighlight>
                 </View>
+
+                <View style={styles.webviewContainer}>
+                    <WebView
+                        style={styles.webview}
+                        source={require('./text.html')}
+                    />
+                </View>
                 <TextInput
                     ref="input"
                     underlineColorAndroid="transparent"
                     placeholder="empty"
                     style={styles.input}
                 />
-                <View style={styles.webviewContainer}>
-                    {/*<WebView
-                        style={styles.webview}
-                        source={require('./text.html')}
-                    />*/}
-                </View>
                 {this.state.visible && (
                     <KeyboardView
                         ref={KEYBOARD_VIEW}
-                        backgroundColor="#fff"
-                        onShow={(state, height) => console.log('onShow', state, height)}
-                        onHide={(state) => console.log('onHide', state)}
-                        onKeyboardChanged={(state, height) => console.log('onKeyboardChanged', state, height)}
+                        onShow={() => console.log('onShow')}
+                        onHide={() => console.log('onHide')}
                         renderCover={() => <View pointerEvents="none" style={{flex: 1, backgroundColor: 'rgba(0, 0,0, 0.2)'}} />}
                         renderStickyView={this._renderStickyView}>
-                        <ScrollView
-                            keyboardShouldPersistTaps="always"
-                            style={{flex: 1,  backgroundColor: '#fff'}}>
-                            <View style={styles.keyboard}>
-                                <Text style={styles.keyboardText}>KEYBOARD REPLACEMENT</Text>
-                            </View>
-                            <TouchableHighlight
-                                style={styles.button}
-                                onPress={this._blur.bind(this)}
-                                underlayColor="#ccc"
-                            >
-                                <View style={styles.buttonContent}>
-                                    <Text style={styles.buttonText}>BLUR</Text>
+                        {this.state.contentVisible && (
+                            <ScrollView
+                                keyboardShouldPersistTaps="always"
+                                style={{flex: 1,  backgroundColor: '#fff'}}>
+                                <View style={styles.keyboard}>
+                                    <Text style={styles.keyboardText}>KEYBOARD REPLACEMENT</Text>
                                 </View>
-                            </TouchableHighlight>
-                        </ScrollView>
+                                <TouchableHighlight
+                                    style={styles.button}
+                                    onPress={this._blur.bind(this)}
+                                    underlayColor="#ccc"
+                                >
+                                    <View style={styles.buttonContent}>
+                                        <Text style={styles.buttonText}>BLUR</Text>
+                                    </View>
+                                </TouchableHighlight>
+                            </ScrollView>
+                        )}
                     </KeyboardView>
                 )}
             </View>
@@ -174,14 +184,14 @@ const styles = StyleSheet.create({
     },
 
     actions: {
-        justifyContent: 'space-around',
+        justifyContent: 'center',
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginTop: -50
+        marginTop: -200
     },
 
     webviewContainer: {
-        width: 100,
+        width: 300,
         height: 30,
         borderWidth: StyleSheet.hairlineWidth,
         alignSelf: 'center'

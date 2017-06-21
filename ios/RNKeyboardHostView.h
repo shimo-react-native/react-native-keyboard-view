@@ -5,7 +5,7 @@
 #import <React/RCTView.h>
 #import <React/RCTBridge.h>
 
-@interface RNKeyboardHostView : UIView <RCTInvalidating, YYKeyboardObserver>
+@interface RNKeyboardHostView : RCTView <RCTInvalidating, YYKeyboardObserver>
 
 @property (nonatomic, assign) BOOL synchronouslyUpdateTransform;
 

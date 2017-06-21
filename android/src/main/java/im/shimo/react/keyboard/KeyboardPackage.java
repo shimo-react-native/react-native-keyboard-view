@@ -13,7 +13,7 @@ import java.util.List;
 public class KeyboardPackage implements ReactPackage {
 
     @Override
-    public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
+    public List<NativeModule> createNativeModules(final ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         modules.add(new KeyboardModule(reactContext));
         return modules;
@@ -28,6 +28,8 @@ public class KeyboardPackage implements ReactPackage {
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         List<ViewManager> modules = new ArrayList<>();
         modules.add(new KeyboardViewManager());
+        modules.add(new KeyboardContentViewManager());
+        modules.add(new KeyboardCoverViewManager());
         return modules;
     }
 }

@@ -1,32 +1,33 @@
 #import "RNKeyboardHostView.h"
 
-#import "RCTAssert.h"
-#import "RCTTouchHandler.h"
-#import "RCTUIManager.h"
-#import "UIView+React.h"
+#import <React/RCTAssert.h>
+#import <React/RCTTouchHandler.h>
+#import <React/RCTUIManager.h>
+#import <React/UIView+React.h>
 #import <React/RCTUtils.h>
 #import <UIKit/UIKit.h>
+#import <React/RCTUtils.h>
+#import <React/RCTShadowView.h>
+
+#import "RNKeyboardCoverView.h"
+#import "RNKeyboardContentView.h"
 
 @implementation RNKeyboardHostView
 {
     __weak RCTBridge *_bridge;
-    __weak UIView *_contentView;
-    __weak UIView *_stickyView;
+    __weak RNKeyboardContentView *_contentView;
+    __weak RNKeyboardCoverView *_coverView;
     __weak YYKeyboardManager *_manager;
     __weak UIWindow *_keyboardWindow;
+    BOOL _keyboardState;
     BOOL _isPresented;
-    RCTTouchHandler *_containerTouchHandler;
-    RCTTouchHandler *_stickyViewTouchHandler;
 }
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge
 {
     if ((self = [super initWithFrame:CGRectZero])) {
         _bridge = bridge;
-        _containerTouchHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
-        _stickyViewTouchHandler = [[RCTTouchHandler alloc] initWithBridge:_bridge];
         _manager = [YYKeyboardManager defaultManager];
-        [_manager addObserver:self];
     }
     return self;
 }
@@ -43,28 +44,41 @@
     _synchronouslyUpdateTransform = synchronouslyUpdateTransform;
 }
 
-- (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex
+- (void)insertReactSubview:(__kindof UIView *)subview atIndex:(NSInteger)atIndex
 {
-    if (atIndex == 0) {
+    if ([subview class] == [RNKeyboardContentView class]) {
         RCTAssert(_contentView == nil, @"KeyboardView ContainerView is already existed.");
-        [_containerTouchHandler attachToView:subview];
         _contentView = subview;
-    } else if (atIndex == 1) {
-        RCTAssert(_stickyView == nil, @"KeyboardView StickyView is already existed.");
-        [_stickyViewTouchHandler attachToView:subview];
-        _stickyView = subview;
+    } else if ([subview class] == [RNKeyboardCoverView class]) {
+        RCTAssert(_coverView == nil, @"KeyboardView StickyView is already existed.");
+        _coverView = subview;
+    }
+    
+    [super insertReactSubview:subview atIndex:atIndex];
+    
+    if (_contentView && _coverView) {
+        [_manager addObserver:self];
+        
+        if (!_isPresented && [_manager isKeyboardVisible]) {
+            dispatch_sync(RCTGetUIManagerQueue(), ^{
+                [self presendAndLayoutContents];
+            });
+        }
+        
     }
 }
 
-- (void)removeReactSubview:(UIView *)subview
+- (void)removeReactSubview:(__kindof UIView *)subview
 {
-    if (subview == _contentView) {
-        [_containerTouchHandler detachFromView:subview];
+    if ([subview class] == [RNKeyboardContentView class]) {
+        [_contentView removeFromSuperview];
         _contentView = nil;
-    } else if (subview == _stickyView) {
-        [_stickyViewTouchHandler detachFromView:subview];
-        _stickyView = nil;
+    } else if ([subview class] == [RNKeyboardCoverView class]) {
+        [_coverView removeFromSuperview];
+        _coverView = nil;
     }
+    
+    [super removeReactSubview:subview];
 }
 
 - (void)didUpdateReactSubviews
@@ -79,121 +93,139 @@
     }
 }
 
-- (void)synchronousTransform
+- (void)didMoveToSuperview
 {
-    if (_manager.keyboardVisible && _synchronouslyUpdateTransform) {
-        _keyboardWindow.transform = _stickyView.transform = self.transform;
+    if (!self.superview && _isPresented) {
+        [_manager removeObserver:self];
+        _isPresented = NO;
     }
 }
 
-- (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
-    if (!_contentView || !_stickyView) {
+- (void)synchronousTransform
+{
+    if (_manager.keyboardVisible && _synchronouslyUpdateTransform) {
+        _keyboardWindow.transform = self.transform;
+        _coverView.transform = self.transform;
+    }
+}
+
+- (void)present
+{
+    [UIView performWithoutAnimation:^() {
+        [self synchronousTransform];
+    }];
+    
+    [_keyboardWindow addSubview:_contentView];
+    [self.window addSubview:_coverView];
+}
+
+- (void)presendAndLayoutContents
+{
+    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        _keyboardWindow = [_manager keyboardWindow];
+        [self present];
+        [self layoutContents];
+    }];
+    [_bridge.uiManager setNeedsLayout];
+}
+
+- (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition
+{
+
+    BOOL fromVisible = transition.fromVisible;
+    BOOL toVisible = transition.toVisible;
+    
+    _keyboardState = toVisible;
+
+    if ((!fromVisible && !toVisible) ||(!_contentView || !_coverView)) {
         return;
     }
 
     _keyboardWindow = [_manager keyboardWindow];
-    UIView *keyboardView = [_manager keyboardView];
-    BOOL fromVisible = transition.fromVisible;
-    BOOL toVisible = transition.toVisible;
-    CGRect toFrame = [_manager convertRect:transition.toFrame toView:nil];
+    _keyboardWindow.transform = self.transform;
+    if (!fromVisible && !_isPresented) {
+        [self present];
+    }
 
-
-    if (!fromVisible && !toVisible) {
-        return;
+    if (toVisible) {
+        [self layoutContents];
     }
 
     if (!fromVisible && !_isPresented) {
         [UIView performWithoutAnimation:^() {
-            [self synchronousTransform];
+            [self setAdjustedContainerFrame:YES];
         }];
-        [_keyboardWindow addSubview:_contentView];
-        [self.window addSubview:_stickyView];
         _isPresented = YES;
-    } else if (!toVisible) {
-        _isPresented = NO;
     }
-
-    // Set content height.
-    if (toVisible) {
-        [_bridge.uiManager setSize:toFrame.size forView:_contentView.subviews.firstObject];
-        [_bridge.uiManager setSize:toFrame.size forView:_stickyView.subviews.lastObject];
-    }
-
-    toFrame.size.height += [self getStickyViewHeight];
-
-    [UIView performWithoutAnimation:^() {
-        if (!fromVisible) {
-            [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
-            [self setAdjustedContainerFrame:toFrame direction:YES];
-        }
-    }];
-
+    
     [UIView animateWithDuration:transition.animationDuration
                           delay:0
-                        options:transition.animationCurve
+                        options:transition.animationOption
                      animations:^() {
                          if (!fromVisible) {
-                             [self setAdjustedContainerFrame:toFrame direction:NO];
-                             [self setAdjustedKeyboardFrame:keyboardView.frame direction:NO];
+                             [self setAdjustedContainerFrame:NO];
                          } else if (!toVisible) {
-                             [self setAdjustedContainerFrame:toFrame direction:YES];
-                             [self setAdjustedKeyboardFrame:keyboardView.frame direction:YES];
+                             [self setAdjustedContainerFrame:YES];
                          }
                      }
                      completion:^(BOOL finished) {
-                         if (finished && !toVisible) {
+                         if (finished && !toVisible && !_keyboardState) {
                              [_contentView removeFromSuperview];
-                             [_stickyView removeFromSuperview];
+                             [_coverView removeFromSuperview];
+                             _isPresented = NO;
                          }
                      }];
 }
 
-- (CGFloat)getStickyViewHeight
+- (void)layoutContents
 {
-    return CGRectGetHeight(_stickyView.subviews[1].bounds);
+    CGRect keyboardFrame = [_manager keyboardFrame];
+    CGSize screenSize = RCTScreenSize();
+    float coverHeight = screenSize.height - CGRectGetHeight(keyboardFrame);
+    
+    dispatch_sync(RCTGetUIManagerQueue(), ^{
+        RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
+        _contentShadowView.size = screenSize;
+        YGNodeStyleSetPadding(_contentShadowView.yogaNode, YGEdgeTop, coverHeight);
+        
+        RCTShadowView *_coverShadowView = [self getShadowView:_coverView];
+        _coverShadowView.size = CGSizeMake(screenSize.width, coverHeight);
+        [_bridge.uiManager setNeedsLayout];
+    });
 }
 
-- (void)setAdjustedContainerFrame:(CGRect)frame direction:(BOOL)direction
+- (void)setAdjustedContainerFrame:(BOOL)direction
 {
-    frame.origin.y = direction ? frame.size.height : 0;
-    [_contentView reactSetFrame:frame];
-    [_stickyView reactSetFrame:frame];
+    float keyboardHeight = CGRectGetHeight([_manager keyboardFrame]);
+    float offset = direction ? keyboardHeight : 0;
+    
+    CGRect contentFrame = _contentView.frame;
+    contentFrame.origin.y = offset;
+    [_contentView reactSetFrame:contentFrame];
+    
+    CGRect coverFrame = _coverView.frame;
+    coverFrame.origin.y = offset;
+    [_coverView reactSetFrame:coverFrame];
 }
 
-- (void)setAdjustedKeyboardFrame:(CGRect)frame direction:(BOOL)direction
+- (RCTShadowView *)getShadowView:(UIView *)view
 {
-    CGFloat offset = [self getStickyViewHeight];
-    UIView *keyboardView = [_manager keyboardView];
-
-    if (offset) {
-        frame.origin.y = frame.origin.y + (direction ? offset : -offset);
-    }
-
-    [keyboardView setFrame:frame];
-
+    NSMutableDictionary<NSNumber *, RCTShadowView *> *shadowViewRegistry = [_bridge.uiManager valueForKey:@"shadowViewRegistry"];
+    NSNumber *reactTag = view.reactTag;
+    return shadowViewRegistry[reactTag];
 }
 
--(void)invalidate
+- (void)invalidate
 {
-    if ([_manager isKeyboardVisible]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [UIView performWithoutAnimation:^() {
-                [[UIApplication sharedApplication].keyWindow endEditing:YES];
-                [_manager keyboardWindow].transform = _stickyView.transform = CGAffineTransformIdentity;
-
-                [_contentView removeFromSuperview];
-                [_containerTouchHandler detachFromView:_contentView];
-                _contentView = nil;
-
-                [_stickyView removeFromSuperview];
-                [_stickyViewTouchHandler detachFromView:_stickyView];
-                _stickyView = nil;
-            }];
-        });
-    }
-
-    [_manager removeObserver:self];
-    _isPresented = NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIView performWithoutAnimation:^() {
+            _keyboardWindow.transform = CGAffineTransformIdentity;
+        }];
+        [_contentView removeFromSuperview];
+        [_coverView removeFromSuperview];
+        _isPresented = NO;
+        [_manager removeObserver:self];
+    });
 }
 
 @end
