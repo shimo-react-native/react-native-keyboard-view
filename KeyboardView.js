@@ -14,10 +14,6 @@ const styles = StyleSheet.create({
         flex: 1
     },
 
-    contentView: {
-        justifyContent: 'flex-end'
-    },
-
     hide: {
         opacity: 0
     }
@@ -95,8 +91,15 @@ export default class extends Component {
           <KeyboardCoverView
             style={[styles.offSteam, hide]}
             pointerEvents="box-none"
+            collapsable={false}
           >
-              <View style={styles.cover} pointerEvents="box-none">{cover}</View>
+              <View
+                style={styles.cover}
+                pointerEvents="box-none"
+                collapsable={false}
+              >
+                  {cover}
+              </View>
               <View>{stickyView}</View>
           </KeyboardCoverView>
         );
