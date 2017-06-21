@@ -54,21 +54,18 @@
         _coverView = subview;
     }
     
+    [super insertReactSubview:subview atIndex:atIndex];
+    
     if (_contentView && _coverView) {
         [_manager addObserver:self];
         
         if (!_isPresented && [_manager isKeyboardVisible]) {
-            [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
-                _keyboardWindow = [_manager keyboardWindow];
-                [self present];
-                [self layoutContents];
-            }];
-            [_bridge.uiManager setNeedsLayout];
+            dispatch_sync(RCTGetUIManagerQueue(), ^{
+                [self presendAndLayoutContents];
+            });
         }
         
     }
-    
-    [super insertReactSubview:subview atIndex:atIndex];
 }
 
 - (void)removeReactSubview:(__kindof UIView *)subview
@@ -120,6 +117,16 @@
     
     [_keyboardWindow addSubview:_contentView];
     [self.window addSubview:_coverView];
+}
+
+- (void)presendAndLayoutContents
+{
+    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        _keyboardWindow = [_manager keyboardWindow];
+        [self present];
+        [self layoutContents];
+    }];
+    [_bridge.uiManager setNeedsLayout];
 }
 
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition
@@ -175,40 +182,30 @@
     CGRect keyboardFrame = [_manager keyboardFrame];
     CGSize screenSize = RCTScreenSize();
     float coverHeight = screenSize.height - CGRectGetHeight(keyboardFrame);
-    CGRect contentFrame = CGRectMake(0, coverHeight, keyboardFrame.size.width, keyboardFrame.size.height);
     
     dispatch_sync(RCTGetUIManagerQueue(), ^{
         RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
-        _contentShadowView.size = keyboardFrame.size;
-
+        _contentShadowView.size = screenSize;
+        YGNodeStyleSetPadding(_contentShadowView.yogaNode, YGEdgeTop, coverHeight);
+        
         RCTShadowView *_coverShadowView = [self getShadowView:_coverView];
         _coverShadowView.size = CGSizeMake(screenSize.width, coverHeight);
         [_bridge.uiManager setNeedsLayout];
-        
-        // setFrame twice or it will won't work,
-        // don't know why.
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [_contentView setFrame:contentFrame];
-        });
     });
-    
-    [UIView performWithoutAnimation:^{
-        [_contentView setFrame:contentFrame];
-    }];
 }
 
 - (void)setAdjustedContainerFrame:(BOOL)direction
 {
     float keyboardHeight = CGRectGetHeight([_manager keyboardFrame]);
-    float screenHeight = RCTScreenSize().height;
+    float offset = direction ? keyboardHeight : 0;
     
     CGRect contentFrame = _contentView.frame;
-    contentFrame.origin.y = direction ? screenHeight : screenHeight - keyboardHeight;
-    [_contentView setFrame:contentFrame];
+    contentFrame.origin.y = offset;
+    [_contentView reactSetFrame:contentFrame];
     
     CGRect coverFrame = _coverView.frame;
-    coverFrame.origin.y = direction ? keyboardHeight : 0;
-    [_coverView setFrame:coverFrame];
+    coverFrame.origin.y = offset;
+    [_coverView reactSetFrame:coverFrame];
 }
 
 - (RCTShadowView *)getShadowView:(UIView *)view
