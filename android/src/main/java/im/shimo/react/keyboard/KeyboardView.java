@@ -37,9 +37,9 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     public KeyboardView(ThemedReactContext context, @Nullable KeyboardState keyboardState) {
         super(context);
+        context.addLifecycleEventListener(this);
 
         if (keyboardState != null) {
-            context.addLifecycleEventListener(this);
             mKeyboardState = keyboardState;
             mOnKeyboardChangeListener = new KeyboardState.OnKeyboardChangeListener() {
                 @Override
@@ -138,23 +138,24 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         if (mKeyboardState != null) {
             ((ReactContext) getContext()).removeLifecycleEventListener(this);
             dismissPopupWindow();
+            dismissCoverView();
             mKeyboardState.removeOnKeyboardChangeListener(mOnKeyboardChangeListener);
         }
     }
 
     @Override
     public void onHostResume() {
-        // do nothing
+
     }
 
     @Override
     public void onHostPause() {
-        // do nothing
+        dismissPopupWindow();
+        dismissCoverView();
     }
 
     @Override
     public void onHostDestroy() {
-        // Drop the instance if the host is destroyed which will dismiss the PopupWindow
         onDropInstance();
     }
 

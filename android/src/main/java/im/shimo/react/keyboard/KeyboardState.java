@@ -1,6 +1,7 @@
 package im.shimo.react.keyboard;
 
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
@@ -13,6 +14,7 @@ public class KeyboardState {
     private Rect mVisibleViewArea;
     private int mMinKeyboardHeightDetected = (int) PixelUtil.toPixelFromDIP(60);
     private int mKeyboardHeight = 0;
+    private int mRootViewTop = 0;
     private boolean mKeyboardShowing = false;
     private ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
     private static ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
@@ -26,12 +28,15 @@ public class KeyboardState {
             @Override
             public void onGlobalLayout() {
                 rootView.getWindowVisibleDisplayFrame(mVisibleViewArea);
-                int keyboardHeight = DisplayMetricsHolder.getWindowDisplayMetrics().heightPixels - mVisibleViewArea.bottom;
 
-                if (keyboardHeight == mKeyboardHeight) {
+                int keyboardHeight = DisplayMetricsHolder.getWindowDisplayMetrics().heightPixels - mVisibleViewArea.bottom;
+                int rootViewTop = rootView.getTop();
+
+                if (keyboardHeight == mKeyboardHeight && rootViewTop == mRootViewTop) {
                     return;
                 } else {
                     mKeyboardHeight = keyboardHeight;
+                    mRootViewTop = rootViewTop;
                 }
 
                 mKeyboardShowing = mKeyboardHeight > mMinKeyboardHeightDetected;

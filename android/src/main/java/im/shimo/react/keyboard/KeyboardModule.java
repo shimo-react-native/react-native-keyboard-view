@@ -16,11 +16,9 @@ import com.facebook.react.uimanager.UIManagerModule;
 @ReactModule(name = KeyboardModule.NAME)
 public class KeyboardModule extends ReactContextBaseJavaModule {
     /* package */ static final String NAME = "KeyboardViewModule";
-    private InputMethodManager mInputMethodManager;
 
     KeyboardModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        mInputMethodManager = (InputMethodManager) reactContext.getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
     @Override

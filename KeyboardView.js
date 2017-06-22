@@ -1,6 +1,6 @@
 import React, { Component, PropTypes, Children } from 'react';
 import { NativeModules, Keyboard, StyleSheet, View, requireNativeComponent, Platform, Animated } from 'react-native';
-import Modal from 'react-native-root-modal'
+import Modal from 'react-native-root-modal';
 
 const styles = StyleSheet.create({
     offSteam: {
@@ -80,7 +80,7 @@ export default class extends Component {
         );
     }
 
-    _getCoverView(cover, stickyView, visible, transform) {
+    _getCoverView(cover, stickyView, visible) {
         if (!isIOS && !visible) {
             return null;
         }

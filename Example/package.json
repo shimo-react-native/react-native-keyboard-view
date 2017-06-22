@@ -7,9 +7,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "react": "^16.0.0-alpha.6",
-    "react-native": "^0.44.3",
-    "react-native-keyboard-view": "@latest"
+    "react": "16.0.0-alpha.6",
+    "react-native": "0.44.0",
+    "react-native-keyboard-view": "../"
   },
   "devDependencies": {
     "babel-jest": "18.0.0",
