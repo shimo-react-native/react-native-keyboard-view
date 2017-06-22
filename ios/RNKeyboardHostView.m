@@ -60,9 +60,7 @@
         [_manager addObserver:self];
         
         if (!_isPresented && [_manager isKeyboardVisible]) {
-            dispatch_sync(RCTGetUIManagerQueue(), ^{
-                [self presendAndLayoutContents];
-            });
+            [self presendAndLayoutContents];
         }
         
     }
@@ -111,22 +109,24 @@
 
 - (void)present
 {
-    [UIView performWithoutAnimation:^() {
-        [self synchronousTransform];
-    }];
-    
-    [_keyboardWindow addSubview:_contentView];
-    [self.window addSubview:_coverView];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIView performWithoutAnimation:^() {
+            [self synchronousTransform];
+        }];
+        
+        [_keyboardWindow addSubview:_contentView];
+        [self.window addSubview:_coverView];
+    });
 }
 
 - (void)presendAndLayoutContents
 {
-    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+    dispatch_async(RCTGetUIManagerQueue(), ^{
         _keyboardWindow = [_manager keyboardWindow];
         [self present];
         [self layoutContents];
-    }];
-    [_bridge.uiManager setNeedsLayout];
+        [_bridge.uiManager setNeedsLayout];
+    });
 }
 
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition
@@ -183,7 +183,7 @@
     CGSize screenSize = RCTScreenSize();
     float coverHeight = screenSize.height - CGRectGetHeight(keyboardFrame);
     
-    dispatch_sync(RCTGetUIManagerQueue(), ^{
+    dispatch_async(RCTGetUIManagerQueue(), ^{
         RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
         _contentShadowView.size = screenSize;
         YGNodeStyleSetPadding(_contentShadowView.yogaNode, YGEdgeTop, coverHeight);
