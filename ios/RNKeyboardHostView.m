@@ -186,7 +186,7 @@
     dispatch_async(RCTGetUIManagerQueue(), ^{
         RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
         _contentShadowView.size = screenSize;
-
+        // _contentShadowView.yogaNode must not be null
         if (_contentShadowView.yogaNode) {
             YGNodeStyleSetPadding(_contentShadowView.yogaNode, YGEdgeTop, coverHeight);
         }

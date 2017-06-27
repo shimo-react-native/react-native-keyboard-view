@@ -42,9 +42,6 @@ RCT_EXPORT_METHOD(dismissWithoutAnimation)
             [UIView performWithoutAnimation:^{
                 [[UIApplication sharedApplication].keyWindow endEditing:YES];
             }];
-            [UIView animateWithDuration:0 animations:^{
-                
-            }];
         });
     }
 }
