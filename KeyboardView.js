@@ -100,7 +100,9 @@ export default class extends Component {
               >
                   {cover}
               </View>
-              <View>{stickyView}</View>
+              <View collapsable={false} >
+                  {stickyView}
+              </View>
           </KeyboardCoverView>
         );
     }

@@ -24,6 +24,27 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
 
+/**
+ *
+ * ContentView is layout to cover the keyboard,
+ * CoverView is layout to fill the rest part on the screen.
+ *
+ * +--------------+
+ * |              |
+ * |              |
+ * |     cover    |
+ * |     view     |
+ * |              |
+ * |              |
+ * |--------------|
+ * |   (keyboard) |
+ * |    content   |
+ * |     view     |
+ * |              |
+ * +--------------+
+ *
+ */
+
 
 public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     private PopupWindow mPopupWindow;
@@ -104,9 +125,11 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     @Override
     public void removeView(View child) {
         if (child instanceof KeyboardContentView) {
+            mContentView = null;
             dismissPopupWindow();
             mChildCount--;
         } else if (child instanceof KeyboardCoverView) {
+            mCoverView = null;
             dismissCoverView();
             mChildCount--;
         }
@@ -145,7 +168,12 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     @Override
     public void onHostResume() {
-
+        if (mKeyboardState != null  && mKeyboardState.isKeyboardShowing()) {
+            int width = mKeyboardState.getKeyboardWidth();
+            int height = mKeyboardState.getKeyboardHeight();
+            showPopupWindow(width, height);
+            showCover(width, height);
+        }
     }
 
     @Override
@@ -164,7 +192,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
             if (mPopupWindow == null) {
                 mPopupWindow = new PopupWindow(mContentView, width, height);
                 mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                //mPopupWindow.setAnimationStyle(R.style.DialogAnimationSlide);
+                mPopupWindow.setAnimationStyle(R.style.DialogAnimationSlide);
                 mPopupWindow.showAtLocation(getRootView(), Gravity.BOTTOM, 0, 0);
             } else {
                 mPopupWindow.update(width, height);
@@ -182,26 +210,33 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     private void showCover(final int width, final int height) {
-        if (mCoverView != null) {
+        final ReactContext context = (ReactContext)getContext();
+        Activity activity = context.getCurrentActivity();
+
+        if (mCoverView != null && activity != null) {
             removeCoverFromSuper();
 
-            ReactContext context = (ReactContext)getContext();
-            Activity activity = context.getCurrentActivity();
+            final FrameLayout rootLayout = (FrameLayout)activity.findViewById(android.R.id.content);
+            final int coverHeight = rootLayout.getHeight() - height;
 
-            if (activity != null) {
-                FrameLayout rootLayout = (FrameLayout)activity.findViewById(android.R.id.content);
-                final int coverHeight = rootLayout.getHeight() - height;
-                ((ReactContext) getContext()).runOnNativeModulesQueueThread(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
-                                        .updateNodeSize(mCoverView.getId(), width, coverHeight);
-                            }
-                        });
+            context.runOnNativeModulesQueueThread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
 
-                rootLayout.addView(mCoverView);
-            }
+                            context.getNativeModule(UIManagerModule.class)
+                                    .updateNodeSize(mCoverView.getId(), width, coverHeight);
+
+                            // Add cover view after cover view has been layout.
+                            context.runOnUiQueueThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    rootLayout.addView(mCoverView);
+                                }
+                            });
+                        }
+                    }
+            );
         }
     }
 
