@@ -214,8 +214,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         Activity activity = context.getCurrentActivity();
 
         if (mCoverView != null && activity != null) {
-            removeCoverFromSuper();
-
             final FrameLayout rootLayout = (FrameLayout)activity.findViewById(android.R.id.content);
             final int coverHeight = rootLayout.getHeight() - height;
 
@@ -231,6 +229,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
                             context.runOnUiQueueThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    removeCoverFromSuper();
                                     rootLayout.addView(mCoverView);
                                 }
                             });
