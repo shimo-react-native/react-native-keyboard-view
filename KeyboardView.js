@@ -26,6 +26,7 @@ export default class extends Component {
 
     static propTypes = {
         renderStickyView: PropTypes.func,
+        renderCoverView: PropTypes.func,
         onShow: PropTypes.func,
         onHide: PropTypes.func
     };
@@ -112,9 +113,9 @@ export default class extends Component {
     }
 
     render() {
-        const { children, renderStickyView, renderCover, transform } = this.props;
+        const { children, renderStickyView, renderCoverView, transform } = this.props;
         const stickyView = renderStickyView && renderStickyView();
-        const cover = renderCover && renderCover();
+        const cover = renderCoverView && renderCoverView();
         const hasCover = this._hasChildren(cover) || this._hasChildren(stickyView);
         const hasContent = this._hasChildren(children);
 

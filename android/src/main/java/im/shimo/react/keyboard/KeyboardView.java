@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.Nullable;
 
+
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -52,6 +53,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     private @Nullable ReactRootView mReactRootView;
     private View mContentView;
     private View mCoverView;
+    private boolean mCoverVisible;
 
     private int mChildCount = 0;
     private KeyboardState.OnKeyboardChangeListener mOnKeyboardChangeListener;
@@ -211,33 +213,39 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     private void showCover(final int width, final int height) {
         final ReactContext context = (ReactContext)getContext();
-        Activity activity = context.getCurrentActivity();
+        final Activity activity = context.getCurrentActivity();
 
         if (mCoverView != null && activity != null) {
-            final FrameLayout rootLayout = (FrameLayout)activity.findViewById(android.R.id.content);
+            final FrameLayout rootLayout = (FrameLayout)activity.getWindow().getDecorView();
             final int coverHeight = rootLayout.getHeight() - height;
 
             context.runOnNativeModulesQueueThread(
                     new Runnable() {
                         @Override
                         public void run() {
+                            if (!mCoverVisible) {
+                                mCoverVisible = true;
+                                // Add cover view after cover view has been layout.
+                                context.runOnUiQueueThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        removeCoverFromSuper();
+                                        rootLayout.addView(mCoverView);
+                                    }
+                                });
+                            }
 
                             context.getNativeModule(UIManagerModule.class)
                                     .updateNodeSize(mCoverView.getId(), width, coverHeight);
 
-                            // Add cover view after cover view has been layout.
-                            context.runOnUiQueueThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    removeCoverFromSuper();
-                                    rootLayout.addView(mCoverView);
-                                }
-                            });
+
                         }
                     }
             );
+
         }
     }
+
 
     private void dismissPopupWindow() {
         if (mPopupWindow != null) {
@@ -247,6 +255,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     private void dismissCoverView() {
+        mCoverVisible = false;
         if (mCoverView != null) {
             removeCoverFromSuper();
         }
