@@ -1,7 +1,6 @@
 package im.shimo.react.keyboard;
 
 import android.graphics.Rect;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
@@ -17,7 +16,7 @@ public class KeyboardState {
     private int mRootViewTop = 0;
     private boolean mKeyboardShowing = false;
     private ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
-    private static ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
+    private ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
 
     public KeyboardState(final View rootView) {
         ViewTreeObserver viewTreeObserver = rootView.getViewTreeObserver();
@@ -82,7 +81,4 @@ public class KeyboardState {
         void onKeyboardClosed();
     }
 
-    public void destroy(final View rootView) {
-        rootView.getViewTreeObserver().removeOnGlobalLayoutListener(mLayoutListener);
-    }
 }

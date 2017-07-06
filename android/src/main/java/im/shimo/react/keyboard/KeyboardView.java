@@ -58,28 +58,10 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     private int mChildCount = 0;
     private KeyboardState.OnKeyboardChangeListener mOnKeyboardChangeListener;
 
-    public KeyboardView(ThemedReactContext context, @Nullable KeyboardState keyboardState) {
+    public KeyboardView(ThemedReactContext context) {
         super(context);
         context.addLifecycleEventListener(this);
-
-        if (keyboardState != null) {
-            mKeyboardState = keyboardState;
-            mOnKeyboardChangeListener = new KeyboardState.OnKeyboardChangeListener() {
-                @Override
-                public void onKeyboardShown(int keyboardWidth, int keyboardHeight) {
-                    showPopupWindow(keyboardWidth, keyboardHeight);
-                    showCover(keyboardWidth, keyboardHeight);
-                }
-
-                @Override
-                public void onKeyboardClosed() {
-                    dismissPopupWindow();
-                    dismissCoverView();
-                }
-            };
-
-            mKeyboardState.addOnKeyboardChangeListener(mOnKeyboardChangeListener);
-        }
+        bindKeyboardState();
     }
 
     @Override
@@ -165,11 +147,13 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
             dismissPopupWindow();
             dismissCoverView();
             mKeyboardState.removeOnKeyboardChangeListener(mOnKeyboardChangeListener);
+            mKeyboardState = null;
         }
     }
 
     @Override
     public void onHostResume() {
+        bindKeyboardState();
         if (mKeyboardState != null  && mKeyboardState.isKeyboardShowing()) {
             int width = mKeyboardState.getKeyboardWidth();
             int height = mKeyboardState.getKeyboardHeight();
@@ -182,11 +166,39 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     public void onHostPause() {
         dismissPopupWindow();
         dismissCoverView();
+
+        if (mKeyboardState != null) {
+            mKeyboardState.removeOnKeyboardChangeListener(mOnKeyboardChangeListener);
+            mKeyboardState = null;
+        }
     }
 
     @Override
     public void onHostDestroy() {
         onDropInstance();
+    }
+
+    private void bindKeyboardState() {
+        FrameLayout rootLayout = getRootContent();
+
+        if (rootLayout != null) {
+            mKeyboardState = new KeyboardState(rootLayout);
+            mOnKeyboardChangeListener = new KeyboardState.OnKeyboardChangeListener() {
+                @Override
+                public void onKeyboardShown(int keyboardWidth, int keyboardHeight) {
+                    showPopupWindow(keyboardWidth, keyboardHeight);
+                    showCover(keyboardWidth, keyboardHeight);
+                }
+
+                @Override
+                public void onKeyboardClosed() {
+                    dismissPopupWindow();
+                    dismissCoverView();
+                }
+            };
+
+            mKeyboardState.addOnKeyboardChangeListener(mOnKeyboardChangeListener);
+        }
     }
 
     private void showPopupWindow(final int width, final int height) {
@@ -213,12 +225,10 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
     private void showCover(final int width, final int height) {
         final ReactContext context = (ReactContext)getContext();
-        final Activity activity = context.getCurrentActivity();
+        final FrameLayout rootLayout = getRootContent();
 
-        if (mCoverView != null && activity != null) {
-            final FrameLayout rootLayout = (FrameLayout)activity.getWindow().getDecorView();
+        if (mCoverView != null && rootLayout != null) {
             final int coverHeight = rootLayout.getHeight() - height;
-
             context.runOnNativeModulesQueueThread(
                     new Runnable() {
                         @Override
@@ -237,8 +247,6 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
 
                             context.getNativeModule(UIManagerModule.class)
                                     .updateNodeSize(mCoverView.getId(), width, coverHeight);
-
-
                         }
                     }
             );
@@ -246,6 +254,17 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         }
     }
 
+
+    private @Nullable FrameLayout getRootContent() {
+        final ReactContext context = (ReactContext)getContext();
+        final Activity activity = context.getCurrentActivity();
+
+        if (activity != null) {
+            return (FrameLayout)activity.findViewById(android.R.id.content);
+        }
+
+        return null;
+    }
 
     private void dismissPopupWindow() {
         if (mPopupWindow != null) {
