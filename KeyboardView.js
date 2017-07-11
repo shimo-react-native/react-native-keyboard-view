@@ -120,7 +120,9 @@ export default class extends Component {
         const hasContent = this._hasChildren(children);
 
         if (!hasContent && !hasCover) {
-            return null;
+            if (!transform || !isIOS) {
+                return null;
+            }
         }
 
         if (isIOS) {

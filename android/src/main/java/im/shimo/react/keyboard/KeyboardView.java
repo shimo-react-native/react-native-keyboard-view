@@ -72,12 +72,20 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     @Override
     public void addView(View child, int index) {
         if (child instanceof KeyboardContentView) {
+            if (mContentView != null) {
+                removeView(mContentView);
+            }
+
             mContentView = child;
             mChildCount++;
             if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
                 showPopupWindow(mKeyboardState.getKeyboardWidth(), mKeyboardState.getKeyboardHeight());
             }
         } else if (child instanceof KeyboardCoverView) {
+            if (mCoverView != null) {
+                removeView(mCoverView);
+            }
+
             mCoverView = child;
             ((KeyboardCoverView)mCoverView).setOnTouchOutsideCallback(new Callback() {
                 @Override
@@ -109,13 +117,17 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     @Override
     public void removeView(View child) {
         if (child instanceof KeyboardContentView) {
-            mContentView = null;
-            dismissPopupWindow();
-            mChildCount--;
+            if (mContentView != null) {
+                mContentView = null;
+                dismissPopupWindow();
+                mChildCount--;
+            }
         } else if (child instanceof KeyboardCoverView) {
-            mCoverView = null;
-            dismissCoverView();
-            mChildCount--;
+            if (mCoverView != null) {
+                mCoverView = null;
+                dismissCoverView();
+                mChildCount--;
+            }
         }
     }
 
