@@ -13,9 +13,10 @@ public class KeyboardState {
     private Rect mVisibleViewArea;
     private int mMinKeyboardHeightDetected = (int) PixelUtil.toPixelFromDIP(60);
     private int mKeyboardHeight = 0;
+    private int mRootViewTop = 0;
     private boolean mKeyboardShowing = false;
     private ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
-    private static ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
+    private ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
 
     public KeyboardState(final View rootView) {
         ViewTreeObserver viewTreeObserver = rootView.getViewTreeObserver();
@@ -26,12 +27,15 @@ public class KeyboardState {
             @Override
             public void onGlobalLayout() {
                 rootView.getWindowVisibleDisplayFrame(mVisibleViewArea);
-                int keyboardHeight = DisplayMetricsHolder.getWindowDisplayMetrics().heightPixels - mVisibleViewArea.bottom;
 
-                if (keyboardHeight == mKeyboardHeight) {
+                int keyboardHeight = DisplayMetricsHolder.getWindowDisplayMetrics().heightPixels - mVisibleViewArea.bottom;
+                int rootViewTop = rootView.getTop();
+
+                if (keyboardHeight == mKeyboardHeight && rootViewTop == mRootViewTop) {
                     return;
                 } else {
                     mKeyboardHeight = keyboardHeight;
+                    mRootViewTop = rootViewTop;
                 }
 
                 mKeyboardShowing = mKeyboardHeight > mMinKeyboardHeightDetected;
@@ -77,7 +81,4 @@ public class KeyboardState {
         void onKeyboardClosed();
     }
 
-    public void destroy(final View rootView) {
-        rootView.getViewTreeObserver().removeOnGlobalLayoutListener(mLayoutListener);
-    }
 }

@@ -1,6 +1,6 @@
 import React, { Component, PropTypes, Children } from 'react';
 import { NativeModules, Keyboard, StyleSheet, View, requireNativeComponent, Platform, Animated } from 'react-native';
-import Modal from 'react-native-root-modal'
+import Modal from 'react-native-root-modal';
 
 const styles = StyleSheet.create({
     offSteam: {
@@ -26,6 +26,7 @@ export default class extends Component {
 
     static propTypes = {
         renderStickyView: PropTypes.func,
+        renderCoverView: PropTypes.func,
         onShow: PropTypes.func,
         onHide: PropTypes.func
     };
@@ -80,7 +81,7 @@ export default class extends Component {
         );
     }
 
-    _getCoverView(cover, stickyView, visible, transform) {
+    _getCoverView(cover, stickyView, visible) {
         if (!isIOS && !visible) {
             return null;
         }
@@ -100,7 +101,9 @@ export default class extends Component {
               >
                   {cover}
               </View>
-              <View>{stickyView}</View>
+              <View collapsable={false} >
+                  {stickyView}
+              </View>
           </KeyboardCoverView>
         );
     }
@@ -110,14 +113,16 @@ export default class extends Component {
     }
 
     render() {
-        const { children, renderStickyView, renderCover, transform } = this.props;
+        const { children, renderStickyView, renderCoverView, transform } = this.props;
         const stickyView = renderStickyView && renderStickyView();
-        const cover = renderCover && renderCover();
+        const cover = renderCoverView && renderCoverView();
         const hasCover = this._hasChildren(cover) || this._hasChildren(stickyView);
         const hasContent = this._hasChildren(children);
 
         if (!hasContent && !hasCover) {
-            return null;
+            if (!transform || !isIOS) {
+                return null;
+            }
         }
 
         if (isIOS) {

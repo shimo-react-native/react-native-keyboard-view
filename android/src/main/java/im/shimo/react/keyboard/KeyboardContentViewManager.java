@@ -15,10 +15,4 @@ public class KeyboardContentViewManager extends ViewGroupManager<KeyboardContent
     public KeyboardContentView createViewInstance(ThemedReactContext context) {
         return new KeyboardContentView(context);
     }
-
-
-    @Override
-    public void onDropViewInstance(KeyboardContentView view) {
-        super.onDropViewInstance(view);
-    }
 }

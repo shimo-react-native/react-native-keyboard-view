@@ -16,6 +16,7 @@ import com.facebook.react.uimanager.UIManagerModule;
 @ReactModule(name = KeyboardModule.NAME)
 public class KeyboardModule extends ReactContextBaseJavaModule {
     /* package */ static final String NAME = "KeyboardViewModule";
+
     private InputMethodManager mInputMethodManager;
 
     KeyboardModule(ReactApplicationContext reactContext) {
@@ -39,7 +40,9 @@ public class KeyboardModule extends ReactContextBaseJavaModule {
 
                     if (focus != null) {
                         focus.clearFocus();
+                        mInputMethodManager.hideSoftInputFromWindow(focus.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
                     }
+
                 }
             }
         });

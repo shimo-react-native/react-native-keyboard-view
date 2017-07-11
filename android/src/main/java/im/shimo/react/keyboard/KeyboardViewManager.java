@@ -9,7 +9,6 @@ import com.facebook.react.uimanager.ViewGroupManager;
 public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
 
     protected static final String REACT_CLASS = "KeyboardView";
-    private KeyboardState mKeyboardState;
 
     @Override
     public String getName() {
@@ -18,11 +17,7 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
 
     @Override
     public KeyboardView createViewInstance(ThemedReactContext context) {
-        if (mKeyboardState == null && context.getCurrentActivity() != null) {
-            mKeyboardState = new KeyboardState(context.getCurrentActivity().findViewById(android.R.id.content));
-        }
-
-        return new KeyboardView(context, mKeyboardState);
+        return new KeyboardView(context);
     }
 
     @Override

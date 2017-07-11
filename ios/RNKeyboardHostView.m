@@ -186,7 +186,10 @@
     dispatch_async(RCTGetUIManagerQueue(), ^{
         RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
         _contentShadowView.size = screenSize;
-        YGNodeStyleSetPadding(_contentShadowView.yogaNode, YGEdgeTop, coverHeight);
+        // _contentShadowView.yogaNode must not be null
+        if (_contentShadowView.yogaNode) {
+            YGNodeStyleSetPadding(_contentShadowView.yogaNode, YGEdgeTop, coverHeight);
+        }
         
         RCTShadowView *_coverShadowView = [self getShadowView:_coverView];
         _coverShadowView.size = CGSizeMake(screenSize.width, coverHeight);
