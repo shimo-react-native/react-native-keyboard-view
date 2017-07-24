@@ -293,6 +293,9 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     private void removeCoverFromSuper() {
+        if (mCoverView == null) {
+            return;
+        }
         ViewGroup parent = (ViewGroup)mCoverView.getParent();
         if (parent != null) {
             parent.removeView(mCoverView);
