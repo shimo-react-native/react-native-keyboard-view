@@ -129,7 +129,7 @@ export default class extends Component {
             return (
               <Modal style={styles.offSteam} visible={true}>
                   <KeyboardView
-                    style={[styles.offSteam, transform && { transform }]}
+                    style={[styles.offSteam, styles.hide, transform && { transform }]}
                     synchronouslyUpdateTransform={!!transform}
                   >
                       {this._getContentView(children, hasContent)}
@@ -140,7 +140,7 @@ export default class extends Component {
         } else {
             return (
               <KeyboardView
-                style={styles.offSteam}
+                style={[styles.offSteam, styles.hide]}
               >
                   {this._getContentView(children, hasContent)}
                   {this._getCoverView(cover, stickyView, hasCover)}
