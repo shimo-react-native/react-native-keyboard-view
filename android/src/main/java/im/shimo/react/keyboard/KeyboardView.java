@@ -228,7 +228,7 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
                     new Runnable() {
                         @Override
                         public void run() {
-                            if (mContentView != null) { // async, mContentView may bel null
+                            if (mContentView != null) { // async, mContentView may be null
                                 ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
                                     .updateNodeSize(mContentView.getId(), width, height);
                             }
