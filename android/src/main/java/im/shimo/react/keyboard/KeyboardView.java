@@ -252,9 +252,11 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
                                 // Add cover view after cover view has been layout.
                                 context.runOnUiQueueThread(new Runnable() {
                                     @Override
-                                    public void run() {
-                                        removeCoverFromSuper();
-                                        rootLayout.addView(mCoverView);
+                                    public void run() { // async, mCoverView may be null
+                                        if (mCoverView != null) {
+                                            removeCoverFromSuper();
+                                            rootLayout.addView(mCoverView);
+                                        }
                                     }
                                 });
                             }
