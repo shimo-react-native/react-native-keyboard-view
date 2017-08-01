@@ -4,11 +4,14 @@ package im.shimo.react.keyboard;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.Nullable;
 
 
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,11 +22,14 @@ import android.widget.FrameLayout;
 import android.widget.PopupWindow;
 
 import com.facebook.react.ReactRootView;
+import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.uimanager.PointerEvents;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.views.view.ReactViewGroup;
 
 /**
  *
@@ -47,21 +53,19 @@ import com.facebook.react.uimanager.UIManagerModule;
  */
 
 
-public class KeyboardView extends ViewGroup implements LifecycleEventListener {
+public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEventListener {
     private PopupWindow mPopupWindow;
     private @Nullable KeyboardState mKeyboardState;
-    private @Nullable ReactRootView mReactRootView;
     private View mContentView;
     private View mCoverView;
-    private boolean mCoverVisible;
-
     private int mChildCount = 0;
     private KeyboardState.OnKeyboardChangeListener mOnKeyboardChangeListener;
+    private ActivityEventListener mActivityEventListener;
 
     public KeyboardView(ThemedReactContext context) {
         super(context);
-        context.addLifecycleEventListener(this);
         bindKeyboardState();
+        context.addLifecycleEventListener(this);
     }
 
     @Override
@@ -72,31 +76,15 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     @Override
     public void addView(View child, int index) {
         if (child instanceof KeyboardContentView) {
-            if (mContentView != null) {
-                removeView(mContentView);
-            }
-
             mContentView = child;
             mChildCount++;
             if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-                showPopupWindow(mKeyboardState.getKeyboardWidth(), mKeyboardState.getKeyboardHeight());
+                showPopupWindow();
             }
         } else if (child instanceof KeyboardCoverView) {
-            if (mCoverView != null) {
-                removeView(mCoverView);
-            }
-
             mCoverView = child;
-            ((KeyboardCoverView)mCoverView).setOnTouchOutsideCallback(new Callback() {
-                @Override
-                public void invoke(Object... args) {
-                    onTouchEvent((MotionEvent)args[0]);
-                }
-            });
             mChildCount++;
-            if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-                showCover(mKeyboardState.getKeyboardWidth(), mKeyboardState.getKeyboardHeight());
-            }
+            resizeCover();
         }
     }
 
@@ -117,17 +105,13 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     @Override
     public void removeView(View child) {
         if (child instanceof KeyboardContentView) {
-            if (mContentView != null) {
-                mContentView = null;
-                dismissPopupWindow();
-                mChildCount--;
-            }
+            dismissPopupWindow();
+            mContentView = null;
+            mChildCount--;
         } else if (child instanceof KeyboardCoverView) {
-            if (mCoverView != null) {
-                mCoverView = null;
-                dismissCoverView();
-                mChildCount--;
-            }
+            removeCoverFromSuper();
+            mCoverView = null;
+            mChildCount--;
         }
     }
 
@@ -138,6 +122,12 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         } else {
             removeView(mCoverView);
         }
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        resizeCover();
     }
 
     @Override
@@ -154,35 +144,24 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     public void onDropInstance() {
-        if (mKeyboardState != null) {
-            ((ReactContext) getContext()).removeLifecycleEventListener(this);
-            dismissPopupWindow();
-            dismissCoverView();
-            mKeyboardState.removeOnKeyboardChangeListener(mOnKeyboardChangeListener);
-            mKeyboardState = null;
-        }
+        ((ReactContext) getContext()).removeLifecycleEventListener(this);
+        dismissPopupWindow();
+        removeCoverFromSuper();
+        unbindKeyboardState();
     }
 
     @Override
     public void onHostResume() {
         bindKeyboardState();
-        if (mKeyboardState != null  && mKeyboardState.isKeyboardShowing()) {
-            int width = mKeyboardState.getKeyboardWidth();
-            int height = mKeyboardState.getKeyboardHeight();
-            showPopupWindow(width, height);
-            showCover(width, height);
+        if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
+            showPopupWindow();
         }
     }
 
     @Override
     public void onHostPause() {
         dismissPopupWindow();
-        dismissCoverView();
-
-        if (mKeyboardState != null) {
-            mKeyboardState.removeOnKeyboardChangeListener(mOnKeyboardChangeListener);
-            mKeyboardState = null;
-        }
+        unbindKeyboardState();
     }
 
     @Override
@@ -191,93 +170,107 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
     }
 
     private void bindKeyboardState() {
-        FrameLayout rootLayout = getRootContent();
-
-        if (rootLayout != null) {
-            mKeyboardState = new KeyboardState(rootLayout);
+        final ReactContext context = (ReactContext) getContext();
+        Activity activity = ((ReactContext) getContext()).getCurrentActivity();
+        if (activity != null) {
             mOnKeyboardChangeListener = new KeyboardState.OnKeyboardChangeListener() {
                 @Override
-                public void onKeyboardShown(int keyboardWidth, int keyboardHeight) {
-                    showPopupWindow(keyboardWidth, keyboardHeight);
-                    showCover(keyboardWidth, keyboardHeight);
+                public void onKeyboardShown(Rect keyboardFrame) {
+                    showPopupWindow(keyboardFrame);
+                    resizeCover();
                 }
 
                 @Override
                 public void onKeyboardClosed() {
                     dismissPopupWindow();
-                    dismissCoverView();
+                    resizeCover();
                 }
             };
-
+            mKeyboardState = new KeyboardState(activity.findViewById(android.R.id.content));
             mKeyboardState.addOnKeyboardChangeListener(mOnKeyboardChangeListener);
+        } else if (mActivityEventListener == null)  {
+            mActivityEventListener = new ActivityEventListener() {
+                @Override
+                public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+
+                }
+
+                @Override
+                public void onNewIntent(Intent intent) {
+                    if (context.getCurrentActivity() != null) {
+                        unbindKeyboardState();
+                        bindKeyboardState();
+                    }
+                }
+            };
+            context.addActivityEventListener(mActivityEventListener);
         }
     }
 
-    private void showPopupWindow(final int width, final int height) {
+    private void unbindKeyboardState() {
+        if (mKeyboardState != null) {
+            mKeyboardState.removeOnKeyboardChangeListener(mOnKeyboardChangeListener);
+            mKeyboardState = null;
+        } else if (mActivityEventListener != null) {
+            ((ReactContext) getContext()).removeActivityEventListener(mActivityEventListener);
+            mActivityEventListener = null;
+        }
+    }
+
+    private void showPopupWindow() {
+        if (mKeyboardState != null) {
+            showPopupWindow(mKeyboardState.getKeyboardFrame());
+        }
+    }
+
+    private void showPopupWindow(final Rect keyboardFrame) {
         if (mContentView != null) {
             if (mPopupWindow == null) {
-                mPopupWindow = new PopupWindow(mContentView, width, height);
+                mPopupWindow = new PopupWindow(mContentView, keyboardFrame.width(), keyboardFrame.height());
                 mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 mPopupWindow.setAnimationStyle(R.style.DialogAnimationSlide);
-                mPopupWindow.showAtLocation(getRootView(), Gravity.BOTTOM, 0, 0);
+                mPopupWindow.showAtLocation(getRootView(), Gravity.TOP, 0, keyboardFrame.top);
             } else {
-                mPopupWindow.update(width, height);
+                mPopupWindow.update(keyboardFrame.width(), keyboardFrame.height());
             }
 
             ((ReactContext) getContext()).runOnNativeModulesQueueThread(
                     new Runnable() {
                         @Override
                         public void run() {
-                            if (mContentView != null) { // async, mContentView may be null
-                                ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
-                                    .updateNodeSize(mContentView.getId(), width, height);
-                            }
+                            ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
+                                    .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height());
                         }
                     });
         }
     }
 
-    private void showCover(final int width, final int height) {
+    private void resizeCover() {
+        ReactRootView reactRootView = getReactRootView();
+
+        if (mKeyboardState == null || mCoverView == null || reactRootView == null) {
+            return;
+        }
+
+        if (mCoverView.getParent() == null) {
+            reactRootView.addView(mCoverView);
+        }
+
+        int rootHeight = reactRootView.getHeight();
+        Rect keyboardFrame = mKeyboardState.getKeyboardFrame();
         final ReactContext context = (ReactContext)getContext();
-        final FrameLayout rootLayout = getRootContent();
+        final int coverViewWidth = keyboardFrame.width();
+        final int coverViewHeight = rootHeight - keyboardFrame.height();
 
-        if (mCoverView != null && rootLayout != null) {
-            final int coverHeight = rootLayout.getHeight() - height;
-            context.runOnNativeModulesQueueThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!mCoverVisible) {
-                                mCoverVisible = true;
-                                // Add cover view after cover view has been layout.
-                                context.runOnUiQueueThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        removeCoverFromSuper();
-                                        rootLayout.addView(mCoverView);
-                                    }
-                                });
-                            }
-
-                            context.getNativeModule(UIManagerModule.class)
-                                    .updateNodeSize(mCoverView.getId(), width, coverHeight);
-                        }
+        context.runOnNativeModulesQueueThread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        context.getNativeModule(UIManagerModule.class)
+                                .updateNodeSize(mCoverView.getId(), coverViewWidth, coverViewHeight);
                     }
-            );
-
-        }
-    }
-
-
-    private @Nullable FrameLayout getRootContent() {
-        final ReactContext context = (ReactContext)getContext();
-        final Activity activity = context.getCurrentActivity();
-
-        if (activity != null) {
-            return (FrameLayout)activity.findViewById(android.R.id.content);
-        }
-
-        return null;
+                }
+        );
     }
 
     private void dismissPopupWindow() {
@@ -287,40 +280,14 @@ public class KeyboardView extends ViewGroup implements LifecycleEventListener {
         }
     }
 
-    private void dismissCoverView() {
-        mCoverVisible = false;
-        if (mCoverView != null) {
-            removeCoverFromSuper();
-        }
-    }
-
     private void removeCoverFromSuper() {
         if (mCoverView == null) {
             return;
         }
+
         ViewGroup parent = (ViewGroup)mCoverView.getParent();
         if (parent != null) {
             parent.removeView(mCoverView);
         }
     }
-
-    private ReactRootView getReactRootView() {
-        if (mReactRootView == null) {
-            ViewParent parent = getParent();
-
-            while (parent != null && !(parent instanceof ReactRootView)) {
-                parent = parent.getParent();
-            }
-            mReactRootView = (ReactRootView) parent;
-        }
-
-        return mReactRootView;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        getReactRootView().dispatchTouchEvent(event);
-        return false;
-    }
-
 }
