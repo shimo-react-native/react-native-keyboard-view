@@ -5,8 +5,9 @@ import android.content.Context;
 import android.view.MotionEvent;
 
 import com.facebook.react.uimanager.PointerEvents;
+import com.facebook.react.views.view.ReactViewGroup;
 
-public class KeyboardCoverView extends ReactRootAwareViewGroup {
+public class KeyboardCoverView extends ReactViewGroup {
     public KeyboardCoverView(Context context) {
         super(context);
     }
