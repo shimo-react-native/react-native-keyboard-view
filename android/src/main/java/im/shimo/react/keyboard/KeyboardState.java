@@ -1,6 +1,7 @@
 package im.shimo.react.keyboard;
 
 import android.graphics.Rect;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
@@ -9,17 +10,18 @@ import com.facebook.react.uimanager.PixelUtil;
 
 import java.util.ArrayList;
 
-public class KeyboardState {
+class KeyboardState {
     private Rect mVisibleViewArea;
     private int mMinKeyboardHeightDetected = (int) PixelUtil.toPixelFromDIP(60);
-    private int mKeyboardHeight = 0;
-    private int mRootViewTop = 0;
+    private Rect mKeyboardFrame;
     private boolean mKeyboardShowing = false;
     private ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
     private ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
+    private DisplayMetrics mWindowDisplayMetrics;
 
-    public KeyboardState(final View rootView) {
+    KeyboardState(final View rootView) {
         ViewTreeObserver viewTreeObserver = rootView.getViewTreeObserver();
+        mWindowDisplayMetrics = DisplayMetricsHolder.getWindowDisplayMetrics();
         mVisibleViewArea = new Rect();
         mOnKeyboardChangeListeners = new ArrayList<>();
 
@@ -28,22 +30,22 @@ public class KeyboardState {
             public void onGlobalLayout() {
                 rootView.getWindowVisibleDisplayFrame(mVisibleViewArea);
 
-                int keyboardHeight = DisplayMetricsHolder.getWindowDisplayMetrics().heightPixels - mVisibleViewArea.bottom;
-                int rootViewTop = rootView.getTop();
+                Rect keyboardFrame = new Rect(0, mVisibleViewArea.bottom, mWindowDisplayMetrics.widthPixels, mWindowDisplayMetrics.heightPixels);
 
-                if (keyboardHeight == mKeyboardHeight && rootViewTop == mRootViewTop) {
+
+                if (keyboardFrame.equals(mKeyboardFrame)) {
                     return;
                 } else {
-                    mKeyboardHeight = keyboardHeight;
-                    mRootViewTop = rootViewTop;
+                    mKeyboardFrame = keyboardFrame;
                 }
 
-                mKeyboardShowing = mKeyboardHeight > mMinKeyboardHeightDetected;
+
+                mKeyboardShowing = keyboardFrame.height() > mMinKeyboardHeightDetected;
 
                 for (int i = 0; i < mOnKeyboardChangeListeners.size(); i++) {
                     OnKeyboardChangeListener listener = mOnKeyboardChangeListeners.get(i);
                     if (mKeyboardShowing) {
-                        listener.onKeyboardShown(DisplayMetricsHolder.getWindowDisplayMetrics().widthPixels, mKeyboardHeight);
+                        listener.onKeyboardShown(keyboardFrame);
                     } else {
                         listener.onKeyboardClosed();
                     }
@@ -56,28 +58,24 @@ public class KeyboardState {
         viewTreeObserver.addOnGlobalLayoutListener(mLayoutListener);
     }
 
-    public void addOnKeyboardChangeListener(OnKeyboardChangeListener listener) {
+    void addOnKeyboardChangeListener(OnKeyboardChangeListener listener) {
         mOnKeyboardChangeListeners.add(listener);
     }
 
-    public void removeOnKeyboardChangeListener(OnKeyboardChangeListener listener) {
+    void removeOnKeyboardChangeListener(OnKeyboardChangeListener listener) {
         mOnKeyboardChangeListeners.remove(listener);
     }
 
-    public int getKeyboardHeight() {
-        return mKeyboardHeight;
+    Rect getKeyboardFrame() {
+        return mKeyboardFrame;
     }
 
-    public int getKeyboardWidth() {
-        return DisplayMetricsHolder.getWindowDisplayMetrics().widthPixels;
-    }
-
-    public boolean isKeyboardShowing() {
+    boolean isKeyboardShowing() {
         return mKeyboardShowing;
     }
 
-    public interface OnKeyboardChangeListener {
-        void onKeyboardShown(int keyboardWidth, int keyboardHeight);
+    interface OnKeyboardChangeListener {
+        void onKeyboardShown(Rect keyboardFrame);
         void onKeyboardClosed();
     }
 
