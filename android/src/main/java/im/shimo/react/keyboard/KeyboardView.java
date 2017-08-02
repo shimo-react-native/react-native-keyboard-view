@@ -238,8 +238,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     new Runnable() {
                         @Override
                         public void run() {
-                            ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
-                                    .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height());
+                            if (mContentView !=  null) {
+                                ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
+                                        .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height());
+                            }
                         }
                     });
         }
@@ -266,8 +268,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 new Runnable() {
                     @Override
                     public void run() {
-                        context.getNativeModule(UIManagerModule.class)
-                                .updateNodeSize(mCoverView.getId(), coverViewWidth, coverViewHeight);
+                        if (mCoverView != null) {
+                            context.getNativeModule(UIManagerModule.class)
+                                    .updateNodeSize(mCoverView.getId(), coverViewWidth, coverViewHeight);
+                        }
                     }
                 }
         );
