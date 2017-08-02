@@ -149,7 +149,7 @@ class Keyboard extends Component {
                         ref={KEYBOARD_VIEW}
                         onShow={() => console.log('onShow')}
                         onHide={() => console.log('onHide')}
-                        renderCover={() => <View pointerEvents="none" style={{flex: 1, backgroundColor: 'rgba(0, 0,0, 0.2)'}} />}
+                        renderCoverView={() => <View pointerEvents="none" style={{flex: 1, backgroundColor: 'rgba(0, 0,0, 0.2)'}} />}
                         renderStickyView={this._renderStickyView}>
                         {this.state.contentVisible && (
                             <ScrollView
