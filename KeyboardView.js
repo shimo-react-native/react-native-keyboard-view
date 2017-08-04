@@ -1,5 +1,6 @@
-import React, { Component, PropTypes, Children } from 'react';
-import { NativeModules, Keyboard, StyleSheet, View, requireNativeComponent, Platform, Animated } from 'react-native';
+import React, { Component, Children } from 'react';
+import PropTypes from 'prop-types';
+import { NativeModules, StyleSheet, View, requireNativeComponent, Platform, Animated } from 'react-native';
 import Modal from 'react-native-root-modal';
 
 const styles = StyleSheet.create({
@@ -28,7 +29,12 @@ export default class extends Component {
         renderStickyView: PropTypes.func,
         renderCoverView: PropTypes.func,
         onShow: PropTypes.func,
-        onHide: PropTypes.func
+        onHide: PropTypes.func,
+        hideWhenKeyboardIsDismissed: PropTypes.bool
+    };
+
+    static defaultProps = {
+        hideWhenKeyboardIsDismissed: true
     };
 
     static dismiss = isIOS ?
@@ -38,26 +44,6 @@ export default class extends Component {
     static dismissWithoutAnimation = isIOS ?
       NativeModules.RNKeyboardViewManager.dismissWithoutAnimation :
       null;
-
-    componentWillMount() {
-        Keyboard.addListener('keyboardDidShow', this._didShow);
-        Keyboard.addListener('keyboardDidHide', this._didHide);
-    }
-
-    componentWillUnmount() {
-        Keyboard.removeListener('keyboardDidShow', this._didShow);
-        Keyboard.removeListener('keyboardDidHide', this._didHide);
-    }
-
-    _didShow = () => {
-        const { onShow } = this.props;
-        onShow && onShow();
-    };
-
-    _didHide = () => {
-        const { onHide } = this.props;
-        onHide && onHide();
-    };
 
 
     _shouldSetResponder() {
@@ -92,18 +78,18 @@ export default class extends Component {
           <KeyboardCoverView
             style={[styles.offSteam, hide]}
             pointerEvents="box-none"
-            collapsable={false}
           >
               <View
                 style={styles.cover}
                 pointerEvents="box-none"
-                collapsable={false}
               >
                   {cover}
               </View>
-              <View collapsable={false} >
-                  {stickyView}
-              </View>
+              {stickyView && (
+                <View>
+                    {stickyView}
+                </View>
+              )}
           </KeyboardCoverView>
         );
     }
@@ -113,17 +99,12 @@ export default class extends Component {
     }
 
     render() {
-        const { children, renderStickyView, renderCoverView, transform } = this.props;
+        const { children, renderStickyView, renderCoverView, transform, onHide, onShow,
+          hideWhenKeyboardIsDismissed } = this.props;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCoverView && renderCoverView();
         const hasCover = this._hasChildren(cover) || this._hasChildren(stickyView);
         const hasContent = this._hasChildren(children);
-
-        if (!hasContent && !hasCover) {
-            if (!transform || !isIOS) {
-                return null;
-            }
-        }
 
         if (isIOS) {
             return (
@@ -131,6 +112,8 @@ export default class extends Component {
                   <KeyboardView
                     style={[styles.offSteam, styles.hide, transform && { transform }]}
                     synchronouslyUpdateTransform={!!transform}
+                    onKeyboardHide={onHide}
+                    onKeyboardShow={onShow}
                   >
                       {this._getContentView(children, hasContent)}
                       {this._getCoverView(cover, stickyView, hasCover)}
@@ -141,6 +124,8 @@ export default class extends Component {
             return (
               <KeyboardView
                 style={[styles.offSteam, styles.hide]}
+                onKeyboardHide={onHide}
+                onKeyboardShow={onShow}
               >
                   {this._getContentView(children, hasContent)}
                   {this._getCoverView(cover, stickyView, hasCover)}
@@ -157,7 +142,10 @@ let KeyboardView,
 if (isIOS) {
     KeyboardView = requireNativeComponent('RNKeyboardView', null, {
         nativeOnly: {
-            synchronouslyUpdateTransform: true
+            synchronouslyUpdateTransform: true,
+            hideWhenKeyboardIsDismissed: true,
+            onKeyboardHide: true,
+            onKeyboardShow: true
         }
     });
 
@@ -165,7 +153,13 @@ if (isIOS) {
     KeyboardContentView = requireNativeComponent('RNKeyboardContentView');
     KeyboardCoverView = requireNativeComponent('RNKeyboardCoverView');
 } else {
-    KeyboardView = requireNativeComponent('KeyboardView');
+    KeyboardView = requireNativeComponent('KeyboardView', null, {
+        nativeOnly: {
+            hideWhenKeyboardIsDismissed: true,
+            onKeyboardHide: true,
+            onKeyboardShow: true
+        }
+    });
     KeyboardContentView = requireNativeComponent('KeyboardContentView');
     KeyboardCoverView = requireNativeComponent('KeyboardCoverView');
 }

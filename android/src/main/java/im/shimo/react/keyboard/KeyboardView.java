@@ -1,6 +1,5 @@
 package im.shimo.react.keyboard;
 
-
 import java.util.ArrayList;
 
 import android.app.Activity;
@@ -10,26 +9,19 @@ import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.Nullable;
 
-
-import android.util.Log;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
-import android.widget.FrameLayout;
 import android.widget.PopupWindow;
 
 import com.facebook.react.ReactRootView;
 import com.facebook.react.bridge.ActivityEventListener;
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.uimanager.PointerEvents;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.views.view.ReactViewGroup;
+import com.facebook.react.uimanager.events.RCTEventEmitter;
 
 /**
  *
@@ -54,18 +46,50 @@ import com.facebook.react.views.view.ReactViewGroup;
 
 
 public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEventListener {
-    private PopupWindow mPopupWindow;
+    private @Nullable PopupWindow mPopupWindow;
     private @Nullable KeyboardState mKeyboardState;
-    private View mContentView;
-    private View mCoverView;
+    private @Nullable View mContentView;
+    private @Nullable View mCoverView;
     private int mChildCount = 0;
     private KeyboardState.OnKeyboardChangeListener mOnKeyboardChangeListener;
+    private OnAttachStateChangeListener mOnAttachStateChangeListener;
     private ActivityEventListener mActivityEventListener;
+    private boolean mHideWhenKeyboardIsDismissed = true;
+    private RCTEventEmitter mEventEmitter;
+
+    public enum Events {
+        EVENT_SHOW("onKeyboardShow"),
+        EVENT_HIDE("onKeyboardHide");
+
+        private final String mName;
+
+        Events(final String name) {
+            mName = name;
+        }
+
+        @Override
+        public String toString() {
+            return mName;
+        }
+    }
 
     public KeyboardView(ThemedReactContext context) {
         super(context);
         bindKeyboardState();
+        mEventEmitter = context.getJSModule(RCTEventEmitter.class);
         context.addLifecycleEventListener(this);
+        mOnAttachStateChangeListener = new OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                resizeCover();
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                onDropInstance();
+            }
+        };
+        addOnAttachStateChangeListener(mOnAttachStateChangeListener);
     }
 
     @Override
@@ -76,15 +100,28 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     @Override
     public void addView(View child, int index) {
         if (child instanceof KeyboardContentView) {
+            if (mContentView != null) {
+                removeView(mContentView);
+            }
+
             mContentView = child;
             mChildCount++;
-            if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-                showPopupWindow();
+            if (mKeyboardState != null) {
+                showOrUpdatePopupWindow();
             }
         } else if (child instanceof KeyboardCoverView) {
+            if (mCoverView != null) {
+                removeView(mCoverView);
+            }
+
+
             mCoverView = child;
             mChildCount++;
             resizeCover();
+
+            if (mHideWhenKeyboardIsDismissed) {
+                child.setVisibility(GONE);
+            }
         }
     }
 
@@ -125,12 +162,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        resizeCover();
-    }
-
-    @Override
     public void addChildrenForAccessibility(ArrayList<View> outChildren) {
         // Explicitly override this to prevent accessibility events being passed down to children
         // Those will be handled by the mHostView which lives in the PopupWindow
@@ -144,24 +175,26 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     public void onDropInstance() {
-        ((ReactContext) getContext()).removeLifecycleEventListener(this);
-        dismissPopupWindow();
-        removeCoverFromSuper();
-        unbindKeyboardState();
+        if (mKeyboardState != null) {
+            ((ReactContext) getContext()).removeLifecycleEventListener(this);
+            dismissPopupWindow();
+            removeCoverFromSuper();
+            unbindKeyboardState();
+            removeOnAttachStateChangeListener(mOnAttachStateChangeListener);
+            mOnAttachStateChangeListener = null;
+        }
     }
 
     @Override
     public void onHostResume() {
-        bindKeyboardState();
-        if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-            showPopupWindow();
+        if (mKeyboardState != null) {
+            showOrUpdatePopupWindow();
         }
     }
 
     @Override
     public void onHostPause() {
-        dismissPopupWindow();
-        unbindKeyboardState();
+
     }
 
     @Override
@@ -176,14 +209,26 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             mOnKeyboardChangeListener = new KeyboardState.OnKeyboardChangeListener() {
                 @Override
                 public void onKeyboardShown(Rect keyboardFrame) {
-                    showPopupWindow(keyboardFrame);
+                    showOrUpdatePopupWindow(keyboardFrame);
                     resizeCover();
+
+                    if (mCoverView != null && mCoverView.getVisibility() != VISIBLE) {
+                        mCoverView.setVisibility(VISIBLE);
+                    }
+
+                    mEventEmitter.receiveEvent(getId(), Events.EVENT_SHOW.toString(), null);
                 }
 
                 @Override
                 public void onKeyboardClosed() {
-                    dismissPopupWindow();
+                    hidePopupWindow();
                     resizeCover();
+
+                    if (mCoverView != null && mHideWhenKeyboardIsDismissed) {
+                        mCoverView.setVisibility(GONE);
+                    }
+
+                    mEventEmitter.receiveEvent(getId(), Events.EVENT_HIDE.toString(), null);
                 }
             };
             mKeyboardState = new KeyboardState(activity.findViewById(android.R.id.content));
@@ -217,29 +262,33 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         }
     }
 
-    private void showPopupWindow() {
+    private void showOrUpdatePopupWindow() {
         if (mKeyboardState != null) {
-            showPopupWindow(mKeyboardState.getKeyboardFrame());
+            showOrUpdatePopupWindow(mKeyboardState.getKeyboardFrame());
         }
     }
 
-    private void showPopupWindow(final Rect keyboardFrame) {
+    private void showOrUpdatePopupWindow(final Rect keyboardFrame) {
         if (mContentView != null) {
             if (mPopupWindow == null) {
                 mPopupWindow = new PopupWindow(mContentView, keyboardFrame.width(), keyboardFrame.height());
                 mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 mPopupWindow.setAnimationStyle(R.style.DialogAnimationSlide);
-                mPopupWindow.showAtLocation(getRootView(), Gravity.TOP, 0, keyboardFrame.top);
+                mPopupWindow.setClippingEnabled(false);
+
+                mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
             } else {
-                mPopupWindow.update(keyboardFrame.width(), keyboardFrame.height());
+                mPopupWindow.update(0, keyboardFrame.top, keyboardFrame.width(), keyboardFrame.height());
             }
 
             ((ReactContext) getContext()).runOnNativeModulesQueueThread(
                     new Runnable() {
                         @Override
                         public void run() {
-                            ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
-                                    .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height());
+                            if (mContentView !=  null) {
+                                ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
+                                        .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height());
+                            }
                         }
                     });
         }
@@ -266,8 +315,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 new Runnable() {
                     @Override
                     public void run() {
-                        context.getNativeModule(UIManagerModule.class)
-                                .updateNodeSize(mCoverView.getId(), coverViewWidth, coverViewHeight);
+                        if (mCoverView != null) {
+                            context.getNativeModule(UIManagerModule.class)
+                                    .updateNodeSize(mCoverView.getId(), coverViewWidth, coverViewHeight);
+                        }
                     }
                 }
         );
@@ -280,6 +331,13 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         }
     }
 
+    private void hidePopupWindow() {
+        if (mPopupWindow != null && mKeyboardState != null) {
+            Rect keyboardFrame = mKeyboardState.getKeyboardFrame();
+            mPopupWindow.update(0, keyboardFrame.top + keyboardFrame.height(), -1, -1);
+        }
+    }
+
     private void removeCoverFromSuper() {
         if (mCoverView == null) {
             return;
@@ -289,5 +347,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         if (parent != null) {
             parent.removeView(mCoverView);
         }
+    }
+
+    public void setHideWhenKeyboardIsDismissed(boolean hideWhenKeyboardIsDismissed) {
+        mHideWhenKeyboardIsDismissed = hideWhenKeyboardIsDismissed;
     }
 }
