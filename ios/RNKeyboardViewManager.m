@@ -26,6 +26,9 @@ RCT_EXPORT_MODULE()
 }
 
 RCT_EXPORT_VIEW_PROPERTY(synchronouslyUpdateTransform, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(hideWhenKeyboardIsDismissed, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(onKeyboardHide,RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onKeyboardShow,RCTDirectEventBlock)
 
 RCT_EXPORT_METHOD(dismiss)
 {
@@ -33,7 +36,6 @@ RCT_EXPORT_METHOD(dismiss)
         [[UIApplication sharedApplication].keyWindow endEditing:YES];
     });
 }
-
 
 RCT_EXPORT_METHOD(dismissWithoutAnimation)
 {

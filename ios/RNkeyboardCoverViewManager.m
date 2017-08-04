@@ -7,7 +7,7 @@ RCT_EXPORT_MODULE()
 
 - (UIView *)view
 {
-    return [[RNKeyboardCoverView alloc] initWithBridge:self.bridge];
+    return [[RNKeyboardCoverView alloc] init];
 }
 
 @end
