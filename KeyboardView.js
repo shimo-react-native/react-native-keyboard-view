@@ -114,6 +114,7 @@ export default class extends Component {
                     synchronouslyUpdateTransform={!!transform}
                     onKeyboardHide={onHide}
                     onKeyboardShow={onShow}
+                    hideWhenKeyboardIsDismissed={hideWhenKeyboardIsDismissed}
                   >
                       {this._getContentView(children, hasContent)}
                       {this._getCoverView(cover, stickyView, hasCover)}
@@ -126,6 +127,7 @@ export default class extends Component {
                 style={[styles.offSteam, styles.hide]}
                 onKeyboardHide={onHide}
                 onKeyboardShow={onShow}
+                hideWhenKeyboardIsDismissed={hideWhenKeyboardIsDismissed}
               >
                   {this._getContentView(children, hasContent)}
                   {this._getCoverView(cover, stickyView, hasCover)}
