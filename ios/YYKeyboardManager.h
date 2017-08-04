@@ -24,14 +24,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 typedef struct {
     BOOL fromVisible; ///< Keyboard visible before transition.
-    BOOL toVisible;   ///< Keyboard visible after transition.
+    BOOL toVisible; ///< Keyboard visible after transition.
     CGRect fromFrame; ///< Keyboard frame before transition.
-    CGRect toFrame;   ///< Keyboard frame after transition.
-    NSTimeInterval animationDuration;       ///< Keyboard transition animation duration.
-    UIViewAnimationCurve animationCurve;    ///< Keyboard transition animation curve.
+    CGRect toFrame; ///< Keyboard frame after transition.
+    NSTimeInterval animationDuration; ///< Keyboard transition animation duration.
+    UIViewAnimationCurve animationCurve; ///< Keyboard transition animation curve.
     UIViewAnimationOptions animationOption; ///< Keybaord transition animation option.
 } YYKeyboardTransition;
-
 
 /**
  The YYKeyboardObserver protocol defines the method you can use
@@ -41,7 +40,6 @@ typedef struct {
 @optional
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition;
 @end
-
 
 /**
  A YYKeyboardManager object lets you get the system keyboard information,
@@ -53,7 +51,7 @@ typedef struct {
 @interface YYKeyboardManager : NSObject
 
 - (instancetype)init UNAVAILABLE_ATTRIBUTE;
-+ (instancetype)new UNAVAILABLE_ATTRIBUTE;
++ (instancetype) new UNAVAILABLE_ATTRIBUTE;
 
 /// Get the default manager.
 + (instancetype)defaultManager;
@@ -70,7 +68,6 @@ typedef struct {
 /// Get the keyboard frame. CGRectNull if there's no keyboard view.
 /// Use convertRect:toView: to convert frame to specified view.
 @property (nonatomic, readonly) CGRect keyboardFrame;
-
 
 /**
  Add an observer to manager to get keyboard change information.

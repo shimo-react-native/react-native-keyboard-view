@@ -1,7 +1,7 @@
-#import <React/RCTView.h>
 #import <Foundation/Foundation.h>
 #import <React/RCTBridge.h>
 #import <React/RCTInvalidating.h>
+#import <React/RCTView.h>
 
 @interface RNKeyboardContentView : RCTView <RCTInvalidating>
 

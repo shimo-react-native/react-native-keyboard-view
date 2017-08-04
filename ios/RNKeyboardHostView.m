@@ -1,19 +1,18 @@
 
-    
+
 #import "RNKeyboardHostView.h"
 
 #import <React/RCTAssert.h>
+#import <React/RCTRootView.h>
+#import <React/RCTShadowView.h>
 #import <React/RCTTouchHandler.h>
 #import <React/RCTUIManager.h>
+#import <React/RCTUtils.h>
 #import <React/UIView+React.h>
-#import <React/RCTUtils.h>
 #import <UIKit/UIKit.h>
-#import <React/RCTUtils.h>
-#import <React/RCTShadowView.h>
-#import <React/RCTRootView.h>
 
-#import "RNKeyboardCoverView.h"
 #import "RNKeyboardContentView.h"
+#import "RNKeyboardCoverView.h"
 
 @interface RNKeyboardHostView ()
 
@@ -109,7 +108,7 @@
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
     BOOL fromVisible = transition.fromVisible;
     BOOL toVisible = transition.toVisible;
-    
+
     if (fromVisible != toVisible && toVisible) {
         if (_onKeyboardShow) {
             _onKeyboardShow(nil);
@@ -289,4 +288,3 @@
 }
 
 @end
-

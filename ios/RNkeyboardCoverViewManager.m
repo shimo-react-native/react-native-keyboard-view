@@ -1,12 +1,11 @@
-#import "RNKeyboardCoverViewManager.h"
 #import "RNKeyboardCoverView.h"
+#import "RNKeyboardCoverViewManager.h"
 
 @implementation RNKeyboardCoverViewManager
 
 RCT_EXPORT_MODULE()
 
-- (UIView *)view
-{
+- (UIView *)view {
     return [[RNKeyboardCoverView alloc] init];
 }
 
