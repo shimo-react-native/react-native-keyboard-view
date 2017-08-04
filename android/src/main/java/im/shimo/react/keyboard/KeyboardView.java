@@ -75,7 +75,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     public KeyboardView(ThemedReactContext context) {
         super(context);
-        bindKeyboardState();
         mEventEmitter = context.getJSModule(RCTEventEmitter.class);
         context.addLifecycleEventListener(this);
         mOnAttachStateChangeListener = new OnAttachStateChangeListener() {
@@ -90,6 +89,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             }
         };
         addOnAttachStateChangeListener(mOnAttachStateChangeListener);
+        bindKeyboardState();
     }
 
     @Override
@@ -123,6 +123,8 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 child.setVisibility(GONE);
             }
         }
+
+        checkKeyboardState();
     }
 
     @Override
@@ -205,6 +207,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private void bindKeyboardState() {
         final ReactContext context = (ReactContext) getContext();
         Activity activity = ((ReactContext) getContext()).getCurrentActivity();
+
         if (activity != null) {
             mOnKeyboardChangeListener = new KeyboardState.OnKeyboardChangeListener() {
                 @Override
@@ -233,6 +236,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             };
             mKeyboardState = new KeyboardState(activity.findViewById(android.R.id.content));
             mKeyboardState.addOnKeyboardChangeListener(mOnKeyboardChangeListener);
+            checkKeyboardState();
         } else if (mActivityEventListener == null)  {
             mActivityEventListener = new ActivityEventListener() {
                 @Override
@@ -259,6 +263,12 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         } else if (mActivityEventListener != null) {
             ((ReactContext) getContext()).removeActivityEventListener(mActivityEventListener);
             mActivityEventListener = null;
+        }
+    }
+
+    private void checkKeyboardState() {
+        if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
+            mOnKeyboardChangeListener.onKeyboardShown(mKeyboardState.getKeyboardFrame());
         }
     }
 
