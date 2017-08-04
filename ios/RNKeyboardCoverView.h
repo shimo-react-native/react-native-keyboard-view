@@ -1,5 +1,5 @@
-#import "RNKeyboardContentView.h"
+#import <React/RCTView.h>
 
-@interface RNKeyboardCoverView : RNKeyboardContentView
+@interface RNKeyboardCoverView : RCTView
 
 @end

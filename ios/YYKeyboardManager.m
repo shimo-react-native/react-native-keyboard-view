@@ -12,7 +12,6 @@
 #import "YYKeyboardManager.h"
 #import <objc/runtime.h>
 
-
 static int _YYKeyboardViewFrameObserverKey;
 
 /// Observer for view's frame/bounds/center/transform
@@ -21,7 +20,6 @@ static int _YYKeyboardViewFrameObserverKey;
 - (void)addToKeyboardView:(UIView *)keyboardView;
 + (instancetype)observerForView:(UIView *)keyboardView;
 @end
-
 
 @implementation _YYKeyboardViewFrameObserver {
     __unsafe_unretained UIView *_keyboardView;
@@ -82,8 +80,6 @@ static int _YYKeyboardViewFrameObserverKey;
 
 @end
 
-
-
 @implementation YYKeyboardManager {
     NSHashTable *_observers;
 
@@ -110,7 +106,7 @@ static int _YYKeyboardViewFrameObserverKey;
 
 - (instancetype)_init {
     self = [super init];
-    _observers = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory|NSPointerFunctionsObjectPointerPersonality capacity:0];
+    _observers = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPointerPersonality capacity:0];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(_keyboardFrameWillChangeNotification:)
                                                  name:UIKeyboardWillChangeFrameNotification
@@ -445,7 +441,8 @@ static int _YYKeyboardViewFrameObserverKey;
                             trans.toFrame.origin.x += trans.toFrame.size.width;
                         }
                     } break;
-                    default: break;
+                    default:
+                        break;
                 }
             }
         }

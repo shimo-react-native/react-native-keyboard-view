@@ -80,21 +80,21 @@
 		101789271B283EE1006C41B8 = {
 			isa = PBXGroup;
 			children = (
-				7F87121E1EEF85330068E5B2 /* RNKeyboardCoverViewManager.h */,
-				7F8712211EEF85DF0068E5B2 /* RNKeyboardCoverViewManager.m */,
+				101789311B283EE1006C41B8 /* Products */,
+				7F8712151EEE9DA30068E5B2 /* RNKeyboardContentView.h */,
+				7F8712161EEE9DA30068E5B2 /* RNKeyboardContentView.m */,
 				7F8712181EEEA0D80068E5B2 /* RNKeyboardContentViewManager.h */,
 				7F8712191EEEA0D80068E5B2 /* RNKeyboardContentViewManager.m */,
 				7F8712231EEF86220068E5B2 /* RNKeyboardCoverView.h */,
 				7F8712241EEF8A130068E5B2 /* RNKeyboardCoverView.m */,
-				7F8712151EEE9DA30068E5B2 /* RNKeyboardContentView.h */,
-				7F8712161EEE9DA30068E5B2 /* RNKeyboardContentView.m */,
-				7F8004691E5A7FC000905D7C /* YYKeyboardManager.h */,
-				7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */,
-				7FE295431E03BDA2009E7610 /* RNKeyboardViewManager.h */,
-				7FE295441E03BDA2009E7610 /* RNKeyboardViewManager.m */,
+				7F87121E1EEF85330068E5B2 /* RNKeyboardCoverViewManager.h */,
+				7F8712211EEF85DF0068E5B2 /* RNKeyboardCoverViewManager.m */,
 				7F80046F1E5A8D5B00905D7C /* RNKeyboardHostView.h */,
 				7F8004701E5A8D6700905D7C /* RNKeyboardHostView.m */,
-				101789311B283EE1006C41B8 /* Products */,
+				7FE295431E03BDA2009E7610 /* RNKeyboardViewManager.h */,
+				7FE295441E03BDA2009E7610 /* RNKeyboardViewManager.m */,
+				7F8004691E5A7FC000905D7C /* YYKeyboardManager.h */,
+				7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */,
 			);
 			sourceTree = "<group>";
 		};
