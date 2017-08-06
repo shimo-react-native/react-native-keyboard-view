@@ -25,9 +25,9 @@
     __weak RNKeyboardContentView *_contentView;
     __weak RNKeyboardCoverView *_coverView;
     __weak YYKeyboardManager *_manager;
-    __weak UIWindow *_keyboardWindow;
     BOOL _keyboardState;
     BOOL _isPresented;
+    BOOL attachedToSuper;
 }
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge {
@@ -43,8 +43,24 @@
 #pragma mark - UIView
 
 - (void)didMoveToSuperview {
+    [super didMoveToSuperview];
     if (!self.superview && _isPresented) {
         _isPresented = NO;
+    }
+}
+
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    if (!_coverView.superview && self.window) {
+        [self autoAddSubview:_coverView onSuperview:self.rootView];
+        
+        if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
+            [_coverView setCoverHidden:YES];
+        }
+    }
+    
+    if (!_contentView.superview && self.window) {
+        [self autoAddSubview:_contentView onSuperview:[_manager keyboardWindow]];
     }
 }
 
@@ -54,15 +70,20 @@
     if ([subview class] == [RNKeyboardContentView class]) {
         RCTAssert(_contentView == nil, @"KeyboardView ContainerView is already existed.");
         _contentView = subview;
+        [self autoAddSubview:_contentView onSuperview:[_manager keyboardWindow]];
     } else if ([subview class] == [RNKeyboardCoverView class]) {
         RCTAssert(_coverView == nil, @"KeyboardView StickyView is already existed.");
         _coverView = subview;
+        
+        [self autoAddSubview:_coverView onSuperview:self.rootView];
+        if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
+            [_coverView setCoverHidden:YES];
+        }
     }
 
+    
     [super insertReactSubview:subview atIndex:atIndex];
-    if (!_hideWhenKeyboardIsDismissed || (_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
-        [self presendAndLayoutContents];
-    }
+    [self layoutContents];
 }
 
 - (void)removeReactSubview:(__kindof UIView *)subview {
@@ -92,7 +113,7 @@
 - (void)invalidate {
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIView performWithoutAnimation:^() {
-            _keyboardWindow.transform = CGAffineTransformIdentity;
+            [_manager keyboardWindow].transform = CGAffineTransformIdentity;
         }];
         [_contentView removeFromSuperview];
         _contentView = nil;
@@ -116,19 +137,21 @@
     }
 
     _keyboardState = toVisible;
-
+    
     if ((!fromVisible && !toVisible) || (!_contentView && !_coverView)) {
         return;
     }
 
-    _keyboardWindow = [_manager keyboardWindow];
-    _keyboardWindow.transform = self.transform;
     if (!fromVisible && !_isPresented) {
-        [self present];
+        [self synchronousTransform];
     }
 
     if (toVisible) {
         [self layoutContents];
+        [_coverView setCoverHidden:NO];
+        [UIView performWithoutAnimation:^() {
+            [_coverView setAlpha:1];
+        }];
     }
 
     if (!fromVisible && !_isPresented) {
@@ -149,17 +172,14 @@
             }
             if (!toVisible && _hideWhenKeyboardIsDismissed) {
                 [_coverView setAlpha:0];
-                [_contentView setAlpha:0];
             }
         }
         completion:^(BOOL finished) {
             if (finished && !toVisible && !_keyboardState) { // keyboard is not visible
                 _isPresented = NO;
                 if (_hideWhenKeyboardIsDismissed) {
-                    [_coverView setHidden:YES];
-                    [_contentView setHidden:YES];
+                    [_coverView setCoverHidden:YES];
                     [_coverView setAlpha:1];
-                    [_contentView setAlpha:1];
                     if (_onKeyboardHide) {
                         _onKeyboardHide(nil);
                     }
@@ -170,32 +190,15 @@
 
 #pragma mark - Layout
 
-- (void)presendAndLayoutContents {
-    [self present];
-    [self layoutContents];
-}
-
-- (void)present {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [UIView performWithoutAnimation:^() {
-            [self synchronousTransform];
-        }];
-        if (_contentView) {
-            [self autoAddSubview:_contentView onSuperview:_keyboardWindow];
-            [_contentView setHidden:NO];
-        }
-        if (_coverView) {
-            [self autoAddSubview:_coverView onSuperview:self.rootView];
-            [_coverView setHidden:NO];
-        }
-    });
-}
-
 - (void)layoutContents {
     CGRect keyboardFrame = [_manager keyboardFrame];
     CGSize screenSize = RCTScreenSize();
     float coverHeight = screenSize.height - CGRectGetHeight(keyboardFrame);
-
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self synchronousTransform];
+    });
+    
     dispatch_async(RCTGetUIManagerQueue(), ^{
         if (_contentView) {
             RCTShadowView *_contentShadowView = [self getShadowView:_contentView];
@@ -216,10 +219,12 @@
 #pragma mark - Private
 
 - (void)synchronousTransform {
-    if (_manager.keyboardVisible && _synchronouslyUpdateTransform) {
-        _keyboardWindow.transform = self.transform;
-        _coverView.transform = self.transform;
-    }
+    [UIView performWithoutAnimation:^() {
+        if (_manager.keyboardVisible && _synchronouslyUpdateTransform) {
+            [_manager keyboardWindow].transform = self.transform;
+            _coverView.transform = self.transform;
+        }
+    }];
 }
 
 - (void)setAdjustedContainerFrame:(BOOL)direction {
