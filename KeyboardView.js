@@ -51,7 +51,7 @@ export default class extends Component {
     }
 
     _getContentView(children, visible) {
-        if (!isIOS && !visible) {
+        if (!visible) {
             return null;
         }
 
@@ -61,6 +61,7 @@ export default class extends Component {
           <KeyboardContentView
             style={[styles.offSteam, hide]}
             pointerEvents="box-none"
+            key="contentView"
           >
               {children}
           </KeyboardContentView>
@@ -68,7 +69,7 @@ export default class extends Component {
     }
 
     _getCoverView(cover, stickyView, visible) {
-        if (!isIOS && !visible) {
+        if (!visible) {
             return null;
         }
 
@@ -78,6 +79,7 @@ export default class extends Component {
           <KeyboardCoverView
             style={[styles.offSteam, hide]}
             pointerEvents="box-none"
+            key="coverView"
           >
               <View
                 style={styles.cover}
@@ -106,18 +108,26 @@ export default class extends Component {
         const hasCover = this._hasChildren(cover) || this._hasChildren(stickyView);
         const hasContent = this._hasChildren(children);
 
+        const props = {
+            onKeyboardHide: onHide,
+            onKeyboardShow: onShow,
+            hideWhenKeyboardIsDismissed: hideWhenKeyboardIsDismissed
+        };
+
+        const childViews = [
+            this._getContentView(children, hasContent, hasContent),
+            this._getCoverView(cover, stickyView, hasCover)
+        ];
+
         if (isIOS) {
             return (
               <Modal style={styles.offSteam} visible={true}>
                   <KeyboardView
                     style={[styles.offSteam, styles.hide, transform && { transform }]}
                     synchronouslyUpdateTransform={!!transform}
-                    onKeyboardHide={onHide}
-                    onKeyboardShow={onShow}
-                    hideWhenKeyboardIsDismissed={hideWhenKeyboardIsDismissed}
+                    {...props}
                   >
-                      {this._getContentView(children, hasContent)}
-                      {this._getCoverView(cover, stickyView, hasCover)}
+                      {childViews}
                   </KeyboardView>
               </Modal>
             );
@@ -125,12 +135,9 @@ export default class extends Component {
             return (
               <KeyboardView
                 style={[styles.offSteam, styles.hide]}
-                onKeyboardHide={onHide}
-                onKeyboardShow={onShow}
-                hideWhenKeyboardIsDismissed={hideWhenKeyboardIsDismissed}
+                {...props}
               >
-                  {this._getContentView(children, hasContent)}
-                  {this._getCoverView(cover, stickyView, hasCover)}
+                  {childViews}
               </KeyboardView>
             );
         }
