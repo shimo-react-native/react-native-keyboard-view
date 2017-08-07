@@ -2,22 +2,20 @@
 #import <React/UIView+React.h>
 
 @implementation RNKeyboardCoverView {
-    BOOL _isCoverHidden;
+    BOOL _coverHidden;
 }
 
 #pragma mark - UIView
 
 - (void)setHidden:(BOOL)hidden {
-    if (_isCoverHidden == hidden) {
-        [super setHidden:hidden];
-    }
+    // do nothing, let `setCoverHidden` do the stuff
 }
 
 #pragma mark - Setter
 
-- (void)setCoverHidden:(BOOL)hidden {
-    _isCoverHidden = hidden;
-    [self setHidden:hidden];
+- (void)setCoverHidden:(BOOL)coverHidden {
+    _coverHidden = coverHidden;
+    [super setHidden:coverHidden];
 }
 
 
