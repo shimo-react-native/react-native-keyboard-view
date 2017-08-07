@@ -2,6 +2,6 @@
 
 @interface RNKeyboardCoverView : RCTView
 
-- (void)setCoverHidden:(BOOL)hidden;
+@property (nonatomic, assign) BOOL coverHidden;
 
 @end

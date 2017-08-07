@@ -1,9 +1,7 @@
 #import "RNKeyboardCoverView.h"
 #import <React/UIView+React.h>
 
-@implementation RNKeyboardCoverView {
-    BOOL _coverHidden;
-}
+@implementation RNKeyboardCoverView
 
 #pragma mark - UIView
 
