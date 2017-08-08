@@ -70,6 +70,10 @@ class KeyboardState {
         return mKeyboardFrame;
     }
 
+    Rect getVisibleViewArea() {
+        return mVisibleViewArea;
+    }
+
     boolean isKeyboardShowing() {
         return mKeyboardShowing;
     }

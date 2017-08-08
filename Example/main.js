@@ -20,7 +20,8 @@ class Keyboard extends Component {
         super(props);
         this.state = {
             visible: true,
-            contentVisible: false
+            contentVisible: false,
+            placeholderHeight: 0
         };
     }
 
@@ -130,6 +131,15 @@ class Keyboard extends Component {
                             <Text style={styles.buttonText}>TOGGLE VISIBLE</Text>
                         </View>
                     </TouchableHighlight>
+                    <TouchableHighlight
+                      style={styles.button}
+                      onPress={() => this.setState({placeholderHeight: this.state.placeholderHeight ? 0 : 320})}
+                      underlayColor="#ccc"
+                    >
+                        <View style={styles.buttonContent}>
+                            <Text style={styles.buttonText}>TOGGLE PLACEHOLDER</Text>
+                        </View>
+                    </TouchableHighlight>
                 </View>
 
                 <View style={styles.webviewContainer}>
@@ -150,7 +160,9 @@ class Keyboard extends Component {
                         onShow={() => console.log('onShow')}
                         onHide={() => console.log('onHide')}
                         renderCoverView={() => <View pointerEvents="none" style={{flex: 1, backgroundColor: 'rgba(0, 0,0, 0.2)'}} />}
-                        renderStickyView={this._renderStickyView}>
+                        renderStickyView={this._renderStickyView}
+                        keyboardPlaceholderHeight={this.state.placeholderHeight}
+                    >
                         {this.state.contentVisible && (
                             <ScrollView
                                 keyboardShouldPersistTaps="always"

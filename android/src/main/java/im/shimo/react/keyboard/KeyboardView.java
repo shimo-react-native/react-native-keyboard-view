@@ -56,6 +56,8 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private ActivityEventListener mActivityEventListener;
     private boolean mHideWhenKeyboardIsDismissed = true;
     private RCTEventEmitter mEventEmitter;
+    private int mKeyboardPlaceholderHeight;
+    private @Nullable Rect mKeyboardPlaceholderFrame;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -106,7 +108,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
             mContentView = child;
             mChildCount++;
-            if (mKeyboardState != null) {
+
+            if (mKeyboardPlaceholderHeight > 0) {
+                showKeyboardPlaceHolder(mKeyboardPlaceholderHeight);
+            } else {
                 showOrUpdatePopupWindow();
             }
         } else if (child instanceof KeyboardCoverView) {
@@ -114,15 +119,17 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 removeView(mCoverView);
             }
 
-
             mCoverView = child;
             mChildCount++;
-            resizeCover();
 
-            if (mHideWhenKeyboardIsDismissed) {
-                child.setVisibility(GONE);
+            if (mKeyboardPlaceholderHeight > 0) {
+                showKeyboardPlaceHolder(mKeyboardPlaceholderHeight);
+            } else {
+                resizeCover();
             }
         }
+
+
 
         checkKeyboardState();
     }
@@ -147,6 +154,12 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             dismissPopupWindow();
             mContentView = null;
             mChildCount--;
+
+            if (mKeyboardPlaceholderFrame != null) {
+                mKeyboardPlaceholderFrame = null;
+                resizeCover();
+            }
+
         } else if (child instanceof KeyboardCoverView) {
             removeCoverFromSuper();
             mCoverView = null;
@@ -215,23 +228,20 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     showOrUpdatePopupWindow(keyboardFrame);
                     resizeCover();
 
-                    if (mCoverView != null && mCoverView.getVisibility() != VISIBLE) {
-                        mCoverView.setVisibility(VISIBLE);
+                    if (mKeyboardPlaceholderHeight == 0) {
+                        receiveEvent(Events.EVENT_SHOW);
                     }
-
-                    mEventEmitter.receiveEvent(getId(), Events.EVENT_SHOW.toString(), null);
                 }
 
                 @Override
                 public void onKeyboardClosed() {
-                    hidePopupWindow();
-                    resizeCover();
-
-                    if (mCoverView != null && mHideWhenKeyboardIsDismissed) {
-                        mCoverView.setVisibility(GONE);
+                    if (mKeyboardPlaceholderHeight == 0) {
+                        hidePopupWindow();
+                        resizeCover();
+                        receiveEvent(Events.EVENT_HIDE);
+                    } else {
+                        showKeyboardPlaceHolder(mKeyboardPlaceholderHeight);
                     }
-
-                    mEventEmitter.receiveEvent(getId(), Events.EVENT_HIDE.toString(), null);
                 }
             };
             mKeyboardState = new KeyboardState(activity.findViewById(android.R.id.content));
@@ -274,7 +284,11 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     private void showOrUpdatePopupWindow() {
         if (mKeyboardState != null) {
-            showOrUpdatePopupWindow(mKeyboardState.getKeyboardFrame());
+            if (mKeyboardPlaceholderHeight > 0 && !mKeyboardState.isKeyboardShowing() && mKeyboardPlaceholderFrame != null) {
+                showOrUpdatePopupWindow(mKeyboardPlaceholderFrame);
+            } else {
+                showOrUpdatePopupWindow(mKeyboardState.getKeyboardFrame());
+            }
         }
     }
 
@@ -305,6 +319,23 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private void resizeCover() {
+        if (mKeyboardState != null && mCoverView != null) {
+            if (mHideWhenKeyboardIsDismissed && mKeyboardPlaceholderFrame == null && !mKeyboardState.isKeyboardShowing()) {
+                mCoverView.setVisibility(GONE);
+                return;
+            } else if (mCoverView.getVisibility() != VISIBLE) {
+                mCoverView.setVisibility(VISIBLE);
+            }
+
+            if (mKeyboardPlaceholderFrame != null && !mKeyboardState.isKeyboardShowing()) {
+                resizeCover(mKeyboardPlaceholderFrame);
+            } else {
+                resizeCover(mKeyboardState.getKeyboardFrame());
+            }
+        }
+    }
+
+    private void resizeCover(Rect keyboardFrame) {
         ReactRootView reactRootView = getReactRootView();
 
         if (mKeyboardState == null || mCoverView == null || reactRootView == null) {
@@ -316,7 +347,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         }
 
         int rootHeight = reactRootView.getHeight();
-        Rect keyboardFrame = mKeyboardState.getKeyboardFrame();
+
         final ReactContext context = (ReactContext)getContext();
         final int coverViewWidth = keyboardFrame.width();
         final int coverViewHeight = rootHeight - keyboardFrame.height();
@@ -361,5 +392,40 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     public void setHideWhenKeyboardIsDismissed(boolean hideWhenKeyboardIsDismissed) {
         mHideWhenKeyboardIsDismissed = hideWhenKeyboardIsDismissed;
+    }
+
+
+    public void setKeyboardPlaceholderHeight(int keyboardPlaceholderHeight) {
+        mKeyboardPlaceholderHeight = keyboardPlaceholderHeight;
+        showKeyboardPlaceHolder(mKeyboardPlaceholderHeight);
+    }
+
+    private void showKeyboardPlaceHolder(int keyboardPlaceholderHeight) {
+        if (mContentView == null) {
+            mKeyboardPlaceholderFrame = null;
+        } else if (mKeyboardState != null) {
+            Rect visibleViewArea = mKeyboardState.getVisibleViewArea();
+
+            if (keyboardPlaceholderHeight > 0) {
+                mKeyboardPlaceholderFrame = new Rect(visibleViewArea.left, visibleViewArea.bottom - keyboardPlaceholderHeight, visibleViewArea.right, visibleViewArea.bottom);
+
+                if (!mKeyboardState.isKeyboardShowing()) {
+                    resizeCover();
+                    showOrUpdatePopupWindow();
+                    receiveEvent(Events.EVENT_SHOW);
+                }
+            } else {
+                mKeyboardPlaceholderFrame = null;
+                if (!mKeyboardState.isKeyboardShowing()) {
+                    resizeCover();
+                    hidePopupWindow();
+                    receiveEvent(Events.EVENT_HIDE);
+                }
+            }
+        }
+    }
+
+    private void receiveEvent(Events event) {
+        mEventEmitter.receiveEvent(getId(), event.toString(), null);
     }
 }
