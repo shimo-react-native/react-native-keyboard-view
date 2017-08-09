@@ -8,23 +8,25 @@
 
 @implementation RNKeyboardViewManager {
     NSHashTable *_hostViews;
+    RNKeyboardHostView *_keyboardHostView;
 }
 
 RCT_EXPORT_MODULE()
 
 - (UIView *)view {
-    RNKeyboardHostView *view = [[RNKeyboardHostView alloc] initWithBridge:self.bridge];
+    _keyboardHostView = [[RNKeyboardHostView alloc] initWithBridge:self.bridge];
 
     if (!_hostViews) {
         _hostViews = [NSHashTable weakObjectsHashTable];
     }
-    [_hostViews addObject:view];
+    [_hostViews addObject:_keyboardHostView];
 
-    return view;
+    return _keyboardHostView;
 }
 
 RCT_EXPORT_VIEW_PROPERTY(synchronouslyUpdateTransform, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(hideWhenKeyboardIsDismissed, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(keyboardPlaceholderHeight, CGFloat)
 RCT_EXPORT_VIEW_PROPERTY(onKeyboardHide, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onKeyboardShow, RCTDirectEventBlock)
 
@@ -43,5 +45,11 @@ RCT_EXPORT_METHOD(dismissWithoutAnimation) {
         });
     }
 }
+
+- (NSDictionary *)constantsToExport {
+    return @{
+        @"inHardwareKeyboardMode": @(_keyboardHostView.inHardwareKeyboardMode)
+    };
+};
 
 @end
