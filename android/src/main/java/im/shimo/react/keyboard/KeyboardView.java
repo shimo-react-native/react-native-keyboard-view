@@ -237,11 +237,12 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 public void onKeyboardClosed() {
                     if (mKeyboardPlaceholderHeight == 0) {
                         hidePopupWindow();
-                        resizeCover();
                         receiveEvent(Events.EVENT_HIDE);
                     } else {
                         showKeyboardPlaceHolder(mKeyboardPlaceholderHeight);
                     }
+
+                    resizeCover();
                 }
             };
             mKeyboardState = new KeyboardState(activity.findViewById(android.R.id.content));
