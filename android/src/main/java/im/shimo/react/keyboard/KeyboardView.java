@@ -19,6 +19,7 @@ import com.facebook.react.ReactRootView;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.uimanager.DisplayMetricsHolder;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
@@ -58,6 +59,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private RCTEventEmitter mEventEmitter;
     private int mKeyboardPlaceholderHeight;
     private @Nullable Rect mKeyboardPlaceholderFrame;
+    private float mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -397,7 +399,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
 
     public void setKeyboardPlaceholderHeight(int keyboardPlaceholderHeight) {
-        mKeyboardPlaceholderHeight = keyboardPlaceholderHeight;
+        mKeyboardPlaceholderHeight = (int) (keyboardPlaceholderHeight * mScale);
         showKeyboardPlaceHolder(mKeyboardPlaceholderHeight);
     }
 
