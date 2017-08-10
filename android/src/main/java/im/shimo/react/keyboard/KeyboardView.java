@@ -206,6 +206,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     public void onHostResume() {
         if (mKeyboardState != null) {
             showOrUpdatePopupWindow();
+            resizeCover();
         }
     }
 
