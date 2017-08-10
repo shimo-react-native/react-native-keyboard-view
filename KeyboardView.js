@@ -46,6 +46,9 @@ export default class extends Component {
       NativeModules.RNKeyboardViewManager.dismissWithoutAnimation :
       null;
 
+    static getInHardwareKeyboardMode = isIOS ?
+        NativeModules.RNKeyboardViewManager.getInHardwareKeyboardMode :
+        null;
 
     _shouldSetResponder() {
         return true;

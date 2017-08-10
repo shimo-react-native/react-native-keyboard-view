@@ -46,10 +46,11 @@ RCT_EXPORT_METHOD(dismissWithoutAnimation) {
     }
 }
 
-- (NSDictionary *)constantsToExport {
-    return @{
-        @"inHardwareKeyboardMode": @(_keyboardHostView.inHardwareKeyboardMode)
-    };
-};
+RCT_REMAP_METHOD(getInHardwareKeyboardMode,
+                 getInHardwareKeyboardModeWithResolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject)
+{
+    resolve(@(_keyboardHostView.inHardwareKeyboardMode));
+}
 
 @end

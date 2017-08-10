@@ -31,10 +31,14 @@ class Keyboard extends Component {
 
   _subscription = null;
 
-  _testEvent = () => {
+  _testHardwareKeyboard = async () => {
     if (Platform.OS === 'ios') {
+      const inHardwareKeyboardMode = await KeyboardView.getInHardwareKeyboardMode();
+      console.log('inHardwareKeyboardMode: ', inHardwareKeyboardMode);
       const keyboardViewEmitter = new NativeEventEmitter(NativeModules.RNKeyboardEventEmitter);
-      this._subscription = keyboardViewEmitter.addListener('InHardwareKeyboardModeNameEvent', (reminder) => {
+      this._subscription = keyboardViewEmitter.addListener('InHardwareKeyboardModeNameEvent', async (reminder) => {
+          const inHardwareKeyboardMode = await KeyboardView.getInHardwareKeyboardMode();
+          console.log('inHardwareKeyboardMode: ', inHardwareKeyboardMode);
           console.log(reminder);
         }
       );
@@ -42,7 +46,7 @@ class Keyboard extends Component {
   };
 
   componentDidMount() {
-    this._testEvent();
+    this._testHardwareKeyboard();
   }
 
   componentWillUnmount() {

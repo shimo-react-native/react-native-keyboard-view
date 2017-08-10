@@ -19,7 +19,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 @property (nonatomic, weak) UIView *rootView;
 
 /**
- height for contentView
+ height of contentView
  */
 @property (nonatomic, assign) CGFloat contentHeight;
 @property (nonatomic, assign) BOOL contentShown;
@@ -27,8 +27,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 @property (nonatomic, assign) BOOL keyboardWillShow;
 @property (nonatomic, assign) BOOL contentOrKeyboardShown;
 @property (nonatomic, assign) BOOL inHardwareKeyboardMode;
-
-@property (nonatomic, strong) RCTEventEmitter *eventEmitter;
 
 @end
 
@@ -40,7 +38,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     BOOL _keyboardState;
     BOOL _isPresented;
     BOOL attachedToSuper;
-    CGFloat _keyboardHeight;
 }
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge {
@@ -64,13 +61,13 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 
 - (void)didMoveToWindow {
     [super didMoveToWindow];
-    if (!_coverView.superview) {
+    if (!_coverView.superview && self.window) {
         [self autoAddSubview:_coverView onSuperview:self.rootView];
         if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
             [_coverView setCoverHidden:YES];
         }
     }
-    if (!_contentView.superview) {
+    if (!_contentView.superview && self.window) {
         [self autoAddContentView];
     }
 }
@@ -92,7 +89,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         }
     }
     [self updateSize];
-    [self updateYoffset];
+    [self updateOriginy];
 
     [super insertReactSubview:subview atIndex:atIndex];
 }
@@ -103,7 +100,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         _contentView = nil;
         [self setContentShown:_contentView != nil];
         [self updateSize];
-        [self updateYoffset];
+        [self updateOriginy];
     } else if ([subview class] == [RNKeyboardCoverView class]) {
         [_coverView removeFromSuperview];
         _coverView = nil;
@@ -181,20 +178,19 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         }];
     }
 
-    // update yoffset to the position when keyboard is hidden
+    // update origin y to the position where keyboard is hidden before animation
     if (!fromVisible && !_isPresented) {
         [UIView performWithoutAnimation:^() {
-            [self updateYoffsetWithKeyboardWillShow:NO];
+            [self updateOriginyWithKeyboardWillShow:NO];
         }];
         _isPresented = YES;
     }
 
-    _isPresented = YES;
     [UIView animateWithDuration:transition.animationDuration
         delay:0
         options:transition.animationOption
         animations:^() {
-            [self updateYoffset];
+            [self updateOriginy];
             if (!toVisible && _hideWhenKeyboardIsDismissed) {
                 [_coverView setAlpha:0];
                 [_contentView setAlpha:0];
@@ -256,11 +252,11 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     });
 }
 
-- (void)updateYoffset {
-    [self updateYoffsetWithKeyboardWillShow:_keyboardWillShow];
+- (void)updateOriginy {
+    [self updateOriginyWithKeyboardWillShow:_keyboardWillShow];
 }
 
-- (void)updateYoffsetWithKeyboardWillShow:(BOOL)keyboardWillShow {
+- (void)updateOriginyWithKeyboardWillShow:(BOOL)keyboardWillShow {
     float offset = keyboardWillShow ? 0 : (_contentHeight - (_contentView ? _keyboardPlaceholderHeight : 0));
     if (_contentView) {
         CGRect contentFrame = _contentView.frame;
@@ -330,7 +326,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 
     CGRect keyboardFrame = [_manager keyboardFrame];
     CGFloat keyboardHeight = CGRectGetHeight(keyboardFrame);
-    _keyboardHeight = keyboardHeight;
     CGFloat keyboardWindowHeight = CGRectGetHeight(keyboardWindow.frame);
     CGFloat keyboardVisibleHeight = MAX(keyboardWindowHeight - CGRectGetMinY(keyboardFrame), 0);
 
@@ -365,7 +360,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     _keyboardPlaceholderHeight = keyboardPlaceholderHeight;
     [self autoAddContentView];
     [self updateSize];
-    [self updateYoffset];
+    [self updateOriginy];
 }
 
 - (void)setContentShown:(BOOL)contentShown {
