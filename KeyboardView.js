@@ -1,7 +1,11 @@
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
-import { NativeModules, StyleSheet, View, requireNativeComponent, Platform, Animated } from 'react-native';
+import { NativeModules, StyleSheet, View, requireNativeComponent, Platform, Animated, Dimensions } from 'react-native';
 import Modal from 'react-native-root-modal';
+
+const SCREEN_HEIGHT = Dimensions.get('screen').height;
+const isIOS = Platform.OS === 'ios';
+const isAndroid = Platform.OS === 'android';
 
 const styles = StyleSheet.create({
     offSteam: {
@@ -17,10 +21,13 @@ const styles = StyleSheet.create({
 
     hide: {
         opacity: 0
-    }
-});
+    },
 
-const isIOS = Platform.OS === 'ios';
+    androidInputAvoid: isAndroid ? {
+        bottom: SCREEN_HEIGHT,
+        transform: [{ translateY: SCREEN_HEIGHT }]
+    } : {}
+});
 
 export default class extends Component {
     static displayName = 'KeyboardView';
@@ -48,8 +55,8 @@ export default class extends Component {
       null;
 
     static getInHardwareKeyboardMode = isIOS ?
-        NativeModules.RNKeyboardViewManager.getInHardwareKeyboardMode :
-        null;
+      NativeModules.RNKeyboardViewManager.getInHardwareKeyboardMode :
+      null;
 
     _shouldSetResponder() {
         return true;
@@ -87,13 +94,13 @@ export default class extends Component {
             key="coverView"
           >
               <View
-                style={styles.cover}
+                style={[styles.cover, styles.androidInputAvoid]}
                 pointerEvents="box-none"
               >
                   {cover}
               </View>
               {stickyView && (
-                <View>
+                <View style={styles.androidInputAvoid}>
                     {stickyView}
                 </View>
               )}
@@ -152,8 +159,8 @@ export default class extends Component {
 }
 
 let KeyboardView,
-    KeyboardContentView,
-    KeyboardCoverView;
+  KeyboardContentView,
+  KeyboardCoverView;
 
 const nativeOnlyProps = {
     hideWhenKeyboardIsDismissed: true,
