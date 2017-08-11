@@ -42,6 +42,11 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         view.setHideWhenKeyboardIsDismissed(hideWhenKeyboardIsDismissed);
     }
 
+    @ReactProp(name = "contentVisible")
+    public void setContentVisible(KeyboardView view, boolean contentVisible) {
+        view.setContentVisible(contentVisible);
+    }
+
     @ReactProp(name = "keyboardPlaceholderHeight")
     public void setKeyboardPlaceholderHeight(KeyboardView view, int keyboardPlaceholderHeight) {
         view.setKeyboardPlaceholderHeight(keyboardPlaceholderHeight);

@@ -64,11 +64,20 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     if (!_coverView.superview && self.window) {
         [self autoAddSubview:_coverView onSuperview:self.rootView];
         if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
-            [_coverView setCoverHidden:YES];
+            [_coverView setVisible:NO];
         }
     }
     if (!_contentView.superview && self.window) {
         [self autoAddContentView];
+    }
+    
+    if (!self.window) {
+        [UIView performWithoutAnimation:^() {
+            [_manager keyboardWindow].transform = CGAffineTransformIdentity;
+        }];
+        [_contentView removeFromSuperview];
+        [_coverView removeFromSuperview];
+        _isPresented = NO;
     }
 }
 
@@ -80,12 +89,13 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         _contentView = subview;
         [self autoAddContentView];
         [self setContentShown:_contentView != nil];
+        [_contentView setVisible:!_contentVisible];
     } else if ([subview class] == [RNKeyboardCoverView class]) {
         RCTAssert(_coverView == nil, @"KeyboardView StickyView is already existed.");
         _coverView = subview;
         [self autoAddSubview:_coverView onSuperview:self.rootView];
         if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
-            [_coverView setCoverHidden:YES];
+            [_coverView setVisible:NO];
         }
     }
     [self updateSize];
@@ -172,7 +182,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 
     if (toVisible) {
         [self updateSize];
-        [_coverView setCoverHidden:NO];
+        [_coverView setVisible:YES];
         [UIView performWithoutAnimation:^() {
             [_coverView setAlpha:1];
         }];
@@ -200,7 +210,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
             if (finished && !toVisible && !_keyboardState) { // keyboard is not visible
                 _isPresented = NO;
                 if (_hideWhenKeyboardIsDismissed) {
-                    [_coverView setCoverHidden:YES];
+                    [_coverView setVisible:NO];
                     [_coverView setAlpha:1];
                     [_contentView removeFromSuperview];
                     [_contentView setAlpha:1];
@@ -220,7 +230,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         UIWindow *keyboardWindow = [_manager keyboardWindow];
         [self autoAddSubview:_contentView onSuperview:keyboardWindow];
     } else {
-        if ([_contentView superview] != self.window) {
+        if ([_contentView superview] != self.window && _keyboardPlaceholderHeight > 0) {
             [[_contentView superview] setHidden:YES];
         }
         [self autoAddSubview:_contentView onSuperview:self.window];
@@ -337,7 +347,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         }
         _contentHeight = MAX(keyboardVisibleHeight, _contentHeight);
     } else {
-        _contentHeight = MAX(keyboardVisibleHeight, (_contentView ? _keyboardPlaceholderHeight : 0));
+        _contentHeight = keyboardVisibleHeight > 0 ? keyboardVisibleHeight : (_contentView ? _keyboardPlaceholderHeight : 0);
     }
     return _contentHeight;
 }
@@ -361,6 +371,15 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     [self autoAddContentView];
     [self updateSize];
     [self updateOriginy];
+}
+
+- (void)setContentVisible:(BOOL)contentVisible {
+    if (_contentVisible == contentVisible) {
+        return;
+    }
+    
+    _contentVisible = contentVisible;
+    [_contentView setVisible:contentVisible];
 }
 
 - (void)setContentShown:(BOOL)contentShown {

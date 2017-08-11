@@ -26,6 +26,7 @@ RCT_EXPORT_MODULE()
 
 RCT_EXPORT_VIEW_PROPERTY(synchronouslyUpdateTransform, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(hideWhenKeyboardIsDismissed, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(contentVisible, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(keyboardPlaceholderHeight, CGFloat)
 RCT_EXPORT_VIEW_PROPERTY(onKeyboardHide, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onKeyboardShow, RCTDirectEventBlock)

@@ -31,6 +31,7 @@ export default class extends Component {
         onShow: PropTypes.func,
         onHide: PropTypes.func,
         hideWhenKeyboardIsDismissed: PropTypes.bool,
+        contentVisible: PropTypes.bool,
         keyboardPlaceholderHeight: PropTypes.number
     };
 
@@ -106,7 +107,7 @@ export default class extends Component {
 
     render() {
         const { children, renderStickyView, renderCoverView, transform, onHide, onShow, keyboardPlaceholderHeight,
-          hideWhenKeyboardIsDismissed } = this.props;
+          hideWhenKeyboardIsDismissed, contentVisible } = this.props;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCoverView && renderCoverView();
         const hasCover = this._hasChildren(cover) || this._hasChildren(stickyView);
@@ -116,7 +117,8 @@ export default class extends Component {
             onKeyboardHide: onHide,
             onKeyboardShow: onShow,
             hideWhenKeyboardIsDismissed,
-            keyboardPlaceholderHeight
+            keyboardPlaceholderHeight,
+            contentVisible
         };
 
         const childViews = [
@@ -150,17 +152,22 @@ export default class extends Component {
 }
 
 let KeyboardView,
-  KeyboardContentView,
-  KeyboardCoverView;
+    KeyboardContentView,
+    KeyboardCoverView;
+
+const nativeOnlyProps = {
+    hideWhenKeyboardIsDismissed: true,
+    onKeyboardHide: true,
+    onKeyboardShow: true,
+    keyboardPlaceholderHeight: true,
+    contentVisible: true
+}
 
 if (isIOS) {
     KeyboardView = requireNativeComponent('RNKeyboardView', null, {
         nativeOnly: {
-            synchronouslyUpdateTransform: true,
-            hideWhenKeyboardIsDismissed: true,
-            onKeyboardHide: true,
-            onKeyboardShow: true,
-            keyboardPlaceholderHeight: true
+            ...nativeOnlyProps,
+            synchronouslyUpdateTransform: true
         }
     });
 
@@ -169,12 +176,7 @@ if (isIOS) {
     KeyboardCoverView = requireNativeComponent('RNKeyboardCoverView');
 } else {
     KeyboardView = requireNativeComponent('KeyboardView', null, {
-        nativeOnly: {
-            hideWhenKeyboardIsDismissed: true,
-            onKeyboardHide: true,
-            onKeyboardShow: true,
-            keyboardPlaceholderHeight: true
-        }
+        nativeOnly: nativeOnlyProps
     });
     KeyboardContentView = requireNativeComponent('KeyboardContentView');
     KeyboardCoverView = requireNativeComponent('KeyboardCoverView');

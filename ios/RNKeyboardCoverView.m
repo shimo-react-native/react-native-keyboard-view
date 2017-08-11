@@ -11,9 +11,9 @@
 
 #pragma mark - Setter
 
-- (void)setCoverHidden:(BOOL)coverHidden {
-    _coverHidden = coverHidden;
-    [super setHidden:coverHidden];
+- (void)setVisible:(BOOL)visible {
+    _visible = visible;
+    [super setHidden:!visible];
 }
 
 

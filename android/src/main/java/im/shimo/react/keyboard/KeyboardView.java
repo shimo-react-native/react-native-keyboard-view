@@ -60,6 +60,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private int mKeyboardPlaceholderHeight;
     private @Nullable Rect mKeyboardPlaceholderFrame;
     private float mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
+    private boolean mContentVisible = true;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -297,7 +298,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private void showOrUpdatePopupWindow(final Rect keyboardFrame) {
-        if (mContentView != null) {
+        if (!mContentVisible) {
+            hidePopupWindow();
+        } else if (mContentView != null) {
             if (mPopupWindow == null) {
                 mPopupWindow = new PopupWindow(mContentView, keyboardFrame.width(), keyboardFrame.height());
                 mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -402,6 +405,16 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     public void setKeyboardPlaceholderHeight(int keyboardPlaceholderHeight) {
         mKeyboardPlaceholderHeight = (int) (keyboardPlaceholderHeight * mScale);
         showKeyboardPlaceHolder(mKeyboardPlaceholderHeight);
+    }
+
+    public void setContentVisible(boolean contentVisible) {
+        mContentVisible = contentVisible;
+
+        if (contentVisible) {
+            showOrUpdatePopupWindow();
+        } else {
+            hidePopupWindow();
+        }
     }
 
     private void showKeyboardPlaceHolder(int keyboardPlaceholderHeight) {

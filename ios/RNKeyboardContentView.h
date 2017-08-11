@@ -2,8 +2,9 @@
 #import <React/RCTBridge.h>
 #import <React/RCTInvalidating.h>
 #import <React/RCTView.h>
+#import "RNKeyboardCoverView.h"
 
-@interface RNKeyboardContentView : RCTView <RCTInvalidating>
+@interface RNKeyboardContentView : RNKeyboardCoverView <RCTInvalidating>
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
 
