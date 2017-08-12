@@ -168,7 +168,7 @@ const nativeOnlyProps = {
     onKeyboardShow: true,
     keyboardPlaceholderHeight: true,
     contentVisible: true
-}
+};
 
 if (isIOS) {
     KeyboardView = requireNativeComponent('RNKeyboardView', null, {
