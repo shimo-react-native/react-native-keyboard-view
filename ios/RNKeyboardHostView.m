@@ -89,7 +89,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         _contentView = subview;
         [self autoAddContentView];
         [self setContentShown:_contentView != nil];
-        [_contentView setVisible:!_contentVisible];
+        [_contentView setVisible:_contentVisible];
     } else if ([subview class] == [RNKeyboardCoverView class]) {
         RCTAssert(_coverView == nil, @"KeyboardView StickyView is already existed.");
         _coverView = subview;
