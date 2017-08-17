@@ -43,7 +43,8 @@ export default class extends Component {
     };
 
     static defaultProps = {
-        hideWhenKeyboardIsDismissed: true
+        hideWhenKeyboardIsDismissed: true,
+        contentVisible: true
     };
 
     static dismiss = isIOS ?

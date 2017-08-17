@@ -363,13 +363,14 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 }
 
 - (void)setSynchronouslyUpdateTransform:(BOOL)synchronouslyUpdateTransform {
-    synchronouslyUpdateTransform = YES;
     if (_synchronouslyUpdateTransform == synchronouslyUpdateTransform) {
         return;
     }
 
     if (synchronouslyUpdateTransform) {
         [self synchronousTransform];
+        [self updateSize];
+        [self updateOriginy];
     }
     _synchronouslyUpdateTransform = synchronouslyUpdateTransform;
 }
