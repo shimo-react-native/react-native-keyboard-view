@@ -355,8 +355,14 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 #pragma mark - Setter
 
 - (void)setHideWhenKeyboardIsDismissed:(BOOL)hideWhenKeyboardIsDismissed {
+    if (_hideWhenKeyboardIsDismissed == hideWhenKeyboardIsDismissed) {
+        return;
+    }
+    
     if (![_manager isKeyboardVisible]) {
         [_coverView setVisible:!hideWhenKeyboardIsDismissed];
+        [self updateSize];
+        [self updateOriginy];
     }
     
     _hideWhenKeyboardIsDismissed = hideWhenKeyboardIsDismissed;
@@ -369,8 +375,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 
     if (synchronouslyUpdateTransform) {
         [self synchronousTransform];
-        [self updateSize];
-        [self updateOriginy];
     }
     _synchronouslyUpdateTransform = synchronouslyUpdateTransform;
 }
