@@ -88,7 +88,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         RCTAssert(_contentView == nil, @"KeyboardView ContainerView is already existed.");
         _contentView = subview;
         [self autoAddContentView];
-        [self setContentShown:_contentView != nil];
         [_contentView setVisible:_contentVisible];
     } else if ([subview class] == [RNKeyboardCoverView class]) {
         RCTAssert(_coverView == nil, @"KeyboardView StickyView is already existed.");
@@ -108,7 +107,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     if ([subview class] == [RNKeyboardContentView class]) {
         [_contentView removeFromSuperview];
         _contentView = nil;
-        [self setContentShown:_contentView != nil];
+        [self autoSetContentOrKeyboardShown];
         [self updateSize];
         [self updateOriginy];
     } else if ([subview class] == [RNKeyboardCoverView class]) {
@@ -214,6 +213,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
                     [_coverView setAlpha:1];
                     [_contentView removeFromSuperview];
                     [_contentView setAlpha:1];
+                    [self autoSetContentOrKeyboardShown];
                 }
                 [self setKeyboardShown:NO];
             }
@@ -223,6 +223,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 #pragma mark - Layout
 
 - (void)autoAddContentView {
+    [self autoSetContentOrKeyboardShown];
     if (!_contentView) {
         return;
     }
@@ -282,6 +283,16 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 }
 
 #pragma mark - Private
+
+- (void)autoSetContentOrKeyboardShown {
+    BOOL shown = NO;
+    if (_keyboardShown) {
+        shown = YES;
+    } else if (_contentView && _keyboardPlaceholderHeight > 0) {
+        shown = YES;
+    }
+    [self setContentOrKeyboardShown:shown];
+}
 
 - (void)synchronousTransform {
     [UIView performWithoutAnimation:^() {
@@ -380,6 +391,9 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 }
 
 - (void)setKeyboardPlaceholderHeight:(CGFloat)keyboardPlaceholderHeight {
+    if (_keyboardPlaceholderHeight == keyboardPlaceholderHeight) {
+        return;
+    }
     _keyboardPlaceholderHeight = keyboardPlaceholderHeight;
     [self autoAddContentView];
     [self updateSize];
@@ -395,20 +409,12 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     [_contentView setVisible:contentVisible];
 }
 
-- (void)setContentShown:(BOOL)contentShown {
-    if (_contentShown == contentShown) {
-        return;
-    }
-    _contentShown = contentShown;
-    [self setContentOrKeyboardShown:_keyboardShown || _contentShown];
-}
-
 - (void)setKeyboardShown:(BOOL)keyboardShown {
     if (_keyboardShown == keyboardShown) {
         return;
     }
     _keyboardShown = keyboardShown;
-    [self setContentOrKeyboardShown:_keyboardShown || _contentShown];
+    [self autoSetContentOrKeyboardShown];
 }
 
 - (void)setKeyboardWillShow:(BOOL)keyboardWillShow {
