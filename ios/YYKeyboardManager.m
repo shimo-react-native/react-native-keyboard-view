@@ -82,7 +82,7 @@ static int _YYKeyboardViewFrameObserverKey;
 
 @implementation YYKeyboardManager {
     NSHashTable *_observers;
-
+    
     CGRect _fromFrame;
     BOOL _fromVisible;
     UIInterfaceOrientation _fromOrientation;
@@ -456,10 +456,20 @@ static int _YYKeyboardViewFrameObserverKey;
             trans.toVisible = YES;
         }
     }
-
+    
     if (!CGRectEqualToRect(trans.toFrame, _fromFrame)) {
         for (id<YYKeyboardObserver> observer in _observers.copy) {
             if ([observer respondsToSelector:@selector(keyboardChangedWithTransition:)]) {
+                _keyboardToValid = trans.toVisible;
+                _keyboardFromValid = trans.fromVisible;
+                
+                // especially used for external keyboard when toolbar is hidden
+                if (!_keyboardToValid && CGRectGetHeight(trans.fromFrame) == 0) {
+                    _keyboardToValid = YES;
+                }
+                if (!_keyboardFromValid && CGRectGetHeight(trans.toFrame) == 0) {
+                    _keyboardFromValid = YES;
+                }
                 [observer keyboardChangedWithTransition:trans];
             }
         }
@@ -470,6 +480,8 @@ static int _YYKeyboardViewFrameObserverKey;
     _fromFrame = trans.toFrame;
     _fromVisible = trans.toVisible;
     _fromOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    
 }
 
 - (CGRect)convertRect:(CGRect)rect toView:(UIView *)view {

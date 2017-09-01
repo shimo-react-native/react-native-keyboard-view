@@ -10,7 +10,7 @@
     "prop-types": "^15.5.10",
     "react": "16.0.0-alpha.12",
     "react-native": "0.46.4",
-    "react-native-keyboard-view": "2.0.0-rc9"
+    "react-native-keyboard-view": "2.0.0-rc18"
   },
   "devDependencies": {
     "babel-jest": "18.0.0",
