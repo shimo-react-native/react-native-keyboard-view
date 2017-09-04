@@ -24,7 +24,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 @property (nonatomic, assign) CGFloat contentHeight;
 @property (nonatomic, assign) BOOL contentShown;
 @property (nonatomic, assign) BOOL keyboardShown;
-@property (nonatomic, assign) BOOL keyboardWillShow;
 @property (nonatomic, assign) BOOL contentOrKeyboardShown;
 @property (nonatomic, assign) BOOL inHardwareKeyboardMode;
 
@@ -146,40 +145,30 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 #pragma mark - YYKeyboardObserver
 
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
-    BOOL fromVisible = transition.fromVisible;
-    BOOL toVisible = transition.toVisible;
-    CGRect fromFrame = transition.fromFrame;
+    BOOL fromValid = _manager.keyboardFromValid;
+    BOOL toValid = _manager.keyboardToValid;
     CGRect toFrame = transition.toFrame;
 
-    // especially used for external keyboard when toolbar is hidden
-    if (!toVisible && CGRectGetHeight(fromFrame) == 0) {
-        toVisible = YES;
-    }
-    if (!fromVisible && CGRectGetHeight(toFrame) == 0) {
-        fromVisible = YES;
-    }
-
-    [self setKeyboardWillShow:toVisible];
-    if (toVisible) {
+    if (toValid) {
         [self setKeyboardShown:YES];
     }
 
-    if (toVisible) {
+    if (toValid) {
         [self setInHardwareKeyboardMode:(CGRectGetMaxY(toFrame) > CGRectGetHeight([_manager keyboardWindow].frame))];
     }
-    _keyboardState = toVisible;
+    _keyboardState = toValid;
 
-    if ((!fromVisible && !toVisible) || (!_contentView && !_coverView)) {
+    if ((!fromValid && !toValid) || (!_contentView && !_coverView)) {
         return;
     }
 
     [self autoAddContentView];
 
-    if (!fromVisible && !_isPresented) {
+    if (!fromValid && !_isPresented) {
         [self synchronousTransform];
     }
 
-    if (toVisible) {
+    if (toValid) {
         [self updateSize];
         [_coverView setVisible:YES];
         [UIView performWithoutAnimation:^() {
@@ -188,7 +177,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     }
 
     // update origin y to the position where keyboard is hidden before animation
-    if (!fromVisible && !_isPresented) {
+    if (!fromValid && !_isPresented) {
         [UIView performWithoutAnimation:^() {
             [self updateOriginyWithKeyboardWillShow:NO];
         }];
@@ -200,13 +189,13 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         options:transition.animationOption
         animations:^() {
             [self updateOriginy];
-            if (!toVisible && _hideWhenKeyboardIsDismissed) {
+            if (!toValid && _hideWhenKeyboardIsDismissed) {
                 [_coverView setAlpha:0];
                 [_contentView setAlpha:0];
             }
         }
         completion:^(BOOL finished) {
-            if (finished && !toVisible && !_keyboardState) { // keyboard is not visible
+            if (finished && !toValid && !_keyboardState) { // keyboard is not visible
                 _isPresented = NO;
                 if (_hideWhenKeyboardIsDismissed) {
                     [_coverView setVisible:NO];
@@ -264,7 +253,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 }
 
 - (void)updateOriginy {
-    [self updateOriginyWithKeyboardWillShow:_keyboardWillShow];
+    [self updateOriginyWithKeyboardWillShow:_manager.keyboardToValid];
 }
 
 - (void)updateOriginyWithKeyboardWillShow:(BOOL)keyboardWillShow {
@@ -415,13 +404,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     }
     _keyboardShown = keyboardShown;
     [self autoSetContentOrKeyboardShown];
-}
-
-- (void)setKeyboardWillShow:(BOOL)keyboardWillShow {
-    if (_keyboardWillShow == keyboardWillShow) {
-        return;
-    }
-    _keyboardWillShow = keyboardWillShow;
 }
 
 - (void)setContentOrKeyboardShown:(BOOL)contentOrKeyboardShown {

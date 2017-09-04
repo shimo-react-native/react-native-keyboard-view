@@ -65,6 +65,12 @@ typedef struct {
 /// Whether the keyboard is visible.
 @property (nonatomic, readonly, getter=isKeyboardVisible) BOOL keyboardVisible;
 
+/// Whether the keyboard to bel valid
+@property (nonatomic, assign, readonly) BOOL keyboardToValid;
+
+/// Whether the keyboard from valid
+@property (nonatomic, assign, readonly) BOOL keyboardFromValid;
+
 /// Get the keyboard frame. CGRectNull if there's no keyboard view.
 /// Use convertRect:toView: to convert frame to specified view.
 @property (nonatomic, readonly) CGRect keyboardFrame;
