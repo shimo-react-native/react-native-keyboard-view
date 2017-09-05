@@ -458,18 +458,19 @@ static int _YYKeyboardViewFrameObserverKey;
     }
     
     if (!CGRectEqualToRect(trans.toFrame, _fromFrame)) {
+        _keyboardToValid = trans.toVisible;
+        _keyboardFromValid = trans.fromVisible;
+        
+        // especially used for external keyboard when toolbar is hidden
+        if (!_keyboardToValid && CGRectGetHeight(trans.fromFrame) == 0) {
+            _keyboardToValid = YES;
+        }
+        if (!_keyboardFromValid && CGRectGetHeight(trans.toFrame) == 0) {
+            _keyboardFromValid = YES;
+        }
+        
         for (id<YYKeyboardObserver> observer in _observers.copy) {
             if ([observer respondsToSelector:@selector(keyboardChangedWithTransition:)]) {
-                _keyboardToValid = trans.toVisible;
-                _keyboardFromValid = trans.fromVisible;
-                
-                // especially used for external keyboard when toolbar is hidden
-                if (!_keyboardToValid && CGRectGetHeight(trans.fromFrame) == 0) {
-                    _keyboardToValid = YES;
-                }
-                if (!_keyboardFromValid && CGRectGetHeight(trans.toFrame) == 0) {
-                    _keyboardFromValid = YES;
-                }
                 [observer keyboardChangedWithTransition:trans];
             }
         }
