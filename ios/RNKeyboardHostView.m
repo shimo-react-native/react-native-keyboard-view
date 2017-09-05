@@ -85,11 +85,13 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 - (void)insertReactSubview:(__kindof UIView *)subview atIndex:(NSInteger)atIndex {
     if ([subview class] == [RNKeyboardContentView class]) {
         RCTAssert(_contentView == nil, @"KeyboardView ContainerView is already existed.");
+        subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
         _contentView = subview;
         [self autoAddContentView];
         [_contentView setVisible:_contentVisible];
     } else if ([subview class] == [RNKeyboardCoverView class]) {
         RCTAssert(_coverView == nil, @"KeyboardView StickyView is already existed.");
+        subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
         _coverView = subview;
         [self autoAddSubview:_coverView onSuperview:self.rootView];
         if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
@@ -195,6 +197,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
             }
         }
         completion:^(BOOL finished) {
+            
             if (finished && !toValid && !_keyboardState) { // keyboard is not visible
                 _isPresented = NO;
                 if (_hideWhenKeyboardIsDismissed) {
@@ -228,7 +231,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 }
 
 - (void)updateSize {
-    CGSize screenSize = RCTScreenSize();
+    CGSize screenSize = [[UIScreen mainScreen] bounds].size;
     float coverHeight = screenSize.height - self.contentHeight;
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -305,9 +308,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     UIView *originSuperview = [subview superview];
     if (!originSuperview) {
         [superview addSubview:subview];
-        return;
-    }
-    if (originSuperview != superview) {
+    } else if (originSuperview != superview) {
         [subview removeFromSuperview];
         [superview addSubview:subview];
     }
