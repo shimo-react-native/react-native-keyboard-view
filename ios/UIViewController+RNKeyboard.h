@@ -1,0 +1,10 @@
+#import <UIKit/UIKit.h>
+
+@interface UIViewController (RNKeyboard)
+
+FOUNDATION_EXTERN NSNotificationName const RNViewControllerWillPresentNotification;
+FOUNDATION_EXTERN NSNotificationName const RNViewControllerDidPresentNotification;
+FOUNDATION_EXTERN NSNotificationName const RNViewControllerWillDismissNotification;
+FOUNDATION_EXTERN NSNotificationName const RNViewControllerDidDismissNotification;
+
+@end

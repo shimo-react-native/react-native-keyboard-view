@@ -11,6 +11,7 @@
 
 #import "RNKeyboardContentView.h"
 #import "RNKeyboardCoverView.h"
+#import "UIViewController+RNKeyboard.h"
 
 NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyboardMode";
 
@@ -37,6 +38,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     BOOL _keyboardState;
     BOOL _isPresented;
     BOOL attachedToSuper;
+    CGFloat _tempPlaceholderHeight;
 }
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge {
@@ -45,8 +47,36 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
         _hideWhenKeyboardIsDismissed = YES;
         _manager = [YYKeyboardManager defaultManager];
         [_manager addObserver:self];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(viewControllerWillPresentNotification:)
+                                                     name:RNViewControllerWillPresentNotification
+                                                   object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(viewControllerDidDismissNotification:)
+                                                     name:RNViewControllerDidDismissNotification
+                                                   object:nil];
     }
     return self;
+}
+
+#pragma mark - ViewControllerObserver
+
+- (void)viewControllerWillPresentNotification:(NSNotification *)notification {
+    if (_contentView && !_keyboardShown && _keyboardPlaceholderHeight > 0) {
+        _tempPlaceholderHeight = _keyboardPlaceholderHeight;
+        _keyboardPlaceholderHeight = 0;
+        [self updateSize];
+        [self updateOriginy];
+    }
+}
+
+- (void)viewControllerDidDismissNotification:(NSNotification *)notification {
+    if (_tempPlaceholderHeight) {
+        _keyboardPlaceholderHeight = _tempPlaceholderHeight;
+        _tempPlaceholderHeight = 0;
+        [self updateSize];
+        [self updateOriginy];
+    }
 }
 
 #pragma mark - UIView

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1017893C1B283EE1006C41B8 /* libRNKeyboardView.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 101789301B283EE1006C41B8 /* libRNKeyboardView.a */; };
 		287966321F3B1AE3001E1154 /* RNKeyboardEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = 287966311F3B1AE3001E1154 /* RNKeyboardEventEmitter.m */; };
+		7F7FF4821F6943ED0007E62D /* UIViewController+RNKeyboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F7FF4811F6943ED0007E62D /* UIViewController+RNKeyboard.m */; };
 		7F80046B1E5A7FC000905D7C /* YYKeyboardManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */; };
 		7F8004711E5A8D6700905D7C /* RNKeyboardHostView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F8004701E5A8D6700905D7C /* RNKeyboardHostView.m */; };
 		7F8712171EEE9DA30068E5B2 /* RNKeyboardContentView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F8712161EEE9DA30068E5B2 /* RNKeyboardContentView.m */; };
@@ -45,6 +46,8 @@
 		1017893B1B283EE1006C41B8 /* RNKeyboardViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RNKeyboardViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		287966301F3B1AE3001E1154 /* RNKeyboardEventEmitter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKeyboardEventEmitter.h; sourceTree = "<group>"; };
 		287966311F3B1AE3001E1154 /* RNKeyboardEventEmitter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeyboardEventEmitter.m; sourceTree = "<group>"; };
+		7F7FF4801F6943ED0007E62D /* UIViewController+RNKeyboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIViewController+RNKeyboard.h"; sourceTree = "<group>"; };
+		7F7FF4811F6943ED0007E62D /* UIViewController+RNKeyboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIViewController+RNKeyboard.m"; sourceTree = "<group>"; };
 		7F8004691E5A7FC000905D7C /* YYKeyboardManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYKeyboardManager.h; sourceTree = "<group>"; };
 		7F80046A1E5A7FC000905D7C /* YYKeyboardManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYKeyboardManager.m; sourceTree = "<group>"; };
 		7F80046F1E5A8D5B00905D7C /* RNKeyboardHostView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNKeyboardHostView.h; sourceTree = "<group>"; };
@@ -84,6 +87,8 @@
 			isa = PBXGroup;
 			children = (
 				101789311B283EE1006C41B8 /* Products */,
+				7F7FF4801F6943ED0007E62D /* UIViewController+RNKeyboard.h */,
+				7F7FF4811F6943ED0007E62D /* UIViewController+RNKeyboard.m */,
 				7F8712151EEE9DA30068E5B2 /* RNKeyboardContentView.h */,
 				7F8712161EEE9DA30068E5B2 /* RNKeyboardContentView.m */,
 				7F8712181EEEA0D80068E5B2 /* RNKeyboardContentViewManager.h */,
@@ -201,6 +206,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7F8004711E5A8D6700905D7C /* RNKeyboardHostView.m in Sources */,
+				7F7FF4821F6943ED0007E62D /* UIViewController+RNKeyboard.m in Sources */,
 				7F8712171EEE9DA30068E5B2 /* RNKeyboardContentView.m in Sources */,
 				7F80046B1E5A7FC000905D7C /* YYKeyboardManager.m in Sources */,
 				7FE295451E03BDA2009E7610 /* RNKeyboardViewManager.m in Sources */,
