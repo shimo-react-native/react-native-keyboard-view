@@ -359,7 +359,7 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 
 - (CGFloat)contentHeight {
     UIWindow *keyboardWindow = [_manager keyboardWindow];
-    if (!keyboardWindow) { // keyboard is not visible
+    if (!keyboardWindow || !_manager.keyboardToValid) { // keyboard is not visible
         CGFloat keyboardPlaceholderHeight = _contentView ? _keyboardPlaceholderHeight : 0;
         _contentHeight = MAX(keyboardPlaceholderHeight, 0);
         return _contentHeight;
