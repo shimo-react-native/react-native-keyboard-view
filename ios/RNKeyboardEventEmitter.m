@@ -50,7 +50,7 @@ RCT_EXPORT_MODULE();
 - (void)handleKeyboardInHardwareKeyboardModeNotification:(NSNotification *)notification {
     if (_hasListeners) { // Only send events if anyone is listening
         [self sendEventWithName:RNKeyboardInHardwareKeyboardModeNameEventName
-                           body:@{ @"inHardwareKeyboardMode": notification.object }];
+                           body:notification.object];
     }
 }
 

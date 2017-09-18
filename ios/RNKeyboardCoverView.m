@@ -5,6 +5,14 @@
 
 #pragma mark - UIView
 
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        _visible = YES;
+    }
+    return self;
+}
+
 - (void)setHidden:(BOOL)hidden {
     // do nothing, let `setCoverHidden` do the stuff
 }
@@ -15,6 +23,5 @@
     _visible = visible;
     [super setHidden:!visible];
 }
-
 
 @end

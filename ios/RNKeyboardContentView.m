@@ -24,6 +24,11 @@
     RCTTouchHandler *_touchHandler;
 }
 
+RCT_NOT_IMPLEMENTED(-(instancetype)initWithFrame
+                    : (CGRect)frame)
+RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
+                    : coder)
+
 - (instancetype)initWithBridge:(RCTBridge *)bridge {
     if ((self = [super initWithFrame:CGRectZero])) {
         _touchHandler = [[RCTTouchHandler alloc] initWithBridge:bridge];

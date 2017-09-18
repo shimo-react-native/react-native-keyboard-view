@@ -15,7 +15,7 @@
 
 NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyboardMode";
 
-@interface RNKeyboardHostView () <RCTBridgeModule>
+@interface RNKeyboardHostView ()
 
 @property (nonatomic, weak) UIView *rootView;
 
@@ -41,10 +41,16 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
     CGFloat _tempPlaceholderHeight;
 }
 
+RCT_NOT_IMPLEMENTED(-(instancetype)initWithFrame
+                    : (CGRect)frame)
+RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
+                    : coder)
+
 - (instancetype)initWithBridge:(RCTBridge *)bridge {
     if ((self = [super initWithFrame:CGRectZero])) {
         _bridge = bridge;
         _hideWhenKeyboardIsDismissed = YES;
+        _contentVisible = YES;
         _manager = [YYKeyboardManager defaultManager];
         [_manager addObserver:self];
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -263,7 +269,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 - (void)updateSize {
     CGSize screenSize = [[UIScreen mainScreen] bounds].size;
     float coverHeight = screenSize.height - self.contentHeight;
-
     dispatch_async(dispatch_get_main_queue(), ^{
         [self synchronousTransform];
     });
