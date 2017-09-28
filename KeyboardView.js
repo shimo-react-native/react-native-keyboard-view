@@ -10,17 +10,16 @@ const isAndroid = Platform.OS === 'android';
 const styles = StyleSheet.create({
     offSteam: {
         position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
         height: 0,
-        width: 0,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        opacity: 0
     },
 
     cover: {
         flex: 1
-    },
-
-    hide: {
-        opacity: 0
     },
 
     androidInputAvoid: isAndroid ? {
@@ -68,11 +67,9 @@ export default class extends Component {
             return null;
         }
 
-        const hide = (isIOS && !visible) ? styles.hide : null;
-
         return (
           <KeyboardContentView
-            style={[styles.offSteam, hide]}
+            style={styles.offSteam}
             pointerEvents="box-none"
             key="contentView"
           >
@@ -86,11 +83,9 @@ export default class extends Component {
             return null;
         }
 
-        const hide = (isIOS && !visible) ? styles.hide : null;
-
         return (
           <KeyboardCoverView
-            style={[styles.offSteam, hide]}
+            style={styles.offSteam}
             pointerEvents="box-none"
             key="coverView"
           >
@@ -138,7 +133,7 @@ export default class extends Component {
             return (
               <Modal style={styles.offSteam} visible={true}>
                   <KeyboardView
-                    style={[styles.offSteam, styles.hide, transform && { transform }]}
+                    style={[styles.offSteam, transform && { transform }]}
                     synchronouslyUpdateTransform={!!transform}
                     {...props}
                   >
@@ -149,7 +144,7 @@ export default class extends Component {
         } else {
             return (
               <KeyboardView
-                style={[styles.offSteam, styles.hide]}
+                style={[styles.offSteam]}
                 {...props}
               >
                   {childViews}

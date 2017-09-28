@@ -134,10 +134,12 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
             [_coverView setVisible:NO];
         }
     }
-    [self updateSize];
-    [self updateOriginy];
-
-    [super insertReactSubview:subview atIndex:atIndex];
+  
+    [UIView performWithoutAnimation:^() {
+        [self updateSize];
+        [self updateOriginy];
+        [super insertReactSubview:subview atIndex:atIndex];
+    }];
 }
 
 - (void)removeReactSubview:(__kindof UIView *)subview {
@@ -340,6 +342,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     if (!subview || !superview) {
         return;
     }
+    [subview setAlpha:1];
     UIView *originSuperview = [subview superview];
     if (!originSuperview) {
         [superview addSubview:subview];
