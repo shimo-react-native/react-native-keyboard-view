@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
         right: 0,
         height: 0,
         overflow: 'hidden',
-        opacity: 0
+        opacity: isIOS ? 0 : 1
     },
 
     cover: {
