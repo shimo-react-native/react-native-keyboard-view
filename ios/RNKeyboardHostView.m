@@ -194,7 +194,13 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     }
 
     if (toValid) {
-        [self setInHardwareKeyboardMode:(CGRectGetMaxY(toFrame) > CGRectGetHeight([_manager keyboardWindow].frame))];
+        if ([UIDevice currentDevice].systemVersion.doubleValue >= 11) {
+            // >= iOS11, height is visible keyboard height, when use external keyboard.
+            [self setInHardwareKeyboardMode:(CGRectGetHeight(toFrame) < 200)];
+        } else {
+            // < iOS11, height is real keyboard height, when use external keyboard.
+             [self setInHardwareKeyboardMode:(CGRectGetMaxY(toFrame) > CGRectGetHeight([_manager keyboardWindow].frame))];
+        }
     }
     _keyboardState = toValid;
 
