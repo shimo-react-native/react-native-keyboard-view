@@ -119,8 +119,6 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 #pragma mark - React
 
 - (void)insertReactSubview:(__kindof UIView *)subview atIndex:(NSInteger)atIndex {
-    [super insertReactSubview:subview atIndex:atIndex];
-    
     if ([subview class] == [RNKeyboardContentView class]) {
         RCTAssert(_contentView == nil, @"KeyboardView ContainerView is already existed.");
         subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -198,8 +196,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     if (toValid) {
         if ([UIDevice currentDevice].systemVersion.doubleValue >= 11) {
             // >= iOS11, height is visible keyboard height, when use external keyboard.
-            [self setInHardwareKeyboardMode:(CGRectGetHeight(toFrame) < 300 ||
-                                             CGRectGetMaxY(toFrame) > CGRectGetHeight([_manager keyboardWindow].frame))];
+            [self setInHardwareKeyboardMode:(CGRectGetHeight(toFrame) < 200)];
         } else {
             // < iOS11, height is real keyboard height, when use external keyboard.
              [self setInHardwareKeyboardMode:(CGRectGetMaxY(toFrame) > CGRectGetHeight([_manager keyboardWindow].frame))];
