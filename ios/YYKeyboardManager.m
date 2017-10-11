@@ -208,7 +208,7 @@ static int _YYKeyboardViewFrameObserverKey;
     view = [self _getKeyboardViewFromWindow:window];
     if (view) return view;
     
-    // must be reverse, because there may bel two UIRemoteKeyboardWindow in iOS11.
+    // must be reverse, because there will be two UIRemoteKeyboardWindow when splitting keyboard.
     [[UIApplication sharedApplication].windows enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(__kindof UIWindow * _Nonnull window, NSUInteger idx, BOOL * _Nonnull stop) {
         view = [self _getKeyboardViewFromWindow:window];
         if (view) {
