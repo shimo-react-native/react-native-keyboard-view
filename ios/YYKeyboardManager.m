@@ -203,15 +203,19 @@ static int _YYKeyboardViewFrameObserverKey;
 
 - (UIView *)keyboardView {
     UIWindow *window = nil;
-    UIView *view = nil;
-    for (window in [UIApplication sharedApplication].windows) {
-        view = [self _getKeyboardViewFromWindow:window];
-        if (view) return view;
-    }
+    __block UIView *view = nil;
     window = [UIApplication sharedApplication].keyWindow;
     view = [self _getKeyboardViewFromWindow:window];
     if (view) return view;
-    return nil;
+    
+    // must be reverse, because there may bel two UIRemoteKeyboardWindow in iOS11.
+    [[UIApplication sharedApplication].windows enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(__kindof UIWindow * _Nonnull window, NSUInteger idx, BOOL * _Nonnull stop) {
+        view = [self _getKeyboardViewFromWindow:window];
+        if (view) {
+            *stop = YES;
+        }
+    }];
+    return view;
 }
 
 - (BOOL)isKeyboardVisible {
