@@ -61,11 +61,18 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
                                                  selector:@selector(viewControllerDidDismissNotification:)
                                                      name:RNViewControllerDidDismissNotification
                                                    object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:self
+                                                selector:@selector(deviceOrientationDidChange:)
+                                                    name:UIDeviceOrientationDidChangeNotification object:nil];
     }
     return self;
 }
 
-#pragma mark - ViewControllerObserver
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+#pragma mark - NSNotification
 
 - (void)viewControllerWillPresentNotification:(NSNotification *)notification {
     if (_contentView && !_keyboardShown && _keyboardPlaceholderHeight > 0) {
@@ -83,6 +90,10 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
         [self updateSize];
         [self updateOriginy];
     }
+}
+
+- (void)deviceOrientationDidChange:(NSNotification *) notification {
+    [self updateSize];
 }
 
 #pragma mark - UIView
@@ -121,13 +132,13 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 - (void)insertReactSubview:(__kindof UIView *)subview atIndex:(NSInteger)atIndex {
     if ([subview class] == [RNKeyboardContentView class]) {
         RCTAssert(_contentView == nil, @"KeyboardView ContainerView is already existed.");
-        subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+        subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleWidth;
         _contentView = subview;
         [self autoAddContentView];
         [_contentView setVisible:_contentVisible];
     } else if ([subview class] == [RNKeyboardCoverView class]) {
         RCTAssert(_coverView == nil, @"KeyboardView StickyView is already existed.");
-        subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+        subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleWidth;
         _coverView = subview;
         [self autoAddSubview:_coverView onSuperview:self.rootView];
         if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
@@ -199,7 +210,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
             [self setInHardwareKeyboardMode:(CGRectGetHeight(toFrame) < 200)];
         } else {
             // < iOS11, height is real keyboard height, when use external keyboard.
-             [self setInHardwareKeyboardMode:(CGRectGetMaxY(toFrame) > CGRectGetHeight([_manager keyboardWindow].frame))];
+            [self setInHardwareKeyboardMode:(CGRectGetMaxY(toFrame) > CGRectGetHeight([_manager keyboardWindow].frame))];
         }
     }
     _keyboardState = toValid;
