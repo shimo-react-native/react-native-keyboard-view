@@ -61,10 +61,6 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
                                                  selector:@selector(viewControllerDidDismissNotification:)
                                                      name:RNViewControllerDidDismissNotification
                                                    object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(viewControllerDidDismissNotification:)
-                                                     name:UIViewControllerShowDetailTargetDidChangeNotification
-                                                   object:nil];
         [[NSNotificationCenter defaultCenter]addObserver:self
                                                 selector:@selector(deviceOrientationDidChange:)
                                                     name:UIDeviceOrientationDidChangeNotification object:nil];
