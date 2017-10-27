@@ -49,9 +49,8 @@ RCT_EXPORT_METHOD(dismissWithoutAnimation) {
 
 RCT_REMAP_METHOD(getInHardwareKeyboardMode,
                  getInHardwareKeyboardModeWithResolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    resolve(@(_keyboardHostView.inHardwareKeyboardMode));
+                 rejecter:(RCTPromiseRejectBlock)reject) {
+    resolve(@([YYKeyboardManager defaultManager].inHardwareKeyboardMode));
 }
 
 @end

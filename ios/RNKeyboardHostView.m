@@ -13,8 +13,6 @@
 #import "RNKeyboardCoverView.h"
 #import "UIViewController+RNKeyboard.h"
 
-NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyboardMode";
-
 @interface RNKeyboardHostView ()
 
 @property (nonatomic, weak) UIView *rootView;
@@ -26,7 +24,6 @@ NSString * const RNKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyb
 @property (nonatomic, assign) BOOL contentShown;
 @property (nonatomic, assign) BOOL keyboardShown;
 @property (nonatomic, assign) BOOL contentOrKeyboardShown;
-@property (nonatomic, assign) BOOL inHardwareKeyboardMode;
 
 @end
 
@@ -198,21 +195,11 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 - (void)keyboardChangedWithTransition:(YYKeyboardTransition)transition {
     BOOL fromValid = _manager.keyboardFromValid;
     BOOL toValid = _manager.keyboardToValid;
-    CGRect toFrame = transition.toFrame;
 
     if (toValid) {
         [self setKeyboardShown:YES];
     }
 
-    if (toValid) {
-        if ([UIDevice currentDevice].systemVersion.doubleValue >= 11) {
-            // >= iOS11, height is visible keyboard height, when use external keyboard.
-            [self setInHardwareKeyboardMode:(CGRectGetHeight(toFrame) < 200)];
-        } else {
-            // < iOS11, height is real keyboard height, when use external keyboard.
-            [self setInHardwareKeyboardMode:(CGRectGetMaxY(toFrame) > CGRectGetHeight([_manager keyboardWindow].frame))];
-        }
-    }
     _keyboardState = toValid;
 
     if ((!fromValid && !toValid) || (!_contentView && !_coverView)) {
@@ -252,7 +239,6 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
             }
         }
         completion:^(BOOL finished) {
-            
             if (finished && !toValid && !_keyboardState) { // keyboard is not visible
                 _isPresented = NO;
                 if (_hideWhenKeyboardIsDismissed) {
@@ -449,7 +435,6 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     if (_contentVisible == contentVisible) {
         return;
     }
-    
     _contentVisible = contentVisible;
     [_contentView setVisible:contentVisible];
 }
@@ -469,21 +454,13 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     _contentOrKeyboardShown = contentOrKeyboardShown;
     if (_contentOrKeyboardShown) {
         if (_onKeyboardShow) {
-            _onKeyboardShow(@{ @"inHardwareKeyboardMode": @(_inHardwareKeyboardMode) });
+            _onKeyboardShow(@{ @"inHardwareKeyboardMode": @(_manager.inHardwareKeyboardMode) });
         }
     } else {
         if (_onKeyboardHide) {
             _onKeyboardHide(nil);
         }
     }
-}
-
-- (void)setInHardwareKeyboardMode:(BOOL)inHardwareKeyboardMode {
-    if (_inHardwareKeyboardMode == inHardwareKeyboardMode) {
-        return;
-    }
-    _inHardwareKeyboardMode = inHardwareKeyboardMode;
-    [[NSNotificationCenter defaultCenter] postNotificationName:RNKeyboardInHardwareKeyboardModeNotification object:@(_inHardwareKeyboardMode)];
 }
 
 @end

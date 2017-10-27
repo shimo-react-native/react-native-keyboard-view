@@ -8,6 +8,7 @@
 
 #import "RNKeyboardEventEmitter.h"
 #import "RNKeyboardHostView.h"
+#import "YYKeyboardManager.h"
 
 static NSString *const RNKeyboardInHardwareKeyboardModeNameEventName = @"InHardwareKeyboardModeNameEvent";
 
@@ -25,7 +26,7 @@ RCT_EXPORT_MODULE();
     if (self = [super init]) {
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(handleKeyboardInHardwareKeyboardModeNotification:)
-                                                     name:RNKeyboardInHardwareKeyboardModeNotification
+                                                     name:YYKeyboardInHardwareKeyboardModeNotification
                                                    object:nil];
     }
     return self;
