@@ -12,18 +12,24 @@
 #import "YYKeyboardManager.h"
 #import <objc/runtime.h>
 
+NSString * const YYKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyboardMode";
+
 static int _YYKeyboardViewFrameObserverKey;
 
 /// Observer for view's frame/bounds/center/transform
 @interface _YYKeyboardViewFrameObserver : NSObject
+
 @property (nonatomic, copy) void (^notifyBlock)(UIView *keyboard);
+
 - (void)addToKeyboardView:(UIView *)keyboardView;
 + (instancetype)observerForView:(UIView *)keyboardView;
+
 @end
 
 @implementation _YYKeyboardViewFrameObserver {
     __unsafe_unretained UIView *_keyboardView;
 }
+
 - (void)addToKeyboardView:(UIView *)keyboardView {
     if (_keyboardView == keyboardView) return;
     if (_keyboardView) {
@@ -80,6 +86,12 @@ static int _YYKeyboardViewFrameObserverKey;
 
 @end
 
+@interface YYKeyboardManager()
+
+@property (nonatomic, assign) BOOL inHardwareKeyboardMode;
+
+@end
+
 @implementation YYKeyboardManager {
     NSHashTable *_observers;
     
@@ -98,6 +110,7 @@ static int _YYKeyboardViewFrameObserverKey;
 
     BOOL _lastIsNotification;
 }
+
 
 - (instancetype)init {
     @throw [NSException exceptionWithName:@"YYKeyboardManager init error" reason:@"Use 'defaultManager' to get instance." userInfo:nil];
@@ -473,6 +486,16 @@ static int _YYKeyboardViewFrameObserverKey;
             _keyboardFromValid = YES;
         }
         
+        if (_keyboardToValid) {
+            if ([UIDevice currentDevice].systemVersion.doubleValue >= 11) {
+                // >= iOS11, height is visible keyboard height, when use external keyboard.
+                [self setInHardwareKeyboardMode:(CGRectGetHeight(trans.toFrame) < 200)];
+            } else {
+                // < iOS11, height is real keyboard height, when use external keyboard.
+                [self setInHardwareKeyboardMode:(CGRectGetMaxY(trans.toFrame) > CGRectGetHeight([self keyboardWindow].frame))];
+            }
+        }
+        
         for (id<YYKeyboardObserver> observer in _observers.copy) {
             if ([observer respondsToSelector:@selector(keyboardChangedWithTransition:)]) {
                 [observer keyboardChangedWithTransition:trans];
@@ -485,8 +508,6 @@ static int _YYKeyboardViewFrameObserverKey;
     _fromFrame = trans.toFrame;
     _fromVisible = trans.toVisible;
     _fromOrientation = [UIApplication sharedApplication].statusBarOrientation;
-    
-    
 }
 
 - (CGRect)convertRect:(CGRect)rect toView:(UIView *)view {
@@ -516,6 +537,16 @@ static int _YYKeyboardViewFrameObserverKey;
     rect = [toWindow convertRect:rect fromWindow:mainWindow];
     rect = [view convertRect:rect fromView:toWindow];
     return rect;
+}
+
+#pragma mark - setter
+
+- (void)setInHardwareKeyboardMode:(BOOL)inHardwareKeyboardMode {
+    if (_inHardwareKeyboardMode == inHardwareKeyboardMode) {
+        return;
+    }
+    _inHardwareKeyboardMode = inHardwareKeyboardMode;
+    [[NSNotificationCenter defaultCenter] postNotificationName:YYKeyboardInHardwareKeyboardModeNotification object:@(_inHardwareKeyboardMode)];
 }
 
 @end

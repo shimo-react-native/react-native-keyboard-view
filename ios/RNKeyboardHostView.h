@@ -47,8 +47,6 @@ FOUNDATION_EXTERN NSString * const RNKeyboardInHardwareKeyboardModeNotification;
  */
 @property (nonatomic, assign, readonly) BOOL contentOrKeyboardShown;
 
-@property (nonatomic, assign, readonly) BOOL inHardwareKeyboardMode;
-
 #pragma mark - method
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;

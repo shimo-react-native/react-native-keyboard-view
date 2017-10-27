@@ -18,6 +18,8 @@ FOUNDATION_EXPORT const unsigned char YYKeyboardManagerVersionString[];
 
 NS_ASSUME_NONNULL_BEGIN
 
+FOUNDATION_EXTERN NSString * const YYKeyboardInHardwareKeyboardModeNotification;
+
 /**
  System keyboard transition information.
  Use -[YYKeyboardManager convertRect:toView:] to convert frame to specified view.
@@ -70,6 +72,9 @@ typedef struct {
 
 /// Whether the keyboard from valid
 @property (nonatomic, assign, readonly) BOOL keyboardFromValid;
+
+/// Whether in hardware keyboard mode
+@property (nonatomic, assign, readonly) BOOL inHardwareKeyboardMode;
 
 /// Get the keyboard frame. CGRectNull if there's no keyboard view.
 /// Use convertRect:toView: to convert frame to specified view.
