@@ -381,7 +381,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     CGFloat keyboardWindowHeight = CGRectGetHeight(keyboardWindow.frame);
     CGFloat keyboardVisibleHeight = MAX(keyboardWindowHeight - CGRectGetMinY(keyboardFrame), 0);
 
-    if (keyboardHeight > keyboardVisibleHeight) { // use external keyboard
+    if (keyboardVisibleHeight == 0 || keyboardHeight > keyboardVisibleHeight) { // use external keyboard
         if (_contentView) {
             _contentHeight = _keyboardPlaceholderHeight > 0 ? _keyboardPlaceholderHeight : keyboardHeight;
         } else {
