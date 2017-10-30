@@ -12,7 +12,7 @@
 #import "YYKeyboardManager.h"
 #import <objc/runtime.h>
 
-NSString * const YYKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyboardMode";
+NSString *const YYKeyboardInHardwareKeyboardModeNotification = @"inHardwareKeyboardMode";
 
 static int _YYKeyboardViewFrameObserverKey;
 
@@ -86,7 +86,7 @@ static int _YYKeyboardViewFrameObserverKey;
 
 @end
 
-@interface YYKeyboardManager()
+@interface YYKeyboardManager ()
 
 @property (nonatomic, assign) BOOL inHardwareKeyboardMode;
 
@@ -94,7 +94,7 @@ static int _YYKeyboardViewFrameObserverKey;
 
 @implementation YYKeyboardManager {
     NSHashTable *_observers;
-    
+
     CGRect _fromFrame;
     BOOL _fromVisible;
     UIInterfaceOrientation _fromOrientation;
@@ -111,7 +111,6 @@ static int _YYKeyboardViewFrameObserverKey;
     BOOL _lastIsNotification;
 }
 
-
 - (instancetype)init {
     @throw [NSException exceptionWithName:@"YYKeyboardManager init error" reason:@"Use 'defaultManager' to get instance." userInfo:nil];
     return [super init];
@@ -120,6 +119,17 @@ static int _YYKeyboardViewFrameObserverKey;
 - (instancetype)_init {
     self = [super init];
     _observers = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPointerPersonality capacity:0];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(_windowDidBecomeVisibleNotification:)
+                                                 name:UIWindowDidBecomeVisibleNotification
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(_windowDidBecomeHiddenNotification:)
+                                                 name:UIWindowDidBecomeHiddenNotification
+                                               object:nil];
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(_keyboardFrameWillChangeNotification:)
                                                  name:UIKeyboardWillChangeFrameNotification
@@ -220,14 +230,15 @@ static int _YYKeyboardViewFrameObserverKey;
     window = [UIApplication sharedApplication].keyWindow;
     view = [self _getKeyboardViewFromWindow:window];
     if (view) return view;
-    
+
     // must be reverse, because there will be two UIRemoteKeyboardWindow when splitting keyboard.
-    [[UIApplication sharedApplication].windows enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(__kindof UIWindow * _Nonnull window, NSUInteger idx, BOOL * _Nonnull stop) {
-        view = [self _getKeyboardViewFromWindow:window];
-        if (view) {
-            *stop = YES;
-        }
-    }];
+    [[UIApplication sharedApplication].windows enumerateObjectsWithOptions:NSEnumerationReverse
+                                                                usingBlock:^(__kindof UIWindow *_Nonnull window, NSUInteger idx, BOOL *_Nonnull stop) {
+                                                                    view = [self _getKeyboardViewFromWindow:window];
+                                                                    if (view) {
+                                                                        *stop = YES;
+                                                                    }
+                                                                }];
     return view;
 }
 
@@ -328,6 +339,22 @@ static int _YYKeyboardViewFrameObserverKey;
     }
 
     return nil;
+}
+
+- (void)_windowDidBecomeVisibleNotification:(NSNotification*)notif {
+    if (notif.object == [self keyboardWindow]) {
+        _keyboardFromValid = _keyboardToValid;
+        _keyboardToValid = YES;
+        [self _notifyAllObservers];
+    }
+}
+
+- (void)_windowDidBecomeHiddenNotification:(NSNotification*)notif {
+    if (notif.object == [self keyboardWindow]) {
+        _keyboardFromValid = _keyboardToValid;
+        _keyboardToValid = NO;
+        [self _notifyAllObservers];
+    }
 }
 
 - (void)_keyboardFrameWillChangeNotification:(NSNotification *)notif {
@@ -473,19 +500,8 @@ static int _YYKeyboardViewFrameObserverKey;
             trans.toVisible = YES;
         }
     }
-    
-    if (!CGRectEqualToRect(trans.toFrame, _fromFrame)) {
-        _keyboardToValid = trans.toVisible;
-        _keyboardFromValid = trans.fromVisible;
-        
-        // especially used for external keyboard when toolbar is hidden
-        if (!_keyboardToValid && CGRectGetHeight(trans.fromFrame) == 0) {
-            _keyboardToValid = YES;
-        }
-        if (!_keyboardFromValid && CGRectGetHeight(trans.toFrame) == 0) {
-            _keyboardFromValid = YES;
-        }
-        
+
+    if (!CGRectEqualToRect(trans.toFrame, _fromFrame) || _keyboardToValid != _keyboardFromValid) {
         if (_keyboardToValid) {
             if ([UIDevice currentDevice].systemVersion.doubleValue >= 11) {
                 // >= iOS11, height is visible keyboard height, when use external keyboard.
@@ -495,7 +511,7 @@ static int _YYKeyboardViewFrameObserverKey;
                 [self setInHardwareKeyboardMode:(CGRectGetMaxY(trans.toFrame) > CGRectGetHeight([self keyboardWindow].frame))];
             }
         }
-        
+
         for (id<YYKeyboardObserver> observer in _observers.copy) {
             if ([observer respondsToSelector:@selector(keyboardChangedWithTransition:)]) {
                 [observer keyboardChangedWithTransition:trans];

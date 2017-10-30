@@ -106,7 +106,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     [super didMoveToWindow];
     if (!_coverView.superview && self.window) {
         [self autoAddSubview:_coverView onSuperview:self.rootView];
-        if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
+        if (_hideWhenKeyboardIsDismissed && !_manager.keyboardToValid) {
             [_coverView setVisible:NO];
         }
     }
@@ -138,7 +138,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
         subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleWidth;
         _coverView = subview;
         [self autoAddSubview:_coverView onSuperview:self.rootView];
-        if (_hideWhenKeyboardIsDismissed && !(_hideWhenKeyboardIsDismissed && !_isPresented && [_manager isKeyboardVisible])) {
+        if (_hideWhenKeyboardIsDismissed && !_manager.keyboardToValid) {
             [_coverView setVisible:NO];
         }
     }
@@ -381,7 +381,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     CGFloat keyboardWindowHeight = CGRectGetHeight(keyboardWindow.frame);
     CGFloat keyboardVisibleHeight = MAX(keyboardWindowHeight - CGRectGetMinY(keyboardFrame), 0);
 
-    if (keyboardHeight > keyboardVisibleHeight) { // use external keyboard
+    if (keyboardVisibleHeight == 0 || keyboardHeight > keyboardVisibleHeight) { // use external keyboard
         if (_contentView) {
             _contentHeight = _keyboardPlaceholderHeight > 0 ? _keyboardPlaceholderHeight : keyboardHeight;
         } else {
@@ -401,7 +401,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
         return;
     }
     
-    if (![_manager isKeyboardVisible]) {
+    if (![_manager keyboardToValid]) {
         [_coverView setVisible:!hideWhenKeyboardIsDismissed];
         [self updateSize];
         [self updateOriginy];

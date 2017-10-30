@@ -67,7 +67,7 @@ typedef struct {
 /// Whether the keyboard is visible.
 @property (nonatomic, readonly, getter=isKeyboardVisible) BOOL keyboardVisible;
 
-/// Whether the keyboard to bel valid
+/// Whether the keyboard to be valid
 @property (nonatomic, assign, readonly) BOOL keyboardToValid;
 
 /// Whether the keyboard from valid
