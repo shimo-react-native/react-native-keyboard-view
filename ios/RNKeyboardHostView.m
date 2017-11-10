@@ -7,6 +7,7 @@
 #import <React/RCTShadowView.h>
 #import <React/RCTTouchHandler.h>
 #import <React/RCTUIManager.h>
+#import <React/RCTUIManagerUtils.h>
 #import <React/RCTUtils.h>
 
 #import "RNKeyboardContentView.h"
