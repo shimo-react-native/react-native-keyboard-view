@@ -505,7 +505,7 @@ static int _YYKeyboardViewFrameObserverKey;
         if (_keyboardToValid) {
             if ([UIDevice currentDevice].systemVersion.doubleValue >= 11) {
                 // >= iOS11, height is visible keyboard height, when use external keyboard.
-                [self setInHardwareKeyboardMode:(CGRectGetHeight(trans.toFrame) < 200)];
+                [self setInHardwareKeyboardMode:CGRectGetMinY(trans.toFrame) > 0 && (CGRectGetHeight(trans.toFrame) < 200)];
             } else {
                 // < iOS11, height is real keyboard height, when use external keyboard.
                 [self setInHardwareKeyboardMode:(CGRectGetMaxY(trans.toFrame) > CGRectGetHeight([self keyboardWindow].frame))];
