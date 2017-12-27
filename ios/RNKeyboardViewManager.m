@@ -13,6 +13,14 @@
 
 RCT_EXPORT_MODULE()
 
+- (dispatch_queue_t)methodQueue {
+    return dispatch_get_main_queue();
+}
+
++ (BOOL)requiresMainQueueSetup {
+    return YES;
+}
+
 - (UIView *)view {
     _keyboardHostView = [[RNKeyboardHostView alloc] initWithBridge:self.bridge];
 
@@ -32,18 +40,14 @@ RCT_EXPORT_VIEW_PROPERTY(onKeyboardHide, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onKeyboardShow, RCTDirectEventBlock)
 
 RCT_EXPORT_METHOD(dismiss) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [[UIApplication sharedApplication].keyWindow endEditing:YES];
-    });
+    [[UIApplication sharedApplication].keyWindow endEditing:YES];
 }
 
 RCT_EXPORT_METHOD(dismissWithoutAnimation) {
     if ([YYKeyboardManager defaultManager].isKeyboardVisible) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [UIView performWithoutAnimation:^{
-                [[UIApplication sharedApplication].keyWindow endEditing:YES];
-            }];
-        });
+        [UIView performWithoutAnimation:^{
+            [[UIApplication sharedApplication].keyWindow endEditing:YES];
+        }];
     }
 }
 
