@@ -373,7 +373,9 @@ static int _YYKeyboardViewFrameObserverKey;
     CGRect after = afterValue.CGRectValue;
     UIViewAnimationCurve curve = curveNumber.integerValue;
     NSTimeInterval duration = durationNumber.doubleValue;
-
+    
+    [self updateInHardwareKeyboardMode:after];
+    
     // ignore zero end frame
     if (after.size.width <= 0 && after.size.height <= 0) return;
 
@@ -502,16 +504,6 @@ static int _YYKeyboardViewFrameObserverKey;
     }
 
     if (!CGRectEqualToRect(trans.toFrame, _fromFrame) || _keyboardToValid != _keyboardFromValid) {
-        if (_keyboardToValid) {
-            if ([UIDevice currentDevice].systemVersion.doubleValue >= 11) {
-                // >= iOS11, height is visible keyboard height, when use external keyboard.
-                [self setInHardwareKeyboardMode:CGRectGetMinY(trans.toFrame) > 0 && (CGRectGetHeight(trans.toFrame) < 200)];
-            } else {
-                // < iOS11, height is real keyboard height, when use external keyboard.
-                [self setInHardwareKeyboardMode:(CGRectGetMaxY(trans.toFrame) > CGRectGetHeight([self keyboardWindow].frame))];
-            }
-        }
-
         for (id<YYKeyboardObserver> observer in _observers.copy) {
             if ([observer respondsToSelector:@selector(keyboardChangedWithTransition:)]) {
                 [observer keyboardChangedWithTransition:trans];
@@ -524,6 +516,20 @@ static int _YYKeyboardViewFrameObserverKey;
     _fromFrame = trans.toFrame;
     _fromVisible = trans.toVisible;
     _fromOrientation = [UIApplication sharedApplication].statusBarOrientation;
+}
+
+- (void)updateInHardwareKeyboardMode:(CGRect)keyboardFrame {
+    CGRect keyboardWindowFrame = [self keyboardWindow].frame;
+    if (CGRectGetMaxY(keyboardFrame) == CGRectGetMaxY(keyboardWindowFrame)) {
+        // >= iOS11, CGRectGetHeight(after) < 200 when in hardware keyboard mode
+        [self setInHardwareKeyboardMode:CGRectGetHeight(keyboardFrame) < 200];
+    } else if (CGRectGetMinY(keyboardFrame) == CGRectGetMaxY(keyboardWindowFrame) && CGRectGetHeight(keyboardFrame) == 0) {
+        // iPhone in hardware keyboard mode
+        [self setInHardwareKeyboardMode:YES];
+    } else if (CGRectGetMinY(keyboardFrame) < CGRectGetMaxY(keyboardWindowFrame) && CGRectGetMaxY(keyboardFrame) > CGRectGetMaxY(keyboardWindowFrame)) {
+        // iPad in hardware keyboard mode
+        [self setInHardwareKeyboardMode:YES];
+    }
 }
 
 - (CGRect)convertRect:(CGRect)rect toView:(UIView *)view {

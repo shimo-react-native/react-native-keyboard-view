@@ -22,6 +22,10 @@ static NSString *const RNKeyboardInHardwareKeyboardModeNameEventName = @"InHardw
 
 RCT_EXPORT_MODULE();
 
++ (BOOL)requiresMainQueueSetup {
+    return YES;
+}
+
 - (instancetype)init {
     if (self = [super init]) {
         [[NSNotificationCenter defaultCenter] addObserver:self
