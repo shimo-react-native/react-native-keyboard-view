@@ -25,10 +25,9 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 
 /**
- *
  * ContentView is layout to cover the keyboard,
  * CoverView is layout to fill the rest part on the screen.
- *
+ * <p>
  * +--------------+
  * |              |
  * |              |
@@ -42,15 +41,20 @@ import com.facebook.react.uimanager.events.RCTEventEmitter;
  * |     view     |
  * |              |
  * +--------------+
- *
  */
 
 
 public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEventListener {
-    private @Nullable PopupWindow mPopupWindow;
-    private @Nullable KeyboardState mKeyboardState;
-    private @Nullable View mContentView;
-    private @Nullable View mCoverView;
+    private @Nullable
+    PopupWindow mPopupWindow;
+    private @Nullable
+    KeyboardState mKeyboardState;
+    private @Nullable
+    View mContentView;
+    private @Nullable
+    View mCoverView;
+    private int navigationBarHeight;
+    private int statusBarHeight;
     private int mChildCount = 0;
     private KeyboardState.OnKeyboardChangeListener mOnKeyboardChangeListener;
     private OnAttachStateChangeListener mOnAttachStateChangeListener;
@@ -58,7 +62,8 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private boolean mHideWhenKeyboardIsDismissed = true;
     private RCTEventEmitter mEventEmitter;
     private int mKeyboardPlaceholderHeight;
-    private @Nullable Rect mKeyboardPlaceholderFrame;
+    private @Nullable
+    Rect mKeyboardPlaceholderFrame;
     private float mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
     private boolean mContentVisible = true;
 
@@ -78,8 +83,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         }
     }
 
-    public KeyboardView(ThemedReactContext context) {
+    public KeyboardView(ThemedReactContext context, int navigationBarHeight, int statusBarHeight) {
         super(context);
+        this.navigationBarHeight = navigationBarHeight;
+        this.statusBarHeight = statusBarHeight;
         mEventEmitter = context.getJSModule(RCTEventEmitter.class);
         context.addLifecycleEventListener(this);
         mOnAttachStateChangeListener = new OnAttachStateChangeListener() {
@@ -131,7 +138,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 resizeCover();
             }
         }
-
 
 
         checkKeyboardState();
@@ -249,10 +255,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     resizeCover();
                 }
             };
-            mKeyboardState = new KeyboardState(activity.findViewById(android.R.id.content));
+            mKeyboardState = new KeyboardState(activity.findViewById(android.R.id.content), navigationBarHeight, statusBarHeight);
             mKeyboardState.addOnKeyboardChangeListener(mOnKeyboardChangeListener);
             checkKeyboardState();
-        } else if (mActivityEventListener == null)  {
+        } else if (mActivityEventListener == null) {
             mActivityEventListener = new ActivityEventListener() {
                 @Override
                 public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
@@ -301,24 +307,25 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         if (!mContentVisible) {
             hidePopupWindow();
         } else if (mContentView != null) {
+            final int extraHeight = mKeyboardState != null ? (mKeyboardState.isAddHeight() ? navigationBarHeight : 0) : 0;
             if (mPopupWindow == null) {
-                mPopupWindow = new PopupWindow(mContentView, keyboardFrame.width(), keyboardFrame.height());
+                mPopupWindow = new PopupWindow(mContentView, keyboardFrame.width(), keyboardFrame.height()+ extraHeight);
                 mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 mPopupWindow.setAnimationStyle(R.style.DialogAnimationSlide);
                 mPopupWindow.setClippingEnabled(false);
 
-                mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
+                mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top-extraHeight);
             } else {
-                mPopupWindow.update(0, keyboardFrame.top, keyboardFrame.width(), keyboardFrame.height());
+                mPopupWindow.update(0, keyboardFrame.top-extraHeight, keyboardFrame.width(), keyboardFrame.height()+ extraHeight);
             }
 
             ((ReactContext) getContext()).runOnNativeModulesQueueThread(
                     new Runnable() {
                         @Override
                         public void run() {
-                            if (mContentView !=  null) {
+                            if (mContentView != null) {
                                 ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
-                                        .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height());
+                                        .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height()+ extraHeight);
                             }
                         }
                     });
@@ -355,7 +362,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
         int rootHeight = reactRootView.getHeight();
 
-        final ReactContext context = (ReactContext)getContext();
+        final ReactContext context = (ReactContext) getContext();
         final int coverViewWidth = keyboardFrame.width();
         final int coverViewHeight = rootHeight - keyboardFrame.height();
 
@@ -391,7 +398,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             return;
         }
 
-        ViewGroup parent = (ViewGroup)mCoverView.getParent();
+        ViewGroup parent = (ViewGroup) mCoverView.getParent();
         if (parent != null) {
             parent.removeView(mCoverView);
         }

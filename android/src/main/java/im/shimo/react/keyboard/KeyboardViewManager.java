@@ -1,6 +1,7 @@
 package im.shimo.react.keyboard;
 
-import android.webkit.WebView;
+import android.content.Context;
+import android.content.res.Resources;
 
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.module.annotations.ReactModule;
@@ -13,7 +14,8 @@ import java.util.Map;
 
 @ReactModule(name = KeyboardViewManager.REACT_CLASS)
 public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
-
+    private int navigationBarHeight;
+    private int statusBarHeight;
     protected static final String REACT_CLASS = "KeyboardView";
 
     @Override
@@ -23,7 +25,11 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
 
     @Override
     public KeyboardView createViewInstance(ThemedReactContext context) {
-        return new KeyboardView(context);
+        if (statusBarHeight == 0) {
+            navigationBarHeight = getNavigationBarHeight(context);
+            statusBarHeight = getStatusBarHeight(context);
+        }
+        return new KeyboardView(context, navigationBarHeight, statusBarHeight);
     }
 
     @Override
@@ -60,4 +66,21 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         }
         return builder.build();
     }
+
+    private int getStatusBarHeight(Context context) {
+        Resources resources = context.getResources();
+        int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
+        int height = resources.getDimensionPixelSize(resourceId);
+        System.out.println("mKeyboardFrame navigationBar height=" + height);
+        return height;
+    }
+
+    private int getNavigationBarHeight(Context context) {
+        Resources resources = context.getResources();
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        int height = resources.getDimensionPixelSize(resourceId);
+        System.out.println("mKeyboardFrame navigationBar height=" + height);
+        return height;
+    }
+
 }
