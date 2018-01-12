@@ -71,7 +71,6 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         Resources resources = context.getResources();
         int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
         int height = resources.getDimensionPixelSize(resourceId);
-        System.out.println("mKeyboardFrame navigationBar height=" + height);
         return height;
     }
 
@@ -79,7 +78,6 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         Resources resources = context.getResources();
         int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
         int height = resources.getDimensionPixelSize(resourceId);
-        System.out.println("mKeyboardFrame navigationBar height=" + height);
         return height;
     }
 

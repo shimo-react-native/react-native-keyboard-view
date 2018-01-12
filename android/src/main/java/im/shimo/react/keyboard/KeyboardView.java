@@ -21,6 +21,7 @@ import com.facebook.react.uimanager.DisplayMetricsHolder;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.views.scroll.ReactScrollView;
 
 import java.util.ArrayList;
 
@@ -67,6 +68,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private float mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
     private boolean mContentVisible = true;
     private ObjectAnimator translationSlide;
+    private int mVisible = VISIBLE;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -105,10 +107,12 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         bindKeyboardState();
     }
 
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         // Do nothing as we are laid out by UIManager
     }
+
 
     @Override
     public void addView(View child, int index) {
@@ -308,32 +312,60 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         if (!mContentVisible) {
             hidePopupWindow();
         } else if (mContentView != null) {
-            final int extraHeight = mKeyboardState != null ? (mKeyboardState.isAddHeight() ? navigationBarHeight : 0) : 0;
-            if (mPopupWindow == null) {
-                mPopupWindow = new PopupWindow(mContentView, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
-                mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                mPopupWindow.setAnimationStyle(R.style.DialogAnimationSlide);
-                mPopupWindow.setClippingEnabled(false);
-                mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top - extraHeight);
-            } else {
-                mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
-                if (translationSlide != null) {
-                    translationSlide.cancel();
-                }
-                translationSlide = ObjectAnimator.ofFloat(mCoverView, "translationY", keyboardFrame.height() + extraHeight, 0);
-                translationSlide.start();
-            }
+            int extraHeight = dealWithPopwindow(keyboardFrame);
+            updateNodeSizeOnQueueThread(keyboardFrame, extraHeight);
+        }
+    }
 
-            ((ReactContext) getContext()).runOnNativeModulesQueueThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mContentView != null) {
+    private int dealWithPopwindow(Rect keyboardFrame) {
+        final int extraHeight = mKeyboardState != null ? (mKeyboardState.isRealNavigationBarShow() ? navigationBarHeight : 0) : 0;
+        if (mPopupWindow == null) {
+            mPopupWindow = new PopupWindow(mContentView, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
+            mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            mPopupWindow.setAnimationStyle(R.style.DialogAnimationSlide);
+            mPopupWindow.setClippingEnabled(false);
+            showAtLocationPopwindow(keyboardFrame, extraHeight);
+        } else {
+            updatePopwindow(keyboardFrame, extraHeight);
+            if (translationSlide != null) {
+                translationSlide.cancel();
+            }
+            translationSlide = ObjectAnimator.ofFloat(mCoverView, "translationY", keyboardFrame.height() + extraHeight, 0);
+            translationSlide.start();
+        }
+        return extraHeight;
+    }
+
+    private void updateNodeSizeOnQueueThread(final Rect keyboardFrame, final int extraHeight) {
+        ((ReactContext) getContext()).runOnNativeModulesQueueThread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mContentView != null) {
+                            if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
+                                ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
+                                        .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height());
+                            } else {
                                 ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
                                         .updateNodeSize(mContentView.getId(), keyboardFrame.width(), keyboardFrame.height() + extraHeight);
                             }
                         }
-                    });
+                    }
+                });
+    }
+
+    private void showAtLocationPopwindow(Rect keyboardFrame, int extraHeight) {
+        if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
+            mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
+        } else {
+        }
+    }
+
+    private void updatePopwindow(Rect keyboardFrame, int extraHeight) {
+        if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
+            mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height());
+        } else {
+            mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
         }
     }
 
@@ -368,13 +400,23 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         int rootHeight = reactRootView.getHeight();
         if (!mKeyboardState.isKeyboardShowing() && mKeyboardPlaceholderHeight > 0) {
             //说明键盘没有弹起，但是popwindow是显示状态
-            final int extraHeight = mKeyboardState != null ? (mKeyboardState.isAddHeight() ? navigationBarHeight : 0) : 0;
+            final int extraHeight = mKeyboardState != null ? (mKeyboardState.isRealNavigationBarShow() ? navigationBarHeight : 0) : 0;
             rootHeight -= extraHeight;
         }
 
         final ReactContext context = (ReactContext) getContext();
         final int coverViewWidth = keyboardFrame.width();
-        final int coverViewHeight = rootHeight - keyboardFrame.height();
+        int coverViewHeightTemp = rootHeight - keyboardFrame.height();
+        if (!mKeyboardState.isKeyboardShowing() && mKeyboardPlaceholderHeight == 0) {
+            if (mKeyboardState.isRealNavigationBarShow()) {
+                //说明键盘没有弹起，popwindow也没有显示，并且第三方rom全屏,所以要挨到最底边
+                final int extraHeight = mKeyboardState != null ? (mKeyboardState.isRealNavigationBarShow() ? navigationBarHeight : 0) : 0;
+                if (mKeyboardState.isRomNavigationBarShow()) {
+                    coverViewHeightTemp += extraHeight;
+                }
+            }
+        }
+        final int coverViewHeight = coverViewHeightTemp;
 
         context.runOnNativeModulesQueueThread(
                 new Runnable() {
