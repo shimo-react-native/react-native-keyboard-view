@@ -21,7 +21,6 @@ import com.facebook.react.uimanager.DisplayMetricsHolder;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.facebook.react.views.scroll.ReactScrollView;
 
 import java.util.ArrayList;
 
@@ -68,7 +67,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private float mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
     private boolean mContentVisible = true;
     private ObjectAnimator translationSlide;
-    private int mVisible = VISIBLE;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
