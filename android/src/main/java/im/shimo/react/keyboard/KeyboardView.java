@@ -326,9 +326,11 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         } else {
             updatePopwindow(keyboardFrame, extraHeight);
             if (translationSlide != null) {
-                translationSlide.cancel();
+                if (translationSlide.isRunning() || translationSlide.isStarted()) {
+                    translationSlide.cancel();
+                }
             }
-            translationSlide = ObjectAnimator.ofFloat(mCoverView, "translationY", keyboardFrame.height() + extraHeight, 0);
+            translationSlide = ObjectAnimator.ofFloat(mCoverView, "alpha", 0, 1);
             translationSlide.start();
         }
         return extraHeight;
@@ -354,7 +356,31 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     private void showAtLocationPopwindow(Rect keyboardFrame, int extraHeight) {
         if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-            mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
+            //兼容非原生厂商rom隐藏navigation
+            if (!mKeyboardState.isRealNavigationBarShow()) {
+                //rootView高度=屏幕绘画高度
+                if (mKeyboardState.isKeyboardShowing()) {
+                    //系统NavigationBar显示
+                    //说明键盘弹起时，高度需要增加NavigationBar高度
+                    mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top - extraHeight);
+                } else {
+                    //系统NavigationBar高度不显示
+                    //说明键盘弹起时不需要增加任何高度
+                    mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
+                }
+            } else {
+                //rootView高度=屏幕绘制高度-NavigationBar高度
+                if (mKeyboardState.isKeyboardShowing()) {
+                    //系统NavigationBar显示
+                    //说明键盘弹起时，高度需要增加NavigationBar高度
+                    // ，因为键盘弹起时，NavigationBar会跟着键盘一起出现
+                    mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top - extraHeight);
+                } else {
+                    //系统NavigationBar高度不显示
+                    //说明键盘弹起时不需要增加任何高度
+                    mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
+                }
+            }
         } else {
             mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top - extraHeight);
         }
@@ -362,7 +388,31 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     private void updatePopwindow(Rect keyboardFrame, int extraHeight) {
         if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-            mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height());
+            //兼容非原生厂商rom隐藏navigation
+            if (!mKeyboardState.isRealNavigationBarShow()) {
+                //rootView高度=屏幕绘画高度
+                if (mKeyboardState.isKeyboardShowing()) {
+                    //系统NavigationBar显示
+                    //说明键盘弹起时，高度需要增加NavigationBar高度
+                    mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
+                } else {
+                    //系统NavigationBar高度不显示
+                    //说明键盘弹起时不需要增加任何高度
+                    mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
+                }
+            } else {
+                //rootView高度=屏幕绘制高度-NavigationBar高度
+                if (mKeyboardState.isKeyboardShowing()) {
+                    //系统NavigationBar显示
+                    //说明键盘弹起时，高度需要增加NavigationBar高度
+                    // ，因为键盘弹起时，NavigationBar会跟着键盘一起出现
+                    mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
+                } else {
+                    //系统NavigationBar高度不显示
+                    //说明键盘弹起时不需要增加任何高度
+                    mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
+                }
+            }
         } else {
             mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
         }
