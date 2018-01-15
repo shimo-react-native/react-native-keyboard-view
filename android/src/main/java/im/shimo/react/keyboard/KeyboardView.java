@@ -356,6 +356,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
             mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
         } else {
+            mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top - extraHeight);
         }
     }
 
