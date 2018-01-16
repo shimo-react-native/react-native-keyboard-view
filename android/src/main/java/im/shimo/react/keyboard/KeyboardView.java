@@ -355,39 +355,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private void showAtLocationPopwindow(Rect keyboardFrame, int extraHeight) {
-        if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-            //兼容非原生厂商rom隐藏navigation
-            if (!mKeyboardState.isRealNavigationBarShow()) {
-                //rootView高度=屏幕绘画高度
-                if (mKeyboardState.isKeyboardShowing()) {
-                    //系统NavigationBar显示
-                    //说明键盘弹起时，高度需要增加NavigationBar高度
-                    dealWithShowAtLoacationWhenShowNavigationbar(keyboardFrame, extraHeight);
-                } else {
-                    //系统NavigationBar高度不显示
-                    //说明键盘弹起时不需要增加任何高度
-                    dealWithShowAtLoacationWhenHideNavigationbar(keyboardFrame);
-                }
-            } else {
-                //rootView高度=屏幕绘制高度-NavigationBar高度
-                if (mKeyboardState.isKeyboardShowing()) {
-                    //系统NavigationBar显示
-                    //说明键盘弹起时，高度需要增加NavigationBar高度
-                    // ，因为键盘弹起时，NavigationBar会跟着键盘一起出现
-                    dealWithShowAtLoacationWhenShowNavigationbar(keyboardFrame, extraHeight);
-                } else {
-                    //系统NavigationBar高度不显示
-                    //说明键盘弹起时不需要增加任何高度
-                    dealWithShowAtLoacationWhenHideNavigationbar(keyboardFrame);
-                }
-            }
-        } else {
-            dealWithShowAtLoacationWhenShowNavigationbar(keyboardFrame, extraHeight);
-        }
-    }
-
-    private void dealWithShowAtLoacationWhenHideNavigationbar(Rect keyboardFrame) {
-        mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
+        dealWithShowAtLoacationWhenShowNavigationbar(keyboardFrame, extraHeight);
     }
 
     private void dealWithShowAtLoacationWhenShowNavigationbar(Rect keyboardFrame, int extraHeight) {
@@ -396,6 +364,15 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     private void updatePopwindow(Rect keyboardFrame, int extraHeight) {
         mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
+    }
+
+    /**
+     * 预留方法，以后使用
+     *
+     * @param keyboardFrame
+     */
+    private void dealWithShowAtLoacationWhenHideNavigationbar(Rect keyboardFrame) {
+        mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
     }
 
     /**
