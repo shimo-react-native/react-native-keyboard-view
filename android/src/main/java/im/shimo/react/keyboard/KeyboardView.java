@@ -326,9 +326,11 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         } else {
             updatePopwindow(keyboardFrame, extraHeight);
             if (translationSlide != null) {
-                translationSlide.cancel();
+                if (translationSlide.isRunning() || translationSlide.isStarted()) {
+                    translationSlide.cancel();
+                }
             }
-            translationSlide = ObjectAnimator.ofFloat(mCoverView, "translationY", keyboardFrame.height() + extraHeight, 0);
+            translationSlide = ObjectAnimator.ofFloat(mCoverView, "alpha", 0, 1);
             translationSlide.start();
         }
         return extraHeight;
@@ -353,19 +355,33 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private void showAtLocationPopwindow(Rect keyboardFrame, int extraHeight) {
-        if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-            mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
-        } else {
-            mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top - extraHeight);
-        }
+        dealWithShowAtLoacationWhenShowNavigationbar(keyboardFrame, extraHeight);
+    }
+
+    private void dealWithShowAtLoacationWhenShowNavigationbar(Rect keyboardFrame, int extraHeight) {
+        mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top - extraHeight);
     }
 
     private void updatePopwindow(Rect keyboardFrame, int extraHeight) {
-        if (mKeyboardState != null && mKeyboardState.isKeyboardShowing()) {
-            mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height());
-        } else {
-            mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
-        }
+        mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
+    }
+
+    /**
+     * 预留方法，以后使用
+     *
+     * @param keyboardFrame
+     */
+    private void dealWithShowAtLoacationWhenHideNavigationbar(Rect keyboardFrame) {
+        mPopupWindow.showAtLocation(getRootView(), Gravity.NO_GRAVITY, 0, keyboardFrame.top);
+    }
+
+    /**
+     * 预留方法，以后使用
+     *
+     * @param keyboardFrame
+     */
+    private void dealWithUpdateWhenHideNavigationbar(Rect keyboardFrame) {
+        mPopupWindow.update(0, keyboardFrame.top, keyboardFrame.width(), keyboardFrame.height());
     }
 
     private void resizeCover() {
