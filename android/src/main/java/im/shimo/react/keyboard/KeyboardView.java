@@ -316,7 +316,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private int dealWithPopwindow(Rect keyboardFrame) {
-        final int extraHeight = mKeyboardState != null ? (mKeyboardState.isRealNavigationBarShow() ? navigationBarHeight : 0) : 0;
+        final int extraHeight = checkExtraHeight();
         if (mPopupWindow == null) {
             mPopupWindow = new PopupWindow(mContentView, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
             mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -366,6 +366,23 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         mPopupWindow.update(0, keyboardFrame.top - extraHeight, keyboardFrame.width(), keyboardFrame.height() + extraHeight);
     }
 
+    private int checkExtraHeight() {
+        int temp = 0;
+        if (mKeyboardState != null) {
+            if (mKeyboardState.isRealNavigationBarShow()) {
+                temp = navigationBarHeight;
+            }
+        }
+        if (temp > 0) {
+            if (mKeyboardState.isSmartisanOS() && !mKeyboardState.isRomNavigationBarShow()) {
+                return 0;
+            } else {
+                return temp;
+            }
+        }
+        return 0;
+    }
+
     /**
      * 预留方法，以后使用
      *
@@ -392,7 +409,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             } else if (mCoverView.getVisibility() != VISIBLE) {
                 mCoverView.setVisibility(VISIBLE);
             }
-
             if (mKeyboardPlaceholderFrame != null && !mKeyboardState.isKeyboardShowing()) {
                 resizeCover(mKeyboardPlaceholderFrame);
             } else {
@@ -415,7 +431,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         int rootHeight = reactRootView.getHeight();
         if (!mKeyboardState.isKeyboardShowing() && mKeyboardPlaceholderHeight > 0) {
             //说明键盘没有弹起，但是popwindow是显示状态
-            final int extraHeight = mKeyboardState != null ? (mKeyboardState.isRealNavigationBarShow() ? navigationBarHeight : 0) : 0;
+            final int extraHeight = checkExtraHeight();
             rootHeight -= extraHeight;
         }
 
@@ -425,14 +441,18 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         if (!mKeyboardState.isKeyboardShowing() && mKeyboardPlaceholderHeight == 0) {
             if (mKeyboardState.isRealNavigationBarShow()) {
                 //说明键盘没有弹起，popwindow也没有显示，并且第三方rom全屏,所以要挨到最底边
-                final int extraHeight = mKeyboardState != null ? (mKeyboardState.isRealNavigationBarShow() ? navigationBarHeight : 0) : 0;
+                final int extraHeight = checkExtraHeight();
                 if (mKeyboardState.isRomNavigationBarShow()) {
                     coverViewHeightTemp += extraHeight;
+                    if (coverViewHeightTemp > keyboardFrame.top) {
+                        coverViewHeightTemp -= extraHeight;
+                    }
+                } else if (mKeyboardState.isSmartisanOS()) {
+
                 }
             }
         }
         final int coverViewHeight = coverViewHeightTemp;
-
         context.runOnNativeModulesQueueThread(
                 new Runnable() {
                     @Override
