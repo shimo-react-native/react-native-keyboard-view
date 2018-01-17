@@ -17,43 +17,44 @@ import com.facebook.react.uimanager.DisplayMetricsHolder;
 
 import java.util.ArrayList;
 
-class KeyboardState {
-    private final int screenHeight;
+/**
+ * Created by song on 2018/1/17.
+ */
+
+public abstract class AbstractKeyboardState {
     /**
      * 布局可控RECT
      */
-    private Rect mVisibleViewArea;
+    protected Rect mVisibleViewArea;
     /**
      * 预测键盘Rect，或者NavigationBar高度
      */
-    private Rect mKeyboardFrame;
+    protected Rect mKeyboardFrame;
     /**
      * 键盘是否显示
      */
-    private boolean mKeyboardShowing = false;
-    private ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
-    private ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
-    private DisplayMetrics mWindowDisplayMetrics;
+    protected boolean mKeyboardShowing = false;
+    protected ViewTreeObserver.OnGlobalLayoutListener mLayoutListener;
+    protected ArrayList<OnKeyboardChangeListener> mOnKeyboardChangeListeners;
+    protected DisplayMetrics mWindowDisplayMetrics;
     /**
      * 相对于第三方rom厂商来说NavigationBar是否显示状态
      */
-    private boolean mIsRomNavigationBarShow;
+    protected boolean mIsRomNavigationBarShow;
     /**
      * 系统真正的NavigationBar是否显示状态
      */
-    private boolean mIsRealNavigationBarShow;
+    protected boolean mIsRealNavigationBarShow;
     /**
      * 是否为初始化状态
      */
-    private boolean mIsFirst;
+    protected boolean mIsFirst;
     /**
      * 高度变化之前的高度,用于拦截无效的变化
      */
-    private int usableHeightPrevious;
+    protected int usableHeightPrevious;
 
-    private boolean isSmartosanOS = false;
-    private View mRootView;
-    private Rect temp;
+    protected View mRootView;
 
     /**
      * 是否显示了NavigationBar
@@ -62,7 +63,7 @@ class KeyboardState {
      * @param viewHeight rootView的高度
      * @return
      */
-    void isRomNavigationBarShow(Context context, int viewHeight) {
+    protected void isRomNavigationBarShow(Context context, int viewHeight) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             Display display = wm.getDefaultDisplay();
@@ -91,11 +92,8 @@ class KeyboardState {
     }
 
 
-    KeyboardState(final View rootView, final int navigationBarHeight, final int statusBarHeight) {
+    AbstractKeyboardState(final View rootView, final int navigationBarHeight, final int statusBarHeight) {
         mRootView = rootView;
-        isSmartosanOS = android.os.Build.BRAND.contains("SMARTISAN");
-        DisplayMetrics dm = rootView.getResources().getDisplayMetrics();
-        screenHeight = dm.heightPixels; // 屏幕宽（像素，如：480px）
         ViewTreeObserver viewTreeObserver = rootView.getViewTreeObserver();
         mWindowDisplayMetrics = DisplayMetricsHolder.getScreenDisplayMetrics();
         mVisibleViewArea = new Rect();
@@ -138,46 +136,26 @@ class KeyboardState {
                 //需要探测是否超出了一定的高度，这里直接给statuBar的height
                 mKeyboardShowing = keyboardFrame.height() > statusBarHeight;
             }
-            if (mKeyboardShowing) {
-                //兼容非原生厂商rom隐藏navigation
-                if (!mIsRomNavigationBarShow) {
-                    //rootView高度=屏幕绘画高度
-                    if (mIsRealNavigationBarShow) {
-                        //系统NavigationBar显示
-                        //说明键盘弹起时，高度需要增加NavigationBar高度
-                        if (!isSmartosanOS) {
-                            keyboardFrame.top += navigationBarHeight;
-                        }
-                    } else {
-                        //系统NavigationBar高度不显示
-                        //说明键盘弹起时不需要增加任何高度
-                    }
-                } else {
-                    //rootView高度=屏幕绘制高度-NavigationBar高度
-                    if (mIsRealNavigationBarShow) {
-                        //系统NavigationBar显示
-                        //说明键盘弹起时，高度需要增加NavigationBar高度
-                        // ，因为键盘弹起时，NavigationBar会跟着键盘一起出现
-                        keyboardFrame.top += navigationBarHeight;
-                    } else {
-                        //系统NavigationBar高度不显示
-                        //说明键盘弹起时不需要增加任何高度
-                    }
-                }
-            } else {
-
-            }
+            keyboardFrame = dealKeyBoardFrame(keyboardFrame, navigationBarHeight, statusBarHeight);
             mKeyboardFrame = keyboardFrame;
-            for (int i = 0; i < mOnKeyboardChangeListeners.size(); i++) {
-                OnKeyboardChangeListener listener = mOnKeyboardChangeListeners.get(i);
-                if (mKeyboardShowing) {
-                    listener.onKeyboardShown(keyboardFrame);
-                } else {
-                    listener.onKeyboardClosed();
-                }
+            onDoListener(keyboardFrame);
+        }
+    }
+
+    private void onDoListener(Rect keyboardFrame) {
+        for (int i = 0; i < mOnKeyboardChangeListeners.size(); i++) {
+            OnKeyboardChangeListener listener = mOnKeyboardChangeListeners.get(i);
+            if (mKeyboardShowing) {
+                listener.onKeyboardShown(keyboardFrame);
+            } else {
+                listener.onKeyboardClosed();
             }
         }
     }
+
+    protected abstract Rect dealKeyBoardFrame(Rect keyboardFrame, int navigationBarHeight, int statusBarHeight);
+
+    public abstract int checkExtraHeight(int navigationBarHeight);
 
     void addOnKeyboardChangeListener(OnKeyboardChangeListener listener) {
         mOnKeyboardChangeListeners.add(listener);
@@ -188,8 +166,6 @@ class KeyboardState {
     }
 
     Rect getKeyboardFrame() {
-//        mRootView.getWindowVisibleDisplayFrame(mVisibleViewArea);
-//        mKeyboardFrame = new Rect(0, mVisibleViewArea.bottom, mWindowDisplayMetrics.widthPixels, mWindowDisplayMetrics.heightPixels);
         return mKeyboardFrame;
     }
 
@@ -201,17 +177,13 @@ class KeyboardState {
         return mIsRealNavigationBarShow;
     }
 
+
     boolean isRomNavigationBarShow() {
         return mIsRomNavigationBarShow;
     }
 
-
     boolean isKeyboardShowing() {
         return mKeyboardShowing;
-    }
-
-    boolean isSmartisanOS() {
-        return isSmartosanOS;
     }
 
     interface OnKeyboardChangeListener {
