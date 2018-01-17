@@ -48,7 +48,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private @Nullable
     PopupWindow mPopupWindow;
     private @Nullable
-    KeyboardState mKeyboardState;
+    AbstractKeyboardState mKeyboardState;
     private @Nullable
     View mContentView;
     private @Nullable
@@ -56,7 +56,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private int navigationBarHeight;
     private int statusBarHeight;
     private int mChildCount = 0;
-    private KeyboardState.OnKeyboardChangeListener mOnKeyboardChangeListener;
+    private AbstractKeyboardState.OnKeyboardChangeListener mOnKeyboardChangeListener;
     private OnAttachStateChangeListener mOnAttachStateChangeListener;
     private ActivityEventListener mActivityEventListener;
     private boolean mHideWhenKeyboardIsDismissed = true;
@@ -231,11 +231,14 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private void bindKeyboardState() {
+        if (mKeyboardState != null) {
+            return;
+        }
         final ReactContext context = (ReactContext) getContext();
         Activity activity = ((ReactContext) getContext()).getCurrentActivity();
 
         if (activity != null) {
-            mOnKeyboardChangeListener = new KeyboardState.OnKeyboardChangeListener() {
+            mOnKeyboardChangeListener = new AbstractKeyboardState.OnKeyboardChangeListener() {
                 @Override
                 public void onKeyboardShown(Rect keyboardFrame) {
                     showOrUpdatePopupWindow(keyboardFrame);
@@ -258,7 +261,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     resizeCover();
                 }
             };
-            mKeyboardState = new KeyboardState(activity.findViewById(android.R.id.content), navigationBarHeight, statusBarHeight);
+            mKeyboardState = KeyboardStateFactory.create(activity.findViewById(android.R.id.content), navigationBarHeight, statusBarHeight);
             mKeyboardState.addOnKeyboardChangeListener(mOnKeyboardChangeListener);
             checkKeyboardState();
         } else if (mActivityEventListener == null) {
@@ -367,18 +370,8 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private int checkExtraHeight() {
-        int temp = 0;
         if (mKeyboardState != null) {
-            if (mKeyboardState.isRealNavigationBarShow()) {
-                temp = navigationBarHeight;
-            }
-        }
-        if (temp > 0) {
-            if (mKeyboardState.isSmartisanOS() && !mKeyboardState.isRomNavigationBarShow()) {
-                return 0;
-            } else {
-                return temp;
-            }
+            return mKeyboardState.checkExtraHeight(navigationBarHeight);
         }
         return 0;
     }
@@ -447,8 +440,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     if (coverViewHeightTemp > keyboardFrame.top) {
                         coverViewHeightTemp -= extraHeight;
                     }
-                } else if (mKeyboardState.isSmartisanOS()) {
-
                 }
             }
         }
