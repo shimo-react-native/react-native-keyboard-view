@@ -7,7 +7,7 @@ import android.view.WindowManager;
 
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.uimanager.LayoutShadowNode;
-import com.facebook.react.uimanager.ReactShadowNode;
+import com.facebook.react.uimanager.ReactShadowNodeImpl;
 import com.facebook.yoga.YogaJustify;
 
 public class KeyboardViewShadowView extends LayoutShadowNode {
@@ -16,7 +16,7 @@ public class KeyboardViewShadowView extends LayoutShadowNode {
     private static final Point SIZE_POINT = new Point();
 
     @Override
-    public void addChildAt(ReactShadowNode child, int i) {
+    public void addChildAt(ReactShadowNodeImpl child, int i) {
         super.addChildAt(child, i);
         WindowManager wm = (WindowManager) getThemedContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = Assertions.assertNotNull(wm).getDefaultDisplay();
