@@ -117,7 +117,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     if (!_contentView.superview && self.window) {
         [self autoAddContentView];
     }
-    
+
     if (!self.window) {
         [UIView performWithoutAnimation:^() {
             [_manager keyboardWindow].transform = CGAffineTransformIdentity;

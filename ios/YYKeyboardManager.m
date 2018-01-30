@@ -119,25 +119,25 @@ static int _YYKeyboardViewFrameObserverKey;
 - (instancetype)_init {
     self = [super init];
     _observers = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPointerPersonality capacity:0];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(_windowDidBecomeVisibleNotification:)
-                                                 name:UIWindowDidBecomeVisibleNotification
+                                             selector:@selector(keyboardWillShow:)
+                                                 name:UIKeyboardWillShowNotification
                                                object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(_windowDidBecomeHiddenNotification:)
-                                                 name:UIWindowDidBecomeHiddenNotification
+                                             selector:@selector(keyboardWillHide:)
+                                                 name:UIKeyboardWillHideNotification
                                                object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(_keyboardFrameWillChangeNotification:)
+                                             selector:@selector(keyboardWillChangeFrame:)
                                                  name:UIKeyboardWillChangeFrameNotification
                                                object:nil];
     // for iPad (iOS 9)
     if ([UIDevice currentDevice].systemVersion.floatValue >= 9) {
         [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(_keyboardFrameDidChangeNotification:)
+                                                 selector:@selector(keyboardDidChangeFrame:)
                                                      name:UIKeyboardDidChangeFrameNotification
                                                    object:nil];
     }
@@ -341,23 +341,19 @@ static int _YYKeyboardViewFrameObserverKey;
     return nil;
 }
 
-- (void)_windowDidBecomeVisibleNotification:(NSNotification*)notif {
-    if (notif.object == [self keyboardWindow]) {
-        _keyboardFromValid = _keyboardToValid;
-        _keyboardToValid = YES;
-        [self _notifyAllObservers];
-    }
+- (void)keyboardWillShow:(NSNotification *)notif {
+    _keyboardFromValid = _keyboardToValid;
+    _keyboardToValid = YES;
+    [self _notifyAllObservers];
 }
 
-- (void)_windowDidBecomeHiddenNotification:(NSNotification*)notif {
-    if (notif.object == [self keyboardWindow]) {
-        _keyboardFromValid = _keyboardToValid;
-        _keyboardToValid = NO;
-        [self _notifyAllObservers];
-    }
+- (void)keyboardWillHide:(NSNotification *)notif {
+    _keyboardFromValid = _keyboardToValid;
+    _keyboardToValid = NO;
+    [self _notifyAllObservers];
 }
 
-- (void)_keyboardFrameWillChangeNotification:(NSNotification *)notif {
+- (void)keyboardWillChangeFrame:(NSNotification *)notif {
     if (![notif.name isEqualToString:UIKeyboardWillChangeFrameNotification]) return;
     NSDictionary *info = notif.userInfo;
     if (!info) return;
@@ -373,9 +369,9 @@ static int _YYKeyboardViewFrameObserverKey;
     CGRect after = afterValue.CGRectValue;
     UIViewAnimationCurve curve = curveNumber.integerValue;
     NSTimeInterval duration = durationNumber.doubleValue;
-    
+
     [self updateInHardwareKeyboardMode:after];
-    
+
     // ignore zero end frame
     if (after.size.width <= 0 && after.size.height <= 0) return;
 
@@ -394,7 +390,7 @@ static int _YYKeyboardViewFrameObserverKey;
     }
 }
 
-- (void)_keyboardFrameDidChangeNotification:(NSNotification *)notif {
+- (void)keyboardDidChangeFrame:(NSNotification *)notif {
     if (![notif.name isEqualToString:UIKeyboardDidChangeFrameNotification]) return;
     NSDictionary *info = notif.userInfo;
     if (!info) return;
