@@ -522,8 +522,8 @@ static int _YYKeyboardViewFrameObserverKey;
     CGRect keyboardWindowFrame = [self keyboardWindow].frame;
     if (CGRectGetMaxY(keyboardFrame) == CGRectGetMaxY(keyboardWindowFrame)) {
         // >= iOS11, CGRectGetHeight(after) < 200 when in hardware keyboard mode
-        [self setInHardwareKeyboardMode:CGRectGetHeight(keyboardFrame) < 200];
-    } else if (CGRectGetMinY(keyboardFrame) == CGRectGetMaxY(keyboardWindowFrame) && CGRectGetHeight(keyboardFrame) < 200) {
+        [self setInHardwareKeyboardMode:CGRectGetHeight(keyboardFrame) < 160];
+    } else if (CGRectGetMinY(keyboardFrame) == CGRectGetMaxY(keyboardWindowFrame) && CGRectGetHeight(keyboardFrame) < 160) {
         // iPhone in hardware keyboard mode
         [self setInHardwareKeyboardMode:YES];
     } else if (CGRectGetMinY(keyboardFrame) < CGRectGetMaxY(keyboardWindowFrame) && CGRectGetMaxY(keyboardFrame) > CGRectGetMaxY(keyboardWindowFrame)) {
