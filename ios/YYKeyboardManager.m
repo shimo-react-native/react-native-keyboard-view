@@ -121,13 +121,13 @@ static int _YYKeyboardViewFrameObserverKey;
     _observers = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPointerPersonality capacity:0];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardWillShow:)
-                                                 name:UIKeyboardWillShowNotification
+                                             selector:@selector(windowDidBecomeVisible:)
+                                                 name:UIWindowDidBecomeVisibleNotification
                                                object:nil];
-
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardWillHide:)
-                                                 name:UIKeyboardWillHideNotification
+                                             selector:@selector(windowDidBecomeHidden:)
+                                                 name:UIWindowDidBecomeHiddenNotification
                                                object:nil];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -190,10 +190,14 @@ static int _YYKeyboardViewFrameObserverKey;
 - (UIWindow *)keyboardWindow {
     UIWindow *window = nil;
     for (window in [UIApplication sharedApplication].windows) {
-        if ([self _getKeyboardViewFromWindow:window]) return window;
+        if ([self _getKeyboardViewFromWindow:window]) {
+          return window;
+        }
     }
     window = [UIApplication sharedApplication].keyWindow;
-    if ([self _getKeyboardViewFromWindow:window]) return window;
+    if ([self _getKeyboardViewFromWindow:window]) {
+        return window;
+    }
 
     NSMutableArray *kbWindows = nil;
     for (window in [UIApplication sharedApplication].windows) {
@@ -265,6 +269,100 @@ static int _YYKeyboardViewFrameObserverKey;
         frame = keyboard.frame;
     }
     return frame;
+}
+
+#pragma mark - notification
+
+- (void)windowDidBecomeVisible:(NSNotification *)notif {
+    if ([self isKeyboardWindow:notif.object]) {
+        _keyboardFromValid = _keyboardToValid;
+        _keyboardToValid = YES;
+        [self _notifyAllObservers];
+    }
+}
+
+- (void)windowDidBecomeHidden:(NSNotification *)notif {
+    if ([self isKeyboardWindow:notif.object]) {
+        _keyboardFromValid = _keyboardToValid;
+        _keyboardToValid = NO;
+        [self _notifyAllObservers];
+    }
+}
+
+- (void)keyboardWillChangeFrame:(NSNotification *)notif {
+    if (![notif.name isEqualToString:UIKeyboardWillChangeFrameNotification]) return;
+    NSDictionary *info = notif.userInfo;
+    if (!info) return;
+    
+    [self _initFrameObserver];
+    
+    NSValue *beforeValue = info[UIKeyboardFrameBeginUserInfoKey];
+    NSValue *afterValue = info[UIKeyboardFrameEndUserInfoKey];
+    NSNumber *curveNumber = info[UIKeyboardAnimationCurveUserInfoKey];
+    NSNumber *durationNumber = info[UIKeyboardAnimationDurationUserInfoKey];
+    
+    CGRect before = beforeValue.CGRectValue;
+    CGRect after = afterValue.CGRectValue;
+    UIViewAnimationCurve curve = curveNumber.integerValue;
+    NSTimeInterval duration = durationNumber.doubleValue;
+    
+    [self updateInHardwareKeyboardMode:after];
+    
+    // ignore zero end frame
+    if (after.size.width <= 0 && after.size.height <= 0) return;
+    
+    _notificationFromFrame = before;
+    _notificationToFrame = after;
+    _notificationCurve = curve;
+    _notificationDuration = duration;
+    _hasNotification = YES;
+    _lastIsNotification = YES;
+    
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_notifyAllObservers) object:nil];
+    if (duration == 0) {
+        [self performSelector:@selector(_notifyAllObservers) withObject:nil afterDelay:0 inModes:@[NSRunLoopCommonModes]];
+    } else {
+        [self _notifyAllObservers];
+    }
+}
+
+- (void)keyboardDidChangeFrame:(NSNotification *)notif {
+    if (![notif.name isEqualToString:UIKeyboardDidChangeFrameNotification]) return;
+    NSDictionary *info = notif.userInfo;
+    if (!info) return;
+    
+    [self _initFrameObserver];
+    
+    NSValue *afterValue = info[UIKeyboardFrameEndUserInfoKey];
+    CGRect after = afterValue.CGRectValue;
+    
+    // ignore zero end frame
+    if (after.size.width <= 0 && after.size.height <= 0) return;
+    
+    _notificationToFrame = after;
+    _notificationCurve = UIViewAnimationCurveEaseInOut;
+    _notificationDuration = 0;
+    _hasNotification = YES;
+    _lastIsNotification = YES;
+    
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_notifyAllObservers) object:nil];
+    [self performSelector:@selector(_notifyAllObservers) withObject:nil afterDelay:0 inModes:@[NSRunLoopCommonModes]];
+}
+
+- (void)_keyboardFrameChanged:(UIView *)keyboard {
+    if (keyboard != self.keyboardView) return;
+    
+    UIWindow *window = keyboard.window;
+    if (window) {
+        _observedToFrame = [window convertRect:keyboard.frame toWindow:nil];
+    } else {
+        _observedToFrame = keyboard.frame;
+    }
+    _hasObservedChange = YES;
+    _lastIsNotification = NO;
+    
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_notifyAllObservers) object:nil];
+    [self performSelector:@selector(_notifyAllObservers) withObject:nil afterDelay:0 inModes:@[NSRunLoopCommonModes]];
 }
 
 #pragma mark - private
@@ -339,94 +437,6 @@ static int _YYKeyboardViewFrameObserverKey;
     }
 
     return nil;
-}
-
-- (void)keyboardWillShow:(NSNotification *)notif {
-    _keyboardFromValid = _keyboardToValid;
-    _keyboardToValid = YES;
-    [self _notifyAllObservers];
-}
-
-- (void)keyboardWillHide:(NSNotification *)notif {
-    _keyboardFromValid = _keyboardToValid;
-    _keyboardToValid = NO;
-    [self _notifyAllObservers];
-}
-
-- (void)keyboardWillChangeFrame:(NSNotification *)notif {
-    if (![notif.name isEqualToString:UIKeyboardWillChangeFrameNotification]) return;
-    NSDictionary *info = notif.userInfo;
-    if (!info) return;
-
-    [self _initFrameObserver];
-
-    NSValue *beforeValue = info[UIKeyboardFrameBeginUserInfoKey];
-    NSValue *afterValue = info[UIKeyboardFrameEndUserInfoKey];
-    NSNumber *curveNumber = info[UIKeyboardAnimationCurveUserInfoKey];
-    NSNumber *durationNumber = info[UIKeyboardAnimationDurationUserInfoKey];
-
-    CGRect before = beforeValue.CGRectValue;
-    CGRect after = afterValue.CGRectValue;
-    UIViewAnimationCurve curve = curveNumber.integerValue;
-    NSTimeInterval duration = durationNumber.doubleValue;
-
-    [self updateInHardwareKeyboardMode:after];
-
-    // ignore zero end frame
-    if (after.size.width <= 0 && after.size.height <= 0) return;
-
-    _notificationFromFrame = before;
-    _notificationToFrame = after;
-    _notificationCurve = curve;
-    _notificationDuration = duration;
-    _hasNotification = YES;
-    _lastIsNotification = YES;
-
-    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_notifyAllObservers) object:nil];
-    if (duration == 0) {
-        [self performSelector:@selector(_notifyAllObservers) withObject:nil afterDelay:0 inModes:@[NSRunLoopCommonModes]];
-    } else {
-        [self _notifyAllObservers];
-    }
-}
-
-- (void)keyboardDidChangeFrame:(NSNotification *)notif {
-    if (![notif.name isEqualToString:UIKeyboardDidChangeFrameNotification]) return;
-    NSDictionary *info = notif.userInfo;
-    if (!info) return;
-
-    [self _initFrameObserver];
-
-    NSValue *afterValue = info[UIKeyboardFrameEndUserInfoKey];
-    CGRect after = afterValue.CGRectValue;
-
-    // ignore zero end frame
-    if (after.size.width <= 0 && after.size.height <= 0) return;
-
-    _notificationToFrame = after;
-    _notificationCurve = UIViewAnimationCurveEaseInOut;
-    _notificationDuration = 0;
-    _hasNotification = YES;
-    _lastIsNotification = YES;
-
-    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_notifyAllObservers) object:nil];
-    [self performSelector:@selector(_notifyAllObservers) withObject:nil afterDelay:0 inModes:@[NSRunLoopCommonModes]];
-}
-
-- (void)_keyboardFrameChanged:(UIView *)keyboard {
-    if (keyboard != self.keyboardView) return;
-
-    UIWindow *window = keyboard.window;
-    if (window) {
-        _observedToFrame = [window convertRect:keyboard.frame toWindow:nil];
-    } else {
-        _observedToFrame = keyboard.frame;
-    }
-    _hasObservedChange = YES;
-    _lastIsNotification = NO;
-
-    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_notifyAllObservers) object:nil];
-    [self performSelector:@selector(_notifyAllObservers) withObject:nil afterDelay:0 inModes:@[NSRunLoopCommonModes]];
 }
 
 - (void)_notifyAllObservers {
@@ -555,6 +565,26 @@ static int _YYKeyboardViewFrameObserverKey;
     rect = [toWindow convertRect:rect fromWindow:mainWindow];
     rect = [view convertRect:rect fromView:toWindow];
     return rect;
+}
+
+- (BOOL)isKeyboardWindow: (NSObject *)object {
+    NSString *windowName = NSStringFromClass(object.class);
+    if ([self _systemVersion] < 9) {
+        // UITextEffectsWindow
+        if (windowName.length == 19 &&
+            [windowName hasPrefix:@"UI"] &&
+            [windowName hasSuffix:@"TextEffectsWindow"]) {
+            return YES;
+        }
+    } else {
+        // UIRemoteKeyboardWindow
+        if (windowName.length == 22 &&
+            [windowName hasPrefix:@"UI"] &&
+            [windowName hasSuffix:@"RemoteKeyboardWindow"]) {
+            return YES;
+        }
+    }
+    return NO;
 }
 
 #pragma mark - setter
