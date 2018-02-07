@@ -461,13 +461,13 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
             if (_onKeyboardShow) {
                 _onKeyboardShow(@{
                                   @"inHardwareKeyboardMode": @(_manager.inHardwareKeyboardMode),
-                                  @"keyboard": @(_keyboardShown)
+                                  @"keyboardShown": @(_keyboardShown)
                                   });
             }
         } else {
             if (_onKeyboardHide) {
                 _onKeyboardHide(@{
-                                  @"keyboard": @(_keyboardShown)
+                                  @"keyboardShown": @(_keyboardShown)
                                   });
             }
         }
