@@ -58,7 +58,7 @@ public abstract class AbstractKeyboardState {
     /**
      * 忽略横竖屏,是否显示NavigationBar
      */
-    protected boolean isNavigationbarShow;
+    protected boolean mIsNavigationbarShow;
 
     /**
      * 是否显示了NavigationBar
@@ -79,13 +79,13 @@ public abstract class AbstractKeyboardState {
                 if (viewHeight == realSize.y) {
                     mIsRomNavigationBarShow = false;
                     if (viewWidth == realSize.x) {
-                        isNavigationbarShow = false;
+                        mIsNavigationbarShow = false;
                     } else if (viewWidth < realSize.x) {
-                        isNavigationbarShow = true;
+                        mIsNavigationbarShow = true;
                     }
                 } else if (viewHeight < realSize.y) {
                     mIsRomNavigationBarShow = true;
-                    isNavigationbarShow = true;
+                    mIsNavigationbarShow = true;
                 }
             }
             display.getSize(size);
@@ -195,7 +195,7 @@ public abstract class AbstractKeyboardState {
      * 忽略横竖屏,是否显示NavigationBar
      */
     boolean isNavigationBarShow() {
-        return isNavigationbarShow;
+        return mIsNavigationbarShow;
     }
 
     boolean isKeyboardShowing() {
