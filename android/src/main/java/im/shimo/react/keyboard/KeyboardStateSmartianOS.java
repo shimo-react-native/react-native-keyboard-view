@@ -21,9 +21,9 @@ public class KeyboardStateSmartianOS extends AbstractKeyboardState {
     protected Rect dealKeyBoardFrame(Rect keyboardFrame, int navigationBarHeight, int statusBarHeight) {
         if (mKeyboardShowing) {
             //兼容非原生厂商rom隐藏navigation
-            if (!mIsRomNavigationBarShow) {
+            if (!mRomNavigationBarShow) {
                 //rootView高度=屏幕绘画高度
-                if (mIsRealNavigationBarShow) {
+                if (mRealNavigationBarShow) {
                     //系统NavigationBar显示
                     //说明键盘弹起时，高度需要增加NavigationBar高度
                 } else {
@@ -32,7 +32,7 @@ public class KeyboardStateSmartianOS extends AbstractKeyboardState {
                 }
             } else {
                 //rootView高度=屏幕绘制高度-NavigationBar高度
-                if (mIsRealNavigationBarShow) {
+                if (mRealNavigationBarShow) {
                     //系统NavigationBar显示
                     //说明键盘弹起时，高度需要增加NavigationBar高度
                     // ，因为键盘弹起时，NavigationBar会跟着键盘一起出现

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -32,7 +33,7 @@ public class KeyboardModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void dismiss() {
         getReactApplicationContext().getNativeModule(UIManagerModule.class).addUIBlock(new UIBlock() {
-            public void execute (NativeViewHierarchyManager nativeViewHierarchyManager) {
+            public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
                 Activity activiy = getCurrentActivity();
 
                 if (activiy != null) {
@@ -47,5 +48,11 @@ public class KeyboardModule extends ReactContextBaseJavaModule {
             }
         });
 
+    }
+
+    @ReactMethod
+    public void getNavigationSize(Promise promise) {
+        int size = KeyboardViewManager.getNavigationSize();
+        promise.resolve(size);
     }
 }
