@@ -17,7 +17,12 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     private int navigationBarHeight;
     private int statusBarHeight;
     protected static final String REACT_CLASS = "KeyboardView";
-    private static KeyboardView mKeyboardView;
+    static KeyboardViewManager INSTANCE;
+    private KeyboardView mKeyboardView;
+
+    public KeyboardViewManager() {
+        INSTANCE = this;
+    }
 
     @Override
     public String getName() {
@@ -30,9 +35,7 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
             navigationBarHeight = getNavigationBarHeight(context);
             statusBarHeight = getStatusBarHeight(context);
         }
-        if (mKeyboardView == null) {
-            mKeyboardView = new KeyboardView(context, navigationBarHeight, statusBarHeight);
-        }
+        mKeyboardView = new KeyboardView(context, navigationBarHeight, statusBarHeight);
         return mKeyboardView;
     }
 
@@ -86,10 +89,10 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     }
 
     static int getNavigationSize() {
-        if (mKeyboardView == null) {
+        if (INSTANCE == null || INSTANCE.mKeyboardView == null) {
             return 0;
         } else {
-            return mKeyboardView.getNavigationSize();
+            return INSTANCE.mKeyboardView.getNavigationSize();
         }
     }
 

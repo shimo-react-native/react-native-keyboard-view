@@ -55,6 +55,10 @@ public abstract class AbstractKeyboardState {
     protected int usableHeightPrevious;
 
     protected View mRootView;
+    /**
+     * 忽略横竖屏,是否显示NavigationBar
+     */
+    protected boolean isNavigationbarShow;
 
     /**
      * 是否显示了NavigationBar
@@ -63,7 +67,7 @@ public abstract class AbstractKeyboardState {
      * @param viewHeight rootView的高度
      * @return
      */
-    protected void isRomNavigationBarShow(Context context, int viewHeight) {
+    protected void isRomNavigationBarShow(Context context, int viewHeight, int viewWidth) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             Display display = wm.getDefaultDisplay();
@@ -74,8 +78,14 @@ public abstract class AbstractKeyboardState {
             if (viewHeight != 0) {
                 if (viewHeight == realSize.y) {
                     mIsRomNavigationBarShow = false;
+                    if (viewWidth == realSize.x) {
+                        isNavigationbarShow = false;
+                    } else if (viewWidth < realSize.x) {
+                        isNavigationbarShow = true;
+                    }
                 } else if (viewHeight < realSize.y) {
                     mIsRomNavigationBarShow = true;
+                    isNavigationbarShow = true;
                 }
             }
             display.getSize(size);
@@ -117,7 +127,7 @@ public abstract class AbstractKeyboardState {
         mRootView.getWindowVisibleDisplayFrame(mVisibleViewArea);
         if (mIsFirst) {
             //初始化状态
-            isRomNavigationBarShow(mRootView.getContext(), mVisibleViewArea.bottom);
+            isRomNavigationBarShow(mRootView.getContext(), mVisibleViewArea.bottom, mVisibleViewArea.right);
         }
         //现在的高度值
         int usableHeightNow = mVisibleViewArea.bottom - mVisibleViewArea.top;
@@ -177,9 +187,15 @@ public abstract class AbstractKeyboardState {
         return mIsRealNavigationBarShow;
     }
 
-
     boolean isRomNavigationBarShow() {
         return mIsRomNavigationBarShow;
+    }
+
+    /**
+     * 忽略横竖屏,是否显示NavigationBar
+     */
+    boolean isNavigationBarShow() {
+        return isNavigationbarShow;
     }
 
     boolean isKeyboardShowing() {
