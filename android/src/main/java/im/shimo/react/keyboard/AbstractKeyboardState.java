@@ -94,9 +94,9 @@ public abstract class AbstractKeyboardState {
             boolean menu = ViewConfiguration.get(context).hasPermanentMenuKey();
             boolean back = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
             if (menu || back) {
-                mIsRomNavigationBarShow = mIsRealNavigationBarShow = false;
+                mIsRomNavigationBarShow = mIsRealNavigationBarShow = mIsNavigationbarShow = false;
             } else {
-                mIsRomNavigationBarShow = mIsRealNavigationBarShow = true;
+                mIsRomNavigationBarShow = mIsRealNavigationBarShow = mIsNavigationbarShow = true;
             }
         }
     }
