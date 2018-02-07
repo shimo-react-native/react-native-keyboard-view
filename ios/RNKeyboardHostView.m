@@ -39,6 +39,7 @@
     BOOL _keyboardState;
     BOOL _isPresented;
     BOOL attachedToSuper;
+    BOOL _keyboardShownChanged;
     CGFloat _tempPlaceholderHeight;
 }
 
@@ -448,21 +449,27 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
         return;
     }
     _keyboardShown = keyboardShown;
+    _keyboardShownChanged = YES;
     [self autoSetContentOrKeyboardShown];
 }
 
 - (void)setContentOrKeyboardShown:(BOOL)contentOrKeyboardShown {
-    if (_contentOrKeyboardShown == contentOrKeyboardShown) {
-        return;
-    }
-    _contentOrKeyboardShown = contentOrKeyboardShown;
-    if (_contentOrKeyboardShown) {
-        if (_onKeyboardShow) {
-            _onKeyboardShow(@{ @"inHardwareKeyboardMode": @(_manager.inHardwareKeyboardMode) });
-        }
-    } else {
-        if (_onKeyboardHide) {
-            _onKeyboardHide(nil);
+    if (_contentOrKeyboardShown != contentOrKeyboardShown || _keyboardShownChanged) {
+        _keyboardShownChanged = NO;
+        _contentOrKeyboardShown = contentOrKeyboardShown;
+        if (_keyboardShown) {
+            if (_onKeyboardShow) {
+                _onKeyboardShow(@{
+                                  @"inHardwareKeyboardMode": @(_manager.inHardwareKeyboardMode),
+                                  @"keyboard": @(_keyboardShown)
+                                  });
+            }
+        } else {
+            if (_onKeyboardHide) {
+                _onKeyboardHide(@{
+                                  @"keyboard": @(_keyboardShown)
+                                  });
+            }
         }
     }
 }

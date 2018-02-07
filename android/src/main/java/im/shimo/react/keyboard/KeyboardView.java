@@ -15,8 +15,10 @@ import android.widget.PopupWindow;
 
 import com.facebook.react.ReactRootView;
 import com.facebook.react.bridge.ActivityEventListener;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.DisplayMetricsHolder;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
@@ -67,6 +69,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private float mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
     private boolean mContentVisible = true;
     private ObjectAnimator translationSlide;
+    private boolean mKeyboard = false;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -241,9 +244,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             mOnKeyboardChangeListener = new AbstractKeyboardState.OnKeyboardChangeListener() {
                 @Override
                 public void onKeyboardShown(Rect keyboardFrame) {
+                    mKeyboard = true;
                     showOrUpdatePopupWindow(keyboardFrame);
                     resizeCover();
-
                     if (mKeyboardPlaceholderHeight == 0) {
                         receiveEvent(Events.EVENT_SHOW);
                     }
@@ -251,6 +254,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
                 @Override
                 public void onKeyboardClosed() {
+                    mKeyboard = false;
                     if (mKeyboardPlaceholderHeight == 0) {
                         hidePopupWindow();
                         receiveEvent(Events.EVENT_HIDE);
@@ -536,7 +540,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private void receiveEvent(Events event) {
-        mEventEmitter.receiveEvent(getId(), event.toString(), null);
+        WritableMap map = Arguments.createMap();
+        map.putBoolean("keyboard", mKeyboard);
+        mEventEmitter.receiveEvent(getId(), event.toString(), map);
     }
 
     @Override

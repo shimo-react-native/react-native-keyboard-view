@@ -22,7 +22,7 @@ FOUNDATION_EXTERN NSString * const RNKeyboardInHardwareKeyboardModeNotification;
 @property (nonatomic, assign) BOOL contentVisible;
 
 /**
- invoked when keyboard or contentView did hidden
+ invoked when keyboard or contentView did hide
  */
 @property (nonatomic, copy) RCTDirectEventBlock onKeyboardHide;
 
