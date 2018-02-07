@@ -40,25 +40,25 @@ public abstract class AbstractKeyboardState {
     /**
      * 相对于第三方rom厂商来说NavigationBar是否显示状态
      */
-    protected boolean mIsRomNavigationBarShow;
+    protected boolean mRomNavigationBarShow;
     /**
      * 系统真正的NavigationBar是否显示状态
      */
-    protected boolean mIsRealNavigationBarShow;
+    protected boolean mRealNavigationBarShow;
     /**
      * 是否为初始化状态
      */
-    protected boolean mIsFirst;
+    protected boolean mFirstInit;
     /**
      * 高度变化之前的高度,用于拦截无效的变化
      */
-    protected int usableHeightPrevious;
+    protected int mUsableHeightPrevious;
 
     protected View mRootView;
     /**
      * 忽略横竖屏,是否显示NavigationBar
      */
-    protected boolean mIsNavigationbarShow;
+    protected boolean mNavigationbarShow;
 
     /**
      * 是否显示了NavigationBar
@@ -77,26 +77,26 @@ public abstract class AbstractKeyboardState {
             display.getRealSize(realSize);
             if (viewHeight != 0) {
                 if (viewHeight == realSize.y) {
-                    mIsRomNavigationBarShow = false;
+                    mRomNavigationBarShow = false;
                     if (viewWidth == realSize.x) {
-                        mIsNavigationbarShow = false;
+                        mNavigationbarShow = false;
                     } else if (viewWidth < realSize.x) {
-                        mIsNavigationbarShow = true;
+                        mNavigationbarShow = true;
                     }
                 } else if (viewHeight < realSize.y) {
-                    mIsRomNavigationBarShow = true;
-                    mIsNavigationbarShow = true;
+                    mRomNavigationBarShow = true;
+                    mNavigationbarShow = true;
                 }
             }
             display.getSize(size);
-            mIsRealNavigationBarShow = (realSize.y != size.y);
+            mRealNavigationBarShow = (realSize.y != size.y);
         } else {
             boolean menu = ViewConfiguration.get(context).hasPermanentMenuKey();
             boolean back = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
             if (menu || back) {
-                mIsRomNavigationBarShow = mIsRealNavigationBarShow = mIsNavigationbarShow = false;
+                mRomNavigationBarShow = mRealNavigationBarShow = mNavigationbarShow = false;
             } else {
-                mIsRomNavigationBarShow = mIsRealNavigationBarShow = mIsNavigationbarShow = true;
+                mRomNavigationBarShow = mRealNavigationBarShow = mNavigationbarShow = true;
             }
         }
     }
@@ -120,26 +120,26 @@ public abstract class AbstractKeyboardState {
     }
 
     void onGlobalLayoutChanged(int navigationBarHeight, int statusBarHeight) {
-        mIsFirst = false;
+        mFirstInit = false;
         if (mVisibleViewArea.bottom == 0) {
-            mIsFirst = true;
+            mFirstInit = true;
         }
         mRootView.getWindowVisibleDisplayFrame(mVisibleViewArea);
-        if (mIsFirst) {
+        if (mFirstInit) {
             //初始化状态
             isRomNavigationBarShow(mRootView.getContext(), mVisibleViewArea.bottom, mVisibleViewArea.right);
         }
         //现在的高度值
         int usableHeightNow = mVisibleViewArea.bottom - mVisibleViewArea.top;
         //当前可见高度和上一次可见高度不一致 布局变动
-        if (usableHeightNow != usableHeightPrevious) {
-            usableHeightPrevious = usableHeightNow;
+        if (usableHeightNow != mUsableHeightPrevious) {
+            mUsableHeightPrevious = usableHeightNow;
             Rect keyboardFrame = new Rect(0, mVisibleViewArea.bottom, mWindowDisplayMetrics.widthPixels, mWindowDisplayMetrics.heightPixels);
             if (keyboardFrame.equals(mKeyboardFrame)) {
                 return;
             }
             //以下代码执行顺序不可改变
-            if (mIsRomNavigationBarShow) {
+            if (mRomNavigationBarShow) {
                 //需要探测是否超出了NavigationBar的高度
                 mKeyboardShowing = keyboardFrame.height() > navigationBarHeight;
             } else {
@@ -184,18 +184,18 @@ public abstract class AbstractKeyboardState {
     }
 
     boolean isRealNavigationBarShow() {
-        return mIsRealNavigationBarShow;
+        return mRealNavigationBarShow;
     }
 
     boolean isRomNavigationBarShow() {
-        return mIsRomNavigationBarShow;
+        return mRomNavigationBarShow;
     }
 
     /**
      * 忽略横竖屏,是否显示NavigationBar
      */
     boolean isNavigationBarShow() {
-        return mIsNavigationbarShow;
+        return mNavigationbarShow;
     }
 
     boolean isKeyboardShowing() {
@@ -203,7 +203,7 @@ public abstract class AbstractKeyboardState {
     }
 
     boolean isInitDataCompelete() {
-        return !mIsFirst;
+        return !mFirstInit;
     }
 
     interface OnKeyboardChangeListener {
