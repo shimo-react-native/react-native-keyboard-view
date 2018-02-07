@@ -186,6 +186,10 @@ public abstract class AbstractKeyboardState {
         return mKeyboardShowing;
     }
 
+    boolean isInitDataCompelete() {
+        return !mIsFirst;
+    }
+
     interface OnKeyboardChangeListener {
         void onKeyboardShown(Rect keyboardFrame);
 

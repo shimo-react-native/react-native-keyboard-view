@@ -3,6 +3,8 @@ package im.shimo.react.keyboard;
 import android.content.Context;
 import android.content.res.Resources;
 
+import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.LayoutShadowNode;
@@ -17,6 +19,7 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     private int navigationBarHeight;
     private int statusBarHeight;
     protected static final String REACT_CLASS = "KeyboardView";
+    private KeyboardView mKeyboardView;
 
     @Override
     public String getName() {
@@ -29,7 +32,10 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
             navigationBarHeight = getNavigationBarHeight(context);
             statusBarHeight = getStatusBarHeight(context);
         }
-        return new KeyboardView(context, navigationBarHeight, statusBarHeight);
+        if (mKeyboardView == null) {
+            mKeyboardView = new KeyboardView(context, navigationBarHeight, statusBarHeight);
+        }
+        return mKeyboardView;
     }
 
     @Override
@@ -79,6 +85,12 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
         int height = resources.getDimensionPixelSize(resourceId);
         return height;
+    }
+
+    @ReactMethod
+    public void getNavigationSize(Promise promise) {
+        int size = mKeyboardView.getNavigationSize();
+        promise.resolve(size);
     }
 
 }
