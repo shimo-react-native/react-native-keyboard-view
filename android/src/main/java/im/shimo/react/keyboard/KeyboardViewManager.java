@@ -88,7 +88,7 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         return height;
     }
 
-    static int getNavigationSize() {
+    static float getNavigationSize() {
         if (INSTANCE == null || INSTANCE.mKeyboardView == null) {
             return 0;
         } else {
