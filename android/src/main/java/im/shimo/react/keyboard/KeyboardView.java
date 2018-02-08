@@ -554,10 +554,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         }
     }
 
-    int getNavigationSize() {
+    float getNavigationSize() {
         if (mKeyboardState != null && mKeyboardState.isInitDataCompelete()) {
             if (mKeyboardState.isNavigationBarShow()) {
-                return navigationBarHeight;
+                return navigationBarHeight/mScale;
             } else {
                 return 0;
             }

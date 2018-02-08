@@ -52,7 +52,7 @@ public class KeyboardModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getNavigationSize(Promise promise) {
-        int size = KeyboardViewManager.getNavigationSize();
+        float size = KeyboardViewManager.getNavigationSize();
         promise.resolve(size);
     }
 }
