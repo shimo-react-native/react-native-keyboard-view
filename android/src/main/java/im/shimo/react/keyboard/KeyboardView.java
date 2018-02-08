@@ -248,9 +248,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     mKeyboardShown = true;
                     showOrUpdatePopupWindow(keyboardFrame);
                     resizeCover();
-                    if (mKeyboardPlaceholderHeight == 0) {
-                        receiveEvent(Events.EVENT_SHOW);
-                    }
+                    receiveEvent(Events.EVENT_SHOW);
                 }
 
                 @Override
