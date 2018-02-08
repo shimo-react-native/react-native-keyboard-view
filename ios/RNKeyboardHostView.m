@@ -457,7 +457,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     if (_contentOrKeyboardShown != contentOrKeyboardShown || _keyboardShownChanged) {
         _keyboardShownChanged = NO;
         _contentOrKeyboardShown = contentOrKeyboardShown;
-        if (_keyboardShown) {
+        if (_contentOrKeyboardShown) {
             if (_onKeyboardShow) {
                 _onKeyboardShow(@{
                                   @"inHardwareKeyboardMode": @(_manager.inHardwareKeyboardMode),
