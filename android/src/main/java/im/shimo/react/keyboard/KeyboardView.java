@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.PopupWindow;
 
@@ -328,6 +329,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             mPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             mPopupWindow.setAnimationStyle(R.style.DialogAnimationSlide);
             mPopupWindow.setClippingEnabled(false);
+			//解决可能出现键盘挡住popwindow的bug
+            mPopupWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_FROM_FOCUSABLE);
+            mPopupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED);
             showAtLocationPopwindow(keyboardFrame, extraHeight);
         } else {
             updatePopwindow(keyboardFrame, extraHeight);
