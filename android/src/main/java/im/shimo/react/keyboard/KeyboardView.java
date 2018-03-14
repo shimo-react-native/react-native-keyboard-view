@@ -491,14 +491,16 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     public void setHideWhenKeyboardIsDismissed(boolean hideWhenKeyboardIsDismissed) {
         mHideWhenKeyboardIsDismissed = hideWhenKeyboardIsDismissed;
-
-        if (mKeyboardState != null && mCoverView != null && !mKeyboardState.isKeyboardShowing()) {
-            if (mHideWhenKeyboardIsDismissed) {
-                mCoverView.setVisibility(GONE);
-            } else {
-                mCoverView.setVisibility(VISIBLE);
-            }
-        }
+        //不仅需要设置 还要进行重新渲染布局
+        resizeCover();
+        //曾经的写法和上面的写法有重复，可以直接使用
+//        if (mKeyboardState != null && mCoverView != null && !mKeyboardState.isKeyboardShowing()) {
+//            if (mHideWhenKeyboardIsDismissed) {
+//                mCoverView.setVisibility(GONE);
+//            } else {
+//                mCoverView.setVisibility(VISIBLE);
+//            }
+//        }
     }
 
 
