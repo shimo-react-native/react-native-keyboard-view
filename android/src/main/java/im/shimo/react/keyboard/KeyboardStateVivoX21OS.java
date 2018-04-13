@@ -33,8 +33,11 @@ class KeyboardStateVivoX21OS extends AbstractKeyboardState {
      * @return
      */
     protected void isRomNavigationBarShow(Context context, int viewHeight, int viewWidth) {
-        if (mRadioReact == 0) {
+        //横竖屏分别处理
+        if (mRadioReact == 0 && isPortrait(context)) {
             mRadioReact = mRootView.getResources().getDimensionPixelSize(R.dimen.vivo_r_height);
+        } else {
+            mRadioReact = 0;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -45,14 +48,16 @@ class KeyboardStateVivoX21OS extends AbstractKeyboardState {
             display.getRealSize(realSize);
             //以下屏幕高度减去圆角高度才能计算出可布局高度
             if (viewHeight != 0) {
-                if (viewHeight == realSize.y - mRadioReact) {
+                int drawHeight = realSize.y - mRadioReact;
+                if (viewHeight == drawHeight) {
                     mRomNavigationBarShow = false;
-                    if (viewWidth == realSize.x - mRadioReact) {
+                    int draWidth = realSize.x - mRadioReact;
+                    if (viewWidth == draWidth) {
                         mNavigationbarShow = false;
-                    } else if (viewWidth < realSize.x - mRadioReact) {
+                    } else if (viewWidth < draWidth) {
                         mNavigationbarShow = true;
                     }
-                } else if (viewHeight < realSize.y - mRadioReact) {
+                } else if (viewHeight < drawHeight) {
                     mRomNavigationBarShow = true;
                     mNavigationbarShow = true;
                 }
@@ -109,5 +114,15 @@ class KeyboardStateVivoX21OS extends AbstractKeyboardState {
             }
         }
         return temp;
+    }
+
+    private boolean isPortrait(Context context) {
+        int orientation = context.getResources().getConfiguration().orientation;
+        if (orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) {
+            return true;
+        } else {
+            //if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
+            return false;
+        }
     }
 }
