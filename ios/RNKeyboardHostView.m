@@ -207,7 +207,10 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 
     _keyboardState = toValid;
 
-    if ((!fromValid && !toValid) || (!_contentView && !_coverView)) {
+    if ((!_manager.inHardwareKeyboardMode &&
+         ((!fromValid && toValid && !transition.fromVisible && !transition.toVisible) ||
+          (fromValid && !toValid && transition.fromVisible && transition.toVisible))) ||
+        (!fromValid && !toValid) || (!_contentView && !_coverView)) {
         return;
     }
 
