@@ -474,7 +474,8 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private void hidePopupWindow() {
         if (mPopupWindow != null && mKeyboardState != null) {
             Rect keyboardFrame = mKeyboardState.getKeyboardFrame();
-            mPopupWindow.update(0, keyboardFrame.top + keyboardFrame.height(), -1, -1);
+            //宽高不能为-1，有的机型会认为保持原宽高
+            mPopupWindow.update(0, keyboardFrame.top + keyboardFrame.height(), 0, 0);
         }
     }
 
