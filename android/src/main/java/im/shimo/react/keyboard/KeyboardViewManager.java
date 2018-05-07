@@ -53,16 +53,19 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     @ReactProp(name = "hideWhenKeyboardIsDismissed")
     public void setHideWhenKeyboardIsDismissed(KeyboardView view, boolean hideWhenKeyboardIsDismissed) {
         view.setHideWhenKeyboardIsDismissed(hideWhenKeyboardIsDismissed);
+        System.out.println("KeyboardViewManager.setHideWhenKeyboardIsDismissed=" + hideWhenKeyboardIsDismissed);
     }
 
     @ReactProp(name = "contentVisible")
     public void setContentVisible(KeyboardView view, boolean contentVisible) {
         view.setContentVisible(contentVisible);
+        System.out.println("KeyboardViewManager.setContentVisible=" + contentVisible);
     }
 
     @ReactProp(name = "keyboardPlaceholderHeight")
     public void setKeyboardPlaceholderHeight(KeyboardView view, int keyboardPlaceholderHeight) {
         view.setKeyboardPlaceholderHeight(keyboardPlaceholderHeight);
+        System.out.println("KeyboardViewManager.setKeyboardPlaceholderHeight=" + keyboardPlaceholderHeight);
     }
 
     @Override
@@ -74,14 +77,14 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         return builder.build();
     }
 
-    private int getStatusBarHeight(Context context) {
+    public static int getStatusBarHeight(Context context) {
         Resources resources = context.getResources();
         int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
         int height = resources.getDimensionPixelSize(resourceId);
         return height;
     }
 
-    private int getNavigationBarHeight(Context context) {
+    public static int getNavigationBarHeight(Context context) {
         Resources resources = context.getResources();
         int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
         int height = resources.getDimensionPixelSize(resourceId);
@@ -89,11 +92,7 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     }
 
     static float getNavigationSize() {
-        if (INSTANCE == null || INSTANCE.mKeyboardView == null) {
-            return 0;
-        } else {
-            return INSTANCE.mKeyboardView.getNavigationSize();
-        }
+        return INSTANCE.navigationBarHeight;
     }
 
 }
