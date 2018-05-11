@@ -7,6 +7,9 @@ import android.view.inputmethod.InputMethodManager;
 public class KeyboardUtil {
 
     public static void showKeyboard(final View view) {
+        if (view == null) {
+            return;
+        }
         view.requestFocus();
         InputMethodManager inputManager =
                 (InputMethodManager) view.getContext().getSystemService(
@@ -15,6 +18,9 @@ public class KeyboardUtil {
     }
 
     public static void hideKeyboard(final View view) {
+        if (view == null) {
+            return;
+        }
         InputMethodManager imm =
                 (InputMethodManager) view.getContext()
                         .getSystemService(Context.INPUT_METHOD_SERVICE);

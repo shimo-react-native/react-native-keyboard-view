@@ -1,9 +1,12 @@
 package im.shimo.react.keyboard;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Rect;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
@@ -40,6 +43,10 @@ public class AdjustResizeWithFullScreen {
             return mInstance.mUseBottom;
         }
         return getWindowBottom();
+    }
+
+    public static WindowManager getDecorView() {
+        return (WindowManager) mInstance.mActivity.getSystemService(Context.WINDOW_SERVICE);
     }
 
     public interface OnKeyboardStatusListener {
@@ -79,6 +86,14 @@ public class AdjustResizeWithFullScreen {
         }
 //        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
     }
+
+    public static void setHiddenMode() {
+        mInstance.mActivity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+    }
+    public static int getMode() {
+      return  mInstance.mActivity.getWindow().getAttributes().softInputMode;
+    }
+
 
     public static void onPauseResize() {
         if (mInstance != null) {
