@@ -1,6 +1,5 @@
 package im.shimo.react.keyboard;
 
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -82,6 +81,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private volatile boolean initWhenAttached;
     private PopupWindow mContentViewPopupWindow;
     private int mMinContentViewHeight = 256;
+    private boolean mKeyboardShownStatus;
+    private int mCoverViewBottom;
+    private int mUseBottom;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -387,28 +389,32 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     @Override
     public void onHostResume() {
-        AdjustResizeWithFullScreen.onResumeResize();
-        if (mCoverView != null) {
-            if (mHideWhenKeyboardIsDismissed || (mContentView != null && mContentView.isShown())) {
-                mCoverView.setVisibility(GONE);
+        if (mKeyboardShownStatus) {
+            mKeyboardShownStatus = false;
+            if (mEditFocusView != null) {
+                mEditFocusView.setFocusable(true);
+                mEditFocusView.requestFocus();
+            }
+        } else {
+            if (mCoverView == null || !mCoverView.isShown()) return;
+            int diff = mUseBottom - AdjustResizeWithFullScreen.getUseBottom();
+            if (diff != 0) {
+                keepCoverViewOnScreenFrom(mCoverViewBottom - diff, 0);
             } else {
-                keepCoverViewOnScreenFrom(AdjustResizeWithFullScreen.getUseBottom(), 0);
-                mCoverView.setVisibility(VISIBLE);
+                keepCoverViewOnScreenFrom(mCoverViewBottom, 0);
             }
         }
     }
 
     @Override
     public void onHostPause() {
-        AdjustResizeWithFullScreen.onPauseResize();
-//        if (mCoverView != null) {
-//            mCoverView.setVisibility(GONE);
-//        }
-//        if (mContentView != null) {
-//        }
-        receiveEvent(Events.EVENT_HIDE);
-        if (KeyboardUtil.isKeyboardActive(mEditFocusView)) {
-            KeyboardUtil.hideKeyboard(mEditFocusView);
+        if (mEditFocusView != null && (KeyboardUtil.isKeyboardActive(mEditFocusView))) {
+            mKeyboardShownStatus = true;
+        } else {
+            if (mCoverView != null) {
+                mCoverViewBottom = mCoverView.getBottom();
+                mUseBottom = AdjustResizeWithFullScreen.getUseBottom();
+            }
         }
     }
 
@@ -447,11 +453,15 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     @Override
     public void removeView(final View child) {
+        if (child == null) return;
         ViewParent viewParent = child.getParent();
         if (viewParent != null) {
             if (child.equals(mCoverView)) {
                 mCoverView = null;
                 ((ViewGroup) viewParent).removeView(child);
+                if (!mContentVisible) {
+                    receiveEvent(Events.EVENT_HIDE);
+                }
             } else {
                 if (mCoverView != null && mCoverView.isShown()
                         && mHideWhenKeyboardIsDismissed
@@ -465,6 +475,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     parent.removeView(mContentView);
                 }
                 mContentView = null;
+                receiveEvent(Events.EVENT_HIDE);
             }
             child.setVisibility(GONE);
             mChildCount--;
@@ -519,9 +530,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                                 }
                                 coverShadowNode.setPosition(YogaEdge.TOP.intValue(), 0);
                                 coverShadowNode.setPositionType(YogaPositionType.ABSOLUTE);
+                                final int useRight = AdjustResizeWithFullScreen.getUseRight();
                                 if (height > -1) {
                                     coverShadowNode.setStyleHeight(height);
-                                    mNativeModule.updateNodeSize(mCoverView.getId(), mCoverView.getMeasuredWidth(), height);
+                                    mNativeModule.updateNodeSize(mCoverView.getId(), useRight, height);
                                 }
                                 mNativeModule.getUIImplementation().dispatchViewUpdates(-1);//这句话相当于全局更新
                                 mCoverView.post(new Runnable() {
