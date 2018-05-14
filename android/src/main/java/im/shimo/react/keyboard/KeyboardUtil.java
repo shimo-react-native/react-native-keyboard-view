@@ -4,6 +4,8 @@ import android.content.Context;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import static android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT;
+
 public class KeyboardUtil {
 
     public static void showKeyboard(final View view) {
@@ -14,7 +16,7 @@ public class KeyboardUtil {
         InputMethodManager inputManager =
                 (InputMethodManager) view.getContext().getSystemService(
                         Context.INPUT_METHOD_SERVICE);
-        inputManager.showSoftInput(view, 0);
+        inputManager.showSoftInput(view, SHOW_IMPLICIT);
     }
 
     public static void hideKeyboard(final View view) {
