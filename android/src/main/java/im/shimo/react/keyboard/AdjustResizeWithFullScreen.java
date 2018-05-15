@@ -29,7 +29,6 @@ public class AdjustResizeWithFullScreen {
     private boolean mKeyboardOpened;
     private int mChildOfContentHeight;
     private final int KEYBOARD_MIN_HEIGHT = 200;
-    private boolean mOnPauseResize;
     private Rect mVisibleViewArea = new Rect();
     private int mHeightPixels;
 
@@ -68,28 +67,6 @@ public class AdjustResizeWithFullScreen {
     }
 
 
-    public static void onPauseResize() {
-        if (mInstance != null) {
-            mInstance.mOnPauseResize = true;
-            if (mInstance.mChildOfContent != null && mInstance.mOnGlobalLayoutListener != null) {
-                mInstance.usableHeightPrevious = 0;
-                if (mInstance.mKeyboardOpened) {
-                    mInstance.mKeyboardOpened = false;
-                    if (mInstance.mListener != null) {
-                        mInstance.mListener.onKeyboardClosed();
-                    }
-                    mInstance.mChildOfContent.requestLayout();
-                }
-            }
-        }
-    }
-
-    public static void onResumeResize() {
-        if (mInstance != null) {
-            mInstance.mOnPauseResize = false;
-        }
-    }
-
     private AdjustResizeWithFullScreen(Activity activity, int statusBarHeight, int navigationBarHeight, OnKeyboardStatusListener onKeyboardStatusListener) {
         mActivity = activity;
         mStatusBarHeight = statusBarHeight;
@@ -119,9 +96,6 @@ public class AdjustResizeWithFullScreen {
     }
 
     private void possiblyResizeChildOfContent() {
-        if (mOnPauseResize) {
-            return;
-        }
         computeUsableHeight();
         int usableHeightNow = mVisibleViewArea.bottom;
         int usableWidthNow = mVisibleViewArea.right;

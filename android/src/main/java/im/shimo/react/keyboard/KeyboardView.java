@@ -197,6 +197,13 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         }
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        receiveEvent(Events.EVENT_HIDE);
+        onDropInstance();
+    }
+
 
     public void setHideWhenKeyboardIsDismissed(boolean hideWhenKeyboardIsDismissed) {
         mHideWhenKeyboardIsDismissed = hideWhenKeyboardIsDismissed;
@@ -430,13 +437,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         detachViewFromRoot();
     }
 
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        receiveEvent(Events.EVENT_HIDE);
-        onDropInstance();
-    }
-
     private void detachViewFromRoot() {
         if (mEditFocusView != null) {
             mEditFocusView.setOnFocusChangeListener(null);
@@ -462,6 +462,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 if (!mContentVisible) {
                     receiveEvent(Events.EVENT_HIDE);
                 }
+                mPreCoverBottom = mPreCoverHeight = mPreCoverWidth = 0;
             } else {
                 if (mCoverView != null && mCoverView.isShown()
                         && mHideWhenKeyboardIsDismissed
@@ -476,6 +477,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 }
                 mContentView = null;
                 receiveEvent(Events.EVENT_HIDE);
+                mPreContentWidth = mPreContentHeight = mPreContentTop = 0;
             }
             child.setVisibility(GONE);
             mChildCount--;
@@ -511,9 +513,13 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         mEventEmitter.receiveEvent(getId(), event.toString(), map);
     }
 
+    //防止多次重绘界面
+    private int mPreCoverHeight = 0;
+    private int mPreCoverBottom = 0;
+    private int mPreCoverWidth = 0;
 
     /**
-     * 将面板固定在某高度，一般是mCoverView的bottom  或者是屏幕以外
+     * 确定CoverView的位置，以及随着coverView变化而变化的contentView的位置
      */
     private void keepCoverViewOnScreenFrom(final int height, final int bottom) {
         if (mCoverView != null) {
@@ -521,8 +527,14 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     new Runnable() {
                         @Override
                         public void run() {
-                            if (mCoverView.getMeasuredHeight() == height && mCoverView.getBottom() == bottom)
+                            final int useRight = AdjustResizeWithFullScreen.getUseRight();
+                            if (mPreCoverBottom == bottom && mPreCoverHeight == height && mPreCoverWidth == useRight) {
+                                postContentView();
                                 return;
+                            }
+                            mPreCoverBottom = bottom;
+                            mPreCoverHeight = height;
+                            mPreCoverWidth = useRight;
                             try {
                                 ReactShadowNode coverShadowNode = mNativeModule.getUIImplementation().resolveShadowNode(mCoverView.getId());
                                 if (bottom >= 0) {
@@ -530,31 +542,40 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                                 }
                                 coverShadowNode.setPosition(YogaEdge.TOP.intValue(), 0);
                                 coverShadowNode.setPositionType(YogaPositionType.ABSOLUTE);
-                                final int useRight = AdjustResizeWithFullScreen.getUseRight();
                                 if (height > -1) {
                                     coverShadowNode.setStyleHeight(height);
                                     mNativeModule.updateNodeSize(mCoverView.getId(), useRight, height);
                                 }
                                 mNativeModule.getUIImplementation().dispatchViewUpdates(-1);//这句话相当于全局更新
-                                mCoverView.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (mContentVisible) {
-                                            if (height > -1) {
-                                                keepContentViewOnScreenFrom(height);
-                                            } else {
-                                                keepContentViewOnScreenFrom(mCoverView.getBottom());
-                                            }
-                                        }
-                                    }
-                                });
+                                postContentView();
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
+
+                        private void postContentView() {
+                            mCoverView.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (mContentVisible) {
+                                        if (height > -1) {
+                                            keepContentViewOnScreenFrom(height);
+                                        } else {
+                                            keepContentViewOnScreenFrom(mCoverView.getBottom());
+                                        }
+                                    }
+                                }
+                            });
+                        }
                     });
         }
     }
+
+
+    //防止多次重绘界面
+    private int mPreContentHeight = 0;
+    private int mPreContentTop = 0;
+    private int mPreContentWidth = 0;
 
     /**
      * 将面板固定在某高度，一般是mCoverView的bottom  或者是屏幕以外
@@ -574,6 +595,12 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             }
             final int tempHeight = getContentViewHeight(top);
             final int useRight = AdjustResizeWithFullScreen.getUseRight();
+            if (mPreContentHeight == tempHeight && mPreContentTop == top && mPreContentWidth == useRight) {
+                return;
+            }
+            mPreContentHeight = tempHeight;
+            mPreContentTop = top;
+            mPreContentWidth = useRight;
             ((ReactContext) getContext()).runOnNativeModulesQueueThread(
                     new Runnable() {
                         @Override
@@ -612,4 +639,5 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
 }
+
 
