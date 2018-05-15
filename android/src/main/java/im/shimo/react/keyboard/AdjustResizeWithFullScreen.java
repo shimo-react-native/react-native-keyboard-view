@@ -21,6 +21,7 @@ public class AdjustResizeWithFullScreen {
     private final int mNavigationBarHeight;
     private View mChildOfContent;
     private int usableHeightPrevious;
+    private int usableWidthPrevious;
     private static AdjustResizeWithFullScreen mInstance;
 
     private OnKeyboardStatusListener mListener;
@@ -123,7 +124,8 @@ public class AdjustResizeWithFullScreen {
         }
         computeUsableHeight();
         int usableHeightNow = mVisibleViewArea.bottom;
-        if (usableHeightNow != usableHeightPrevious) {
+        int usableWidthNow = mVisibleViewArea.right;
+        if (usableHeightNow != usableHeightPrevious || usableWidthNow != usableWidthPrevious) {
             final int heightDifference = mHeightPixels - usableHeightNow;
             if (heightDifference > KEYBOARD_MIN_HEIGHT) {
                 if (mKeyboardHeight != heightDifference) {
@@ -155,6 +157,7 @@ public class AdjustResizeWithFullScreen {
                 }
             }
             usableHeightPrevious = usableHeightNow;
+            usableWidthPrevious = usableWidthNow;
         }
     }
 
