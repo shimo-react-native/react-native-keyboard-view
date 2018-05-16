@@ -14,6 +14,7 @@ import java.util.Map;
 
 @ReactModule(name = KeyboardViewManager.REACT_CLASS)
 public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
+    public final static boolean DEBUG = false;
     private int navigationBarHeight;
     private int statusBarHeight;
     protected static final String REACT_CLASS = "KeyboardView";

@@ -14,7 +14,6 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.EditText;
 import android.widget.PopupWindow;
 
-import com.facebook.drawee.BuildConfig;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactContext;
@@ -159,7 +158,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 }
             }
         }
-        if (BuildConfig.DEBUG) {
+        if (KeyboardViewManager.DEBUG) {
             Log.e(TAG, "child = [" + child + "], index = [" + index + "]"
                     + ",mHideWhenKeyboardIsDismissed=" + mHideWhenKeyboardIsDismissed
                     + ",mContentVisible=" + mContentVisible
@@ -262,7 +261,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     @Override
     public void onKeyboardOpened() {
-        if (BuildConfig.DEBUG) {
+        if (KeyboardViewManager.DEBUG) {
             Log.e(TAG, "onKeyboardOpened"
                     + ",mHideWhenKeyboardIsDismissed=" + mHideWhenKeyboardIsDismissed
                     + ",mContentVisible=" + mContentVisible
@@ -311,7 +310,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     @Override
     public void onKeyboardClosed() {
-        if (BuildConfig.DEBUG) {
+        if (KeyboardViewManager.DEBUG) {
             Log.e(TAG, "onKeyboardClosed"
                     + ",mHideWhenKeyboardIsDismissed=" + mHideWhenKeyboardIsDismissed
                     + ",mContentVisible=" + mContentVisible

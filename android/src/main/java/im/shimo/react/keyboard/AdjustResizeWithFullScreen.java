@@ -2,7 +2,6 @@ package im.shimo.react.keyboard;
 
 import android.app.Activity;
 import android.graphics.Rect;
-import android.support.v4.BuildConfig;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -27,7 +26,6 @@ public class AdjustResizeWithFullScreen {
     private OnKeyboardStatusListener mListener;
     private static int mKeyboardHeight;
     private boolean mKeyboardOpened;
-    private int mChildOfContentHeight;
     private final int KEYBOARD_MIN_HEIGHT = 200;
     private Rect mVisibleViewArea = new Rect();
     private int mHeightPixels;
@@ -88,7 +86,7 @@ public class AdjustResizeWithFullScreen {
         FrameLayout content = (FrameLayout) mActivity.findViewById(android.R.id.content);
         mChildOfContent = content.getChildAt(0);
         mChildOfContent.getViewTreeObserver().addOnGlobalLayoutListener(mOnGlobalLayoutListener);
-        mChildOfContentHeight = mChildOfContent.getBottom();
+        int mChildOfContentHeight = mChildOfContent.getBottom();
         //初始化
         if (mListener != null) {
             mListener.onKeyboardResize(mChildOfContentHeight, 0);
@@ -106,7 +104,7 @@ public class AdjustResizeWithFullScreen {
                     // keyboard is now showing, or the keyboard height has changed
                     // distance - safeAreaHeight = keyboardHeight
                     mKeyboardHeight = heightDifference - (mHeightPixels - mChildOfContent.getBottom());
-                    if (BuildConfig.DEBUG) {
+                    if (KeyboardViewManager.DEBUG) {
                         Log.e(TAG, "mKeyboardHeight=" + mKeyboardHeight + ",usableHeightNow=" + usableHeightNow + ",mChildOfContentHeight=" + mChildOfContent.getRootView().getHeight());
                     }
                 }
