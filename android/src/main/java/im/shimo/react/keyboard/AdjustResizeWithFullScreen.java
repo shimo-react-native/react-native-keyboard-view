@@ -108,6 +108,9 @@ public class AdjustResizeWithFullScreen {
                         Log.e(TAG, "mKeyboardHeight=" + mKeyboardHeight + ",usableHeightNow=" + usableHeightNow + ",mChildOfContentHeight=" + mChildOfContent.getRootView().getHeight());
                     }
                 }
+                if (KeyboardViewManager.DEBUG) {
+                    Log.e(TAG, "possiblyResizeChildOfContent,mKeyboardOpened=true");
+                }
                 if (!mKeyboardOpened) {
                     mKeyboardOpened = true;
                     if (mListener != null) {
@@ -118,6 +121,9 @@ public class AdjustResizeWithFullScreen {
                     mListener.onKeyboardResize(usableHeightNow, 0);
                 }
             } else {
+                if (KeyboardViewManager.DEBUG) {
+                    Log.e(TAG, "possiblyResizeChildOfContent,mKeyboardOpened=false");
+                }
                 if (mKeyboardOpened) {
                     mKeyboardOpened = false;
                     if (mListener != null) {
@@ -141,7 +147,7 @@ public class AdjustResizeWithFullScreen {
     public static boolean isFullscreen() {
         if (mInstance == null) return false;
         return mInstance.computeUsableHeight().bottom % mInstance.mHeightPixels == 0 ||
-                (mInstance.computeUsableHeight().bottom + mKeyboardHeight) % mInstance.mHeightPixels == 0;
+            (mInstance.computeUsableHeight().bottom + mKeyboardHeight) % mInstance.mHeightPixels == 0;
     }
 
     public static int getKeyboardHeight() {

@@ -2,6 +2,7 @@ package im.shimo.react.keyboard;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.util.Log;
 
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.module.annotations.ReactModule;
@@ -20,6 +21,7 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     protected static final String REACT_CLASS = "KeyboardView";
     static KeyboardViewManager INSTANCE;
     private KeyboardView mKeyboardView;
+    private final static String TAG = "KeyboardViewManager";
 
     public KeyboardViewManager() {
         INSTANCE = this;
@@ -36,7 +38,9 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
             navigationBarHeight = getNavigationBarHeight(context);
             statusBarHeight = getStatusBarHeight(context);
         }
-        mKeyboardView = new KeyboardView(context, navigationBarHeight, statusBarHeight);
+        if (mKeyboardView == null) {
+            mKeyboardView = new KeyboardView(context, navigationBarHeight, statusBarHeight);
+        }
         return mKeyboardView;
     }
 
@@ -54,19 +58,25 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     @ReactProp(name = "hideWhenKeyboardIsDismissed")
     public void setHideWhenKeyboardIsDismissed(KeyboardView view, boolean hideWhenKeyboardIsDismissed) {
         view.setHideWhenKeyboardIsDismissed(hideWhenKeyboardIsDismissed);
-        System.out.println("KeyboardViewManager.setHideWhenKeyboardIsDismissed=" + hideWhenKeyboardIsDismissed);
+        if (DEBUG) {
+            Log.e(TAG, "KeyboardViewManager.setHideWhenKeyboardIsDismissed=" + hideWhenKeyboardIsDismissed);
+        }
     }
 
     @ReactProp(name = "contentVisible")
     public void setContentVisible(KeyboardView view, boolean contentVisible) {
         view.setContentVisible(contentVisible);
-        System.out.println("KeyboardViewManager.setContentVisible=" + contentVisible);
+        if (DEBUG) {
+            Log.e(TAG, "KeyboardViewManager.setContentVisible=" + contentVisible);
+        }
     }
 
     @ReactProp(name = "keyboardPlaceholderHeight")
     public void setKeyboardPlaceholderHeight(KeyboardView view, int keyboardPlaceholderHeight) {
         view.setKeyboardPlaceholderHeight(keyboardPlaceholderHeight);
-        System.out.println("KeyboardViewManager.setKeyboardPlaceholderHeight=" + keyboardPlaceholderHeight);
+        if (DEBUG) {
+            Log.e(TAG, "KeyboardViewManager.setKeyboardPlaceholderHeight=" + keyboardPlaceholderHeight);
+        }
     }
 
     @Override

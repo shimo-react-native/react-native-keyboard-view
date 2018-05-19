@@ -68,8 +68,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private float mScale = DisplayMetricsHolder.getScreenDisplayMetrics().density;
     private boolean mContentVisible = true;
     private boolean mHideWhenKeyboardIsDismissed = true;
-    // whether keyboard is shown
-    private boolean mKeyboardShown = false;
     private volatile int mChildCount;
     /**
      * 光标焦点
@@ -84,8 +82,12 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private boolean mKeyboardShownStatus;
     private int mCoverViewBottom;
     private int mUseBottom;
+    private int mUseRight;
     private ValueAnimator translationSlide;
+    // whether keyboard is shown
+    private boolean mKeyboardShown = false;
     private volatile int mVisibility = -1;
+    private int mOrientation = -1;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -170,6 +172,12 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        if (KeyboardViewManager.DEBUG) {
+            Log.e(TAG, "onAttachedToWindow,mOrientation=" + mOrientation);
+        }
+        if (mOrientation == -1) {
+            mOrientation = getResources().getConfiguration().orientation;
+        }
         AdjustResizeWithFullScreen.assistRegisterActivity(mThemedContext.getCurrentActivity(), statusBarHeight, navigationBarHeight, this);
         if (initWhenAttached) {
             initWhenAttached = false;
@@ -190,15 +198,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         }
     }
 
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        receiveEvent(Events.EVENT_HIDE);
-        onDropInstance();
-        if (translationSlide != null) {
-            translationSlide = null;
-        }
-    }
 
     public void setHideWhenKeyboardIsDismissed(boolean hideWhenKeyboardIsDismissed) {
         mHideWhenKeyboardIsDismissed = hideWhenKeyboardIsDismissed;
@@ -327,6 +326,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     @Override
     public boolean onKeyboardResize(int heightOfLayout, int bottom) {
+        if (KeyboardViewManager.DEBUG) {
+            Log.e(TAG, "onKeyboardResize,heightOfLayout=" + heightOfLayout);
+            Log.e(TAG, "onKeyboardResize,mCoverView.isShown()=" + mCoverView.isShown());
+        }
         if (mCoverView != null && AdjustResizeWithFullScreen.isInit()) {
             if (mCoverView.isShown()) {
                 int diff = AdjustResizeWithFullScreen.getWindowBottom() - heightOfLayout;
@@ -377,7 +380,23 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     protected void onWindowVisibilityChanged(int visibility) {
         super.onWindowVisibilityChanged(visibility);
         if (mVisibility != visibility) {
+            if (KeyboardViewManager.DEBUG) {
+                Log.e(TAG, "onWindowVisibilityChanged,mVisibility=" + mVisibility + ",visibility=" + visibility
+                    + ",mUseBottom=" + mUseBottom + ",mKeyboardShownStatus=" + mKeyboardShownStatus);
+            }
+            if (mUseBottom == 0 && !mKeyboardShownStatus) {
+                //没有变化，无需进入逻辑
+                return;
+            }
             if (visibility == VISIBLE) {
+                int orientation = getResources().getConfiguration().orientation;
+                final boolean isOchanged = mOrientation != orientation;
+                if (isOchanged) {
+                    mOrientation = orientation;
+                    mKeyboardShownStatus = false;
+                    mVisibility = visibility;
+                    return;
+                }
                 if (mKeyboardShownStatus) {
                     mKeyboardShownStatus = false;
                     if (mEditFocusView != null) {
@@ -390,7 +409,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                         return;
                     }
                     int diff = mUseBottom - AdjustResizeWithFullScreen.getUseBottom();
-                    if (diff != 0) {
+                    int diffR = mUseRight - getRootView().getWidth();//AdjustResizeWithFullScreen.getUseRight();
+                    boolean isChanged = diff != 0 || diffR != 0 || isOchanged;
+                    if (isChanged) {
                         keepCoverViewOnScreenFrom(mCoverViewBottom - diff, 0);
                     } else {
                         keepCoverViewOnScreenFrom(mCoverViewBottom, 0);
@@ -404,6 +425,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     if (mCoverView != null) {
                         mCoverViewBottom = mCoverView.getBottom();
                         mUseBottom = AdjustResizeWithFullScreen.getUseBottom();
+                        mUseRight = getRootView().getWidth();//AdjustResizeWithFullScreen.getUseRight();
                     }
                 }
                 mVisibility = visibility;
@@ -412,28 +434,40 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        receiveEvent(Events.EVENT_HIDE);
+        onDropInstance();
+    }
+
+    @Override
     public void onHostDestroy() {
+        ((ReactContext) getContext()).removeLifecycleEventListener(this);
         onDropInstance();
     }
 
 
     public void onDropInstance() {
-        ((ReactContext) getContext()).removeLifecycleEventListener(this);
-        AdjustResizeWithFullScreen.assistUnRegister(mThemedContext.getCurrentActivity());
-        detachViewFromRoot();
-    }
-
-    private void detachViewFromRoot() {
         if (mCoverView != null) {
             removeView(mCoverView);
         }
         if (mContentView != null) {
             removeView(mContentView);
         }
-        mContentView = null;
-        mCoverView = null;
-        mContentViewPopupWindow.dismiss();
+        AdjustResizeWithFullScreen.assistUnRegister(mThemedContext.getCurrentActivity());
+//        mContentView = null;
+//        mCoverView = null;
+        mEditFocusView = null;
+//        mContentViewPopupWindow.dismiss();
+        mContentViewPopupWindow.setContentView(null);
         mVisibility = -1;
+        mKeyboardShown = mKeyboardShownStatus = false;
+        mOrientation = -1;
+        mContentVisible = false;
+        mKeyboardPlaceholderHeight = 0;
+        if (translationSlide != null) {
+            translationSlide = null;
+        }
     }
 
     @Override
@@ -506,8 +540,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 new Runnable() {
                     @Override
                     public void run() {
-                        final int useRight = AdjustResizeWithFullScreen.getUseRight();
-                        if (mPreCoverBottom == bottom && mPreCoverHeight == height && mPreCoverWidth == useRight) {
+                        final int useRight = getReactRootView().getWidth();//AdjustResizeWithFullScreen.getUseRight();
+                        //maybe its null in this thread
+                        if (mPreCoverBottom == bottom && mPreCoverHeight == height && mPreCoverWidth == useRight || mCoverView == null) {
                             postContentView();
                             return;
                         }
@@ -581,13 +616,16 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 }
             }
             final int tempHeight = getContentViewHeight(top);
-            final int useRight = AdjustResizeWithFullScreen.getUseRight();
+            final int useRight = getReactRootView().getWidth();//AdjustResizeWithFullScreen.getUseRight();
 
             ((ReactContext) getContext()).runOnNativeModulesQueueThread(
                 new Runnable() {
                     @Override
                     public void run() {
-                        mNativeModule.updateNodeSize(mContentView.getId(), useRight, tempHeight);
+                        if (mContentView != null) {
+                            //maybe its null in this thread
+                            mNativeModule.updateNodeSize(mContentView.getId(), useRight, tempHeight);
+                        }
                     }
                 });
             if (mContentViewPopupWindow.isShowing()) {
