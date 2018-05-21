@@ -185,6 +185,11 @@ public class AdjustResizeWithFullScreen {
         return mInstance.computeUsableHeight().right;
     }
 
+    public static int getUseLeft() {
+        if (mInstance == null) return 0;
+        return mInstance.computeUsableHeight().left;
+    }
+
     private Rect computeUsableHeight() {
         mChildOfContent.getWindowVisibleDisplayFrame(mVisibleViewArea);
         return mVisibleViewArea;
