@@ -20,7 +20,6 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
     private int statusBarHeight;
     protected static final String REACT_CLASS = "KeyboardView";
     static KeyboardViewManager INSTANCE;
-    private KeyboardView mKeyboardView;
     private final static String TAG = "KeyboardViewManager";
 
     public KeyboardViewManager() {
@@ -38,10 +37,7 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
             navigationBarHeight = getNavigationBarHeight(context);
             statusBarHeight = getStatusBarHeight(context);
         }
-        if (mKeyboardView == null) {
-            mKeyboardView = new KeyboardView(context, navigationBarHeight, statusBarHeight);
-        }
-        return mKeyboardView;
+        return new KeyboardView(context, navigationBarHeight, statusBarHeight);
     }
 
     @Override
