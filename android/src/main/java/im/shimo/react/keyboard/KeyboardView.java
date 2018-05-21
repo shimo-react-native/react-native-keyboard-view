@@ -88,6 +88,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private boolean mKeyboardShown = false;
     private volatile int mVisibility = -1;
     private int mOrientation = -1;
+    private boolean isOrientationChange;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -390,7 +391,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             }
             if (visibility == VISIBLE) {
                 int orientation = getResources().getConfiguration().orientation;
-                final boolean isOchanged = mOrientation != orientation;
+                final boolean isOchanged = isOrientationChange = mOrientation != orientation;
                 if (isOchanged) {
                     mOrientation = orientation;
                     mKeyboardShownStatus = false;
@@ -542,7 +543,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     public void run() {
                         final int useRight = getReactRootView().getWidth();//AdjustResizeWithFullScreen.getUseRight();
                         //maybe its null in this thread
-                        if (mPreCoverBottom == bottom && mPreCoverHeight == height && mPreCoverWidth == useRight || mCoverView == null) {
+                        if (!isOrientationChange && mPreCoverBottom == bottom && mPreCoverHeight == height && mPreCoverWidth == useRight || mCoverView == null) {
                             postContentView();
                             return;
                         }
@@ -629,8 +630,17 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     }
                 });
             if (mContentViewPopupWindow.isShowing()) {
-                if (mPreContentHeight == tempHeight && mPreContentTop == top && mPreContentWidth == useRight) {
+                boolean isOrientChanged = isOrientationChange;
+                if (!isOrientChanged) {
+                    isOrientChanged = mOrientation == getResources().getConfiguration().orientation;
+                }
+
+                if (!isOrientChanged && mPreContentHeight == tempHeight && mPreContentTop == top && mPreContentWidth == useRight) {
                     return;
+                }
+                if (isOrientChanged) {
+                    isOrientationChange = false;
+                    mOrientation = getResources().getConfiguration().orientation;
                 }
                 mContentViewPopupWindow.update(AdjustResizeWithFullScreen.getUseLeft(), top, useRight, tempHeight);
             } else {
