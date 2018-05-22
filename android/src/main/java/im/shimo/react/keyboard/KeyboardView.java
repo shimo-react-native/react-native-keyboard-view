@@ -135,7 +135,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
     @Override
     public void addView(View child, int index) {
-        mChildCount++;
         final ViewGroup view = getReactRootView();
         if (view == null) {
             if (child instanceof KeyboardCoverView) {
@@ -151,6 +150,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 }
                 mCoverView = (KeyboardCoverView) child;
                 view.addView(mCoverView);
+                mChildCount++;
             } else if (child instanceof KeyboardContentView) {
                 if (mContentView != null) {
                     removeView(mContentView);
@@ -191,6 +191,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     mCoverView.setVisibility(VISIBLE);
                 }
                 view.addView(mCoverView);
+                mChildCount++;
             }
             if (mContentView != null) {
                 mContentViewPopupWindow.setContentView(mContentView);
@@ -312,8 +313,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         }
         if (mCoverView != null) {
             if (mEditFocusView != null && mEditFocusView.isFocused()) {
-                if (!mContentVisible && mHideWhenKeyboardIsDismissed && (mContentView == null || !mContentView.isShown())) {
+                if (mHideWhenKeyboardIsDismissed) {
                     mCoverView.setVisibility(GONE);
+                    mContentViewPopupWindow.dismiss();
                 } else {
                     if (mContentView == null) {
                         if (mHideWhenKeyboardIsDismissed) {
@@ -488,6 +490,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             if (child.equals(mCoverView)) {
                 mCoverView = null;
                 ((ViewGroup) viewParent).removeView(child);
+                mChildCount--;
                 if (!mContentVisible) {
                     receiveEvent(Events.EVENT_HIDE);
                 }
@@ -503,7 +506,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 mPreContentWidth = mPreContentHeight = mPreContentTop = 0;
             }
             child.setVisibility(GONE);
-            mChildCount--;
         }
     }
 
