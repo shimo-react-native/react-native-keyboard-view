@@ -248,8 +248,8 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         } else {
             if (mEditFocusView != null) {
                 if (mEditFocusView.isFocused()) {
-                    if(!mKeyboardShown) {
-                        if(mCoverView!=null) {
+                    if (!mKeyboardShown) {
+                        if (mCoverView != null) {
                             mCoverView.setVisibility(GONE);
                         }
                     }
@@ -432,7 +432,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 }
                 mVisibility = visibility;
             } else if (visibility == GONE) {
-                if (mEditFocusView != null && (KeyboardUtil.isKeyboardActive(mEditFocusView))) {
+                if (mEditFocusView != null && (KeyboardUtil.isKeyboardActive(mEditFocusView)) || mKeyboardShown) {
                     mKeyboardShownStatus = true;
                 } else {
                     if (mCoverView != null) {
@@ -558,6 +558,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                                 postContentView();
                                 return;
                             }
+                            if (KeyboardViewManager.DEBUG) {
+                                Log.e(TAG, "keepCoverViewOnScreenFrom,height" + height + ",bottom=" + bottom + ",useRight=" + useRight);
+                            }
                             mPreCoverBottom = bottom;
                             mPreCoverHeight = height;
                             mPreCoverWidth = useRight;
@@ -632,7 +635,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             }
             final int tempHeight = getContentViewHeight(top);
             final int useRight = getReactRootView().getWidth();//AdjustResizeWithFullScreen.getUseRight();
-
+            if (KeyboardViewManager.DEBUG) {
+                Log.e(TAG, "keepContentViewOnScreenFrom,height" + tempHeight + ",top=" + top + ",useRight=" + useRight);
+            }
             ((ReactContext) getContext()).runOnNativeModulesQueueThread(
                     new Runnable() {
                         @Override
