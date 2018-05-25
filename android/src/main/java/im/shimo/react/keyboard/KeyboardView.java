@@ -583,6 +583,8 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                         }
 
                         private void postContentView() {
+                            //maybe its null in this thread
+                            if(mCoverView==null) return;
                             mCoverView.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -590,6 +592,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                                         if (height > -1) {
                                             keepContentViewOnScreenFrom(height);
                                         } else {
+                                            //maybe its null in this thread
                                             if (mCoverView == null) return;
                                             keepContentViewOnScreenFrom(mCoverView.getBottom());
                                         }
