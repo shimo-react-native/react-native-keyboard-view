@@ -251,6 +251,12 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     if (!mKeyboardShown) {
                         if (mCoverView != null) {
                             mCoverView.setVisibility(GONE);
+                            //设置到屏幕外
+                            keepCoverViewOnScreenFrom(mPreCoverHeight, AdjustResizeWithFullScreen.getUseBottom());
+                            if (mContentView != null) {
+                                //删除
+                                removeContentView();
+                            }
                         }
                     }
                 } else {
@@ -487,26 +493,37 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         if (child == null) return;
         ViewParent viewParent = child.getParent();
         if (viewParent != null) {
+            if (KeyboardViewManager.DEBUG) {
+                Log.e(TAG, "removeView,child=" + child);
+            }
             if (child.equals(mCoverView)) {
-                mCoverView = null;
-                ((ViewGroup) viewParent).removeView(child);
-                mChildCount--;
-                if (!mContentVisible) {
-                    receiveEvent(Events.EVENT_HIDE);
-                }
-                mPreCoverBottom = mPreCoverHeight = mPreCoverWidth = 0;
+                removeCoverView(child, (ViewGroup) viewParent);
             } else {
-                mContentViewPopupWindow.dismiss();
-                ViewGroup parent = (ViewGroup) mContentView.getParent();
-                if (parent != null) {
-                    parent.removeView(mContentView);
-                }
-                mContentView = null;
-                receiveEvent(Events.EVENT_HIDE);
-                mPreContentWidth = mPreContentHeight = mPreContentTop = 0;
+                removeContentView();
             }
             child.setVisibility(GONE);
         }
+    }
+
+    private void removeCoverView(View child, ViewGroup viewParent) {
+        mCoverView = null;
+        viewParent.removeView(child);
+        mChildCount--;
+        if (!mContentVisible) {
+            receiveEvent(Events.EVENT_HIDE);
+        }
+        mPreCoverBottom = mPreCoverHeight = mPreCoverWidth = 0;
+    }
+
+    private void removeContentView() {
+        mContentViewPopupWindow.dismiss();
+        ViewGroup parent = (ViewGroup) mContentView.getParent();
+        if (parent != null) {
+            parent.removeView(mContentView);
+        }
+        mContentView = null;
+        receiveEvent(Events.EVENT_HIDE);
+        mPreContentWidth = mPreContentHeight = mPreContentTop = 0;
     }
 
     @Override
@@ -616,7 +633,6 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             translationSlide.start();
         }
     }
-
 
     //防止多次重绘界面
     private int mPreContentHeight = 0;
