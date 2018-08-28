@@ -59,6 +59,7 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         }
     }
 
+
     @ReactProp(name = "contentVisible")
     public void setContentVisible(KeyboardView view, boolean contentVisible) {
         view.setContentVisible(contentVisible);

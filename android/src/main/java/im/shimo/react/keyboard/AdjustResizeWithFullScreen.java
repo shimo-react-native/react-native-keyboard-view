@@ -54,7 +54,7 @@ public class AdjustResizeWithFullScreen {
         }
     }
 
-    public static void assistUnRegister(Activity activity) {
+    public static void assistUnRegister() {
         if (mInstance != null) {
             if (mInstance.mChildOfContent != null && mInstance.mOnGlobalLayoutListener != null) {
                 mInstance.mChildOfContent.getViewTreeObserver().removeOnGlobalLayoutListener(mInstance.mOnGlobalLayoutListener);
@@ -80,6 +80,10 @@ public class AdjustResizeWithFullScreen {
     }
 
     private void initData(OnKeyboardStatusListener onKeyboardStatusListener) {
+        if (mActivity == null) {
+            assistUnRegister();
+            return;
+        }
         if (onKeyboardStatusListener != null) {
             mListener = onKeyboardStatusListener;
         }
@@ -147,7 +151,7 @@ public class AdjustResizeWithFullScreen {
     public static boolean isFullscreen() {
         if (mInstance == null) return false;
         return mInstance.computeUsableHeight().bottom % mInstance.mHeightPixels == 0 ||
-            (mInstance.computeUsableHeight().bottom + mKeyboardHeight) % mInstance.mHeightPixels == 0;
+                (mInstance.computeUsableHeight().bottom + mKeyboardHeight) % mInstance.mHeightPixels == 0;
     }
 
     public static int getKeyboardHeight() {
