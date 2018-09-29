@@ -31,7 +31,10 @@ public class AdjustResizeWithFullScreen {
     private int mHeightPixels;
 
     public static View getDecorView() {
-        return mInstance.mActivity.getWindow().getDecorView();
+        if(mInstance != null && mInstance.mActivity != null) {
+            return mInstance.mActivity.getWindow().getDecorView();
+        }
+        return null;
     }
 
     public static boolean isInit() {
