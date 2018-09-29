@@ -692,10 +692,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     mContentViewPopupWindow.setWidth(useRight);
                 }
                 final View decorView = AdjustResizeWithFullScreen.getDecorView();
-                if(decorView==null) {
-                    AdjustResizeWithFullScreen.assistRegisterActivity(mThemedContext.getCurrentActivity(), statusBarHeight, navigationBarHeight, this);
+                if(decorView!=null) {
+                    mContentViewPopupWindow.showAtLocation(decorView, Gravity.NO_GRAVITY, AdjustResizeWithFullScreen.getUseLeft(), top);
                 }
-                mContentViewPopupWindow.showAtLocation(decorView, Gravity.NO_GRAVITY, AdjustResizeWithFullScreen.getUseLeft(), top);
             }
             mPreContentHeight = tempHeight;
             mPreContentTop = top;
