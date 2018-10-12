@@ -25,13 +25,13 @@ class KeyboardContentView extends ReactViewGroup implements RootView {
             final int viewTag = getChildAt(0).getId();
             ReactContext reactContext = (ReactContext) getContext();
             reactContext.runOnNativeModulesQueueThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
-                                    .updateNodeSize(viewTag, w, h);
-                        }
-                    });
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        ((ReactContext) getContext()).getNativeModule(UIManagerModule.class)
+                            .updateNodeSize(viewTag, w, h);
+                    }
+                });
         }
     }
 
