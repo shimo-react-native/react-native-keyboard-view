@@ -206,7 +206,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
 
-    public void setKeyboardPlaceholderHeight(int keyboardPlaceholderHeight) {
+     public void setKeyboardPlaceholderHeight(int keyboardPlaceholderHeight) {
         if (AdjustResizeWithFullScreen.getKeyboardHeight() == 0) {
             mKeyboardPlaceholderHeight = (int) (keyboardPlaceholderHeight * mScale);
         }
@@ -223,19 +223,8 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 receiveEvent(Events.EVENT_SHOW);
             }
         } else if (mCoverView != null && !mContentVisible && !mHideWhenKeyboardIsDismissed && keyboardPlaceholderHeight == 0) {
-            View viewGroup = mCoverView.getChildAt(0);
-            while (!(viewGroup instanceof EditText) && ((ViewGroup) viewGroup).getChildCount() > 0) {
-                viewGroup = ((ViewGroup) viewGroup).getChildAt(0);
-            }
-            if (viewGroup != null && viewGroup instanceof EditText) {
-                if (!viewGroup.isFocused()) {
-                    keepCoverViewOnScreenFrom(AdjustResizeWithFullScreen.getUseBottom(), 0);
-                    mCoverView.setVisibility(VISIBLE);
-                } else {
-                    //输入法弹不出来的bug
-                    KeyboardUtil.showKeyboardOnTouch(viewGroup);
-                }
-            }
+            keepCoverViewOnScreenFrom(AdjustResizeWithFullScreen.getUseBottom(), 0);
+            mCoverView.setVisibility(VISIBLE);
         }
     }
 
