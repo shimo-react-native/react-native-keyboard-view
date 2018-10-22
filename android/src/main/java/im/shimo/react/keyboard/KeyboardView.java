@@ -224,10 +224,15 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             }
         } else if (mCoverView != null && !mContentVisible && !mHideWhenKeyboardIsDismissed && keyboardPlaceholderHeight == 0) {
             View viewGroup = mCoverView.getChildAt(0);
-            while (!(viewGroup instanceof EditText) && ((ViewGroup) viewGroup).getChildCount() > 0) {
-                viewGroup = ((ViewGroup) viewGroup).getChildAt(0);
+            if (viewGroup == null) {
+                return;
             }
-            if (viewGroup != null && viewGroup instanceof EditText) {
+            while (!(viewGroup instanceof EditText) && ((ViewGroup) viewGroup).getChildCount() > 0) {
+                if(viewGroup instanceof ViewGroup) {
+                    viewGroup = ((ViewGroup) viewGroup).getChildAt(0);
+                }
+            }
+            if (viewGroup instanceof EditText) {
                 if (!viewGroup.isFocused()) {
                     keepCoverViewOnScreenFrom(AdjustResizeWithFullScreen.getUseBottom(), 0);
                     mCoverView.setVisibility(VISIBLE);
