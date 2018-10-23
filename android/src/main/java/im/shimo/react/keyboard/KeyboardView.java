@@ -252,6 +252,18 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                     mKeyboardShown = true;
                     onKeyboardClosed();
                 }
+            } else {
+                if (!mKeyboardShown) {
+                        if (mCoverView != null) {
+                            mCoverView.setVisibility(GONE);
+                            //设置到屏幕外
+                            keepCoverViewOnScreenFrom(mPreCoverHeight, AdjustResizeWithFullScreen.getUseBottom());
+                            if (mContentView != null) {
+                                //删除
+                                removeContentView();
+                            }
+                        }
+                    }
             }
         }
     }
