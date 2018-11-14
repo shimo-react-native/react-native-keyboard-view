@@ -131,15 +131,13 @@ export default class extends Component {
 
         if (isIOS) {
             return (
-              <Modal style={styles.offSteam} visible={true}>
-                  <KeyboardView
-                    style={[styles.offSteam, transform && { transform }]}
-                    synchronouslyUpdateTransform={!!transform}
-                    {...props}
-                  >
-                      {childViews}
-                  </KeyboardView>
-              </Modal>
+              <KeyboardView
+                  style={[styles.offSteam, transform && { transform }]}
+                  synchronouslyUpdateTransform={!!transform}
+                  {...props}
+              >
+                  {childViews}
+              </KeyboardView>
             );
         } else {
             return (
