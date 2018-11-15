@@ -16,6 +16,10 @@ FOUNDATION_EXTERN NSString * const RNKeyboardInHardwareKeyboardModeNotification;
  */
 @property (nonatomic, assign) BOOL hideWhenKeyboardIsDismissed;
 
+@property (nonatomic, assign) BOOL fullWhenKeyboardDisplay;
+
+@property (nonatomic, assign) BOOL inNative;
+
 /**
  hide contentView.
  */
@@ -33,7 +37,7 @@ FOUNDATION_EXTERN NSString * const RNKeyboardInHardwareKeyboardModeNotification;
 
 /**
  contentView min height.
- 
+
  if keyboardPlaceholderHeight > 0 && _contentView != nil,
     if keyboard is visible, add contentVie to keyboardWindow, contentViewHieght = MAX(keyboardPlaceholderHeight, keyboardVisibleHeight).
     if keyboard is not visible, add contentVie to reactRootView, contentViewHieght = keyboardPlaceholderHeight.

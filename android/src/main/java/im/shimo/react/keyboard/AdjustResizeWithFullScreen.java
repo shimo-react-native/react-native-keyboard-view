@@ -18,6 +18,7 @@ public class AdjustResizeWithFullScreen {
     private final ViewTreeObserver.OnGlobalLayoutListener mOnGlobalLayoutListener;
     private final int mStatusBarHeight;
     private final int mNavigationBarHeight;
+    private final int mActionBarHeight;
     private View mChildOfContent;
     private int usableHeightPrevious;
     private int usableWidthPrevious;
@@ -29,6 +30,8 @@ public class AdjustResizeWithFullScreen {
     private final int KEYBOARD_MIN_HEIGHT = 200;
     private Rect mVisibleViewArea = new Rect();
     private int mHeightPixels;
+    private static boolean mFullWhenKeyboardDisplay = false;
+    private static boolean mInNative = false;
 
     public static View getDecorView() {
         if(mInstance != null && mInstance.mActivity != null) {
@@ -72,6 +75,7 @@ public class AdjustResizeWithFullScreen {
         mActivity = activity;
         mStatusBarHeight = statusBarHeight;
         mNavigationBarHeight = navigationBarHeight;
+        mActionBarHeight = KeyboardViewManager.getTitleBarHeight(activity);
         mHeightPixels = DisplayMetricsHolder.getScreenDisplayMetrics().heightPixels;
         mOnGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -101,7 +105,11 @@ public class AdjustResizeWithFullScreen {
     }
 
     private void possiblyResizeChildOfContent() {
-        computeUsableHeight();
+        if(mInNative){
+            computeUsableHeight(mFullWhenKeyboardDisplay);
+        }else{
+            computeUsableHeight();
+        }
         int usableHeightNow = mVisibleViewArea.bottom;
         int usableWidthNow = mVisibleViewArea.right;
         if (usableHeightNow != usableHeightPrevious || usableWidthNow != usableWidthPrevious) {
@@ -110,7 +118,11 @@ public class AdjustResizeWithFullScreen {
                 if (mKeyboardHeight != heightDifference) {
                     // keyboard is now showing, or the keyboard height has changed
                     // distance - safeAreaHeight = keyboardHeight
-                    mKeyboardHeight = heightDifference - (mHeightPixels - mChildOfContent.getBottom());
+                    if(mInNative){
+                        mKeyboardHeight = heightDifference;
+                    }else{
+                        mKeyboardHeight = heightDifference - (mHeightPixels - mChildOfContent.getBottom());
+                    }    
                     if (KeyboardViewManager.DEBUG) {
                         Log.e(TAG, "mKeyboardHeight=" + mKeyboardHeight + ",usableHeightNow=" + usableHeightNow + ",mChildOfContentHeight=" + mChildOfContent.getRootView().getHeight());
                     }
@@ -198,9 +210,32 @@ public class AdjustResizeWithFullScreen {
     }
 
     private Rect computeUsableHeight() {
+        return computeUsableHeight(false);
+    }
+    private Rect computeUsableHeight(boolean full) {
         mChildOfContent.getWindowVisibleDisplayFrame(mVisibleViewArea);
+        if(mInNative && !full){
+            mVisibleViewArea.bottom = mVisibleViewArea.bottom - mActionBarHeight-mStatusBarHeight;
+        }
         return mVisibleViewArea;
     }
 
+    public Rect computeContentRect(){
+        Rect rect = new Rect();
+        mChildOfContent.getWindowVisibleDisplayFrame(rect);
+        return rect;
+    }
 
+    public static int getContentBottom() {
+        if (mInstance == null) return 0;
+        return mInstance.computeContentRect().bottom;
+    }
+
+    public static void setFullWhenKeyboardDisplay(boolean fullWhenKeyboardDisplay) {
+        AdjustResizeWithFullScreen.mFullWhenKeyboardDisplay = fullWhenKeyboardDisplay;
+    }
+
+    public static void setInNative(boolean inNative) {
+        AdjustResizeWithFullScreen.mInNative = inNative;
+    }
 }

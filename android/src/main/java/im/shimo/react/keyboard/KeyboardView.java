@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -89,6 +90,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     private volatile int mVisibility = -1;
     private int mOrientation = -1;
     private boolean isOrientationChange;
+    private boolean mHasSendEventShow = false;
+    private boolean mFullWhenKeyboardDisplay;
+    private boolean mInNative;
 
     public enum Events {
         EVENT_SHOW("onKeyboardShow"),
@@ -206,7 +210,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
 
-     public void setKeyboardPlaceholderHeight(int keyboardPlaceholderHeight) {
+    public void setKeyboardPlaceholderHeight(int keyboardPlaceholderHeight) {
         if (AdjustResizeWithFullScreen.getKeyboardHeight() == 0) {
             mKeyboardPlaceholderHeight = (int) (keyboardPlaceholderHeight * mScale);
         }
@@ -351,6 +355,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
             Log.e(TAG, "onKeyboardResize,mCoverView.isShown()=" + mCoverView.isShown());
         }
         if (mCoverView != null && AdjustResizeWithFullScreen.isInit()) {
+            if(!mHasSendEventShow){
+                receiveEvent(Events.EVENT_SHOW);
+            }
+
             if (mCoverView.isShown()) {
                 int diff = AdjustResizeWithFullScreen.getWindowBottom() - heightOfLayout;
                 if (mContentVisible && diff <= navigationBarHeight + statusBarHeight) {
@@ -456,7 +464,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         receiveEvent(Events.EVENT_HIDE);
-        onDropInstance();
+//        onDropInstance();
     }
 
     @Override
@@ -467,6 +475,10 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
 
 
     public void onDropInstance() {
+        if (translationSlide != null) {
+            translationSlide.cancel();
+            translationSlide = null;
+        }
         if (mCoverView != null) {
             removeView(mCoverView);
         }
@@ -484,9 +496,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         mOrientation = -1;
         mContentVisible = false;
         mKeyboardPlaceholderHeight = 0;
-        if (translationSlide != null) {
-            translationSlide = null;
-        }
+
     }
 
     @Override
@@ -507,23 +517,23 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private void removeCoverView(View child, ViewGroup viewParent) {
-        mCoverView = null;
         viewParent.removeView(child);
         mChildCount--;
         if (!mContentVisible) {
             receiveEvent(Events.EVENT_HIDE);
         }
         mPreCoverBottom = mPreCoverHeight = mPreCoverWidth = 0;
+        mCoverView = null;
     }
 
     private void removeContentView() {
         mContentViewPopupWindow.dismiss();
         ViewGroup parent = (ViewGroup) mContentView.getParent();
         if (parent != null) {
-            parent.removeView(mContentView);
+            //                parent.removeView(mContentView);
+            receiveEvent(Events.EVENT_HIDE);
         }
         mContentView = null;
-        receiveEvent(Events.EVENT_HIDE);
         mPreContentWidth = mPreContentHeight = mPreContentTop = 0;
     }
 
@@ -551,6 +561,7 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
     }
 
     private void receiveEvent(Events event) {
+        mHasSendEventShow = event == Events.EVENT_SHOW;
         WritableMap map = Arguments.createMap();
         map.putBoolean("keyboardShown", mKeyboardShown);
         mEventEmitter.receiveEvent(getId(), event.toString(), map);
@@ -652,8 +663,9 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
                 mContentViewPopupWindow.setWidth(AdjustResizeWithFullScreen.getUseRight());
             }
             if (mKeyboardShown) {
-                if (top != AdjustResizeWithFullScreen.getUseBottom()) {
-                    top = AdjustResizeWithFullScreen.getUseBottom();
+                int contentBottom = mInNative ? AdjustResizeWithFullScreen.getContentBottom() : AdjustResizeWithFullScreen.getUseBottom();
+                if (top != contentBottom) {
+                    top = contentBottom;
                 }
             }
             final int tempHeight = getContentViewHeight(top);
@@ -719,6 +731,16 @@ public class KeyboardView extends ReactRootAwareViewGroup implements LifecycleEv
         return realKeyboardHeight;
     }
 
+    public void setFullWhenKeyboardDisplay(boolean fullWhenKeyboardDisplay) {
+        mFullWhenKeyboardDisplay = fullWhenKeyboardDisplay;
+        AdjustResizeWithFullScreen.setFullWhenKeyboardDisplay(fullWhenKeyboardDisplay);
+    }
+
+    public void setInNative(boolean inNative) {
+        mInNative = inNative;
+        AdjustResizeWithFullScreen.setInNative(inNative);
+    }
+    
 }
 
 
