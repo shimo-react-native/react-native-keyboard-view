@@ -1,13 +1,19 @@
 package im.shimo.react.keyboard;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.util.Log;
+import android.view.inputmethod.InputMethodManager;
 
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.LayoutShadowNode;
+import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.facebook.react.uimanager.UIBlock;
+import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.annotations.ReactProp;
 
@@ -31,8 +37,11 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         return REACT_CLASS;
     }
 
+    ThemedReactContext mThemedReactContext;
+
     @Override
     public KeyboardView createViewInstance(ThemedReactContext context) {
+        mThemedReactContext = context;
         if (statusBarHeight == 0) {
             navigationBarHeight = getNavigationBarHeight(context);
             statusBarHeight = getStatusBarHeight(context);
@@ -68,6 +77,22 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         }
     }
 
+    @ReactProp(name = "fullWhenKeyboardDisplay")
+    public void setFullWhenKeyboardDisplay(KeyboardView view,boolean fullWhenKeyboardDisplay){
+        view.setFullWhenKeyboardDisplay(fullWhenKeyboardDisplay);
+        if (DEBUG) {
+            Log.e(TAG, "KeyboardViewManager.setFullWhenKeyboardDisplay=" + fullWhenKeyboardDisplay);
+        }
+    }
+
+    @ReactProp(name = "inNative")
+    public void setInNative(KeyboardView view,boolean inNative){
+        view.setInNative(inNative);
+        if (DEBUG) {
+            Log.e(TAG, "KeyboardViewManager.setInNative=" + inNative);
+        }
+    }
+
     @ReactProp(name = "keyboardPlaceholderHeight")
     public void setKeyboardPlaceholderHeight(KeyboardView view, int keyboardPlaceholderHeight) {
         view.setKeyboardPlaceholderHeight(keyboardPlaceholderHeight);
@@ -97,6 +122,13 @@ public class KeyboardViewManager extends ViewGroupManager<KeyboardView> {
         int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
         int height = resources.getDimensionPixelSize(resourceId);
         return height;
+    }
+
+    public static int getTitleBarHeight(Context context) {
+        TypedArray styledAttributes = context.obtainStyledAttributes(new int[] { android.R.attr.actionBarSize });
+        int actionBarSize = (int) styledAttributes.getDimension(0, 0);
+        styledAttributes.recycle();
+        return actionBarSize;
     }
 
     static float getNavigationSize() {

@@ -37,13 +37,17 @@ export default class extends Component {
         onShow: PropTypes.func,
         onHide: PropTypes.func,
         hideWhenKeyboardIsDismissed: PropTypes.bool,
+        fullWhenKeyboardDisplay: PropTypes.bool,
+        inNative: PropTypes.bool,
         contentVisible: PropTypes.bool,
         keyboardPlaceholderHeight: PropTypes.number
     };
 
     static defaultProps = {
         hideWhenKeyboardIsDismissed: true,
-        contentVisible: true
+        contentVisible: true,
+        fullWhenKeyboardDisplay: false,
+        inNative: false
     };
 
     static dismiss = isIOS ?
@@ -110,7 +114,7 @@ export default class extends Component {
 
     render() {
         const { children, renderStickyView, renderCoverView, transform, onHide, onShow, keyboardPlaceholderHeight,
-          hideWhenKeyboardIsDismissed, contentVisible } = this.props;
+          hideWhenKeyboardIsDismissed, fullWhenKeyboardDisplay, inNative, contentVisible } = this.props;
         const stickyView = renderStickyView && renderStickyView();
         const cover = renderCoverView && renderCoverView();
         const hasCover = this._hasChildren(cover) || this._hasChildren(stickyView);
@@ -120,6 +124,8 @@ export default class extends Component {
             onKeyboardHide: onHide,
             onKeyboardShow: onShow,
             hideWhenKeyboardIsDismissed,
+            fullWhenKeyboardDisplay,
+            inNative,
             keyboardPlaceholderHeight,
             contentVisible
         };
@@ -158,6 +164,8 @@ let KeyboardView,
 
 const nativeOnlyProps = {
     hideWhenKeyboardIsDismissed: true,
+    fullWhenKeyboardDisplay: false,
+    inNative: false,
     onKeyboardHide: true,
     onKeyboardShow: true,
     keyboardPlaceholderHeight: true,

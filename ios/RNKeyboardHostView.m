@@ -147,7 +147,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
             [_coverView setVisible:NO];
         }
     }
-  
+
     [UIView performWithoutAnimation:^() {
         [self updateSize];
         [self updateOriginy];
@@ -408,14 +408,22 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
     if (_hideWhenKeyboardIsDismissed == hideWhenKeyboardIsDismissed) {
         return;
     }
-    
+
     if (![_manager keyboardToValid]) {
         [_coverView setVisible:!hideWhenKeyboardIsDismissed];
         [self updateSize];
         [self updateOriginy];
     }
-    
+
     _hideWhenKeyboardIsDismissed = hideWhenKeyboardIsDismissed;
+}
+
+- (void)setFullWhenKeyboardDisplay:(BOOL)fullWhenKeyboardDisplay {
+
+}
+
+- (void)setInNative:(BOOL)inNative {
+
 }
 
 - (void)setSynchronouslyUpdateTransform:(BOOL)synchronouslyUpdateTransform {
