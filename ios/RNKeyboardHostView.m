@@ -21,6 +21,9 @@
 
 @property (nonatomic, weak) UIView *rootView;
 
+@property (nonatomic, weak) UIWindow *rootWindow;
+
+
 /**
  height of contentView
  */
@@ -110,7 +113,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 - (void)didMoveToWindow {
     [super didMoveToWindow];
     if (!_coverView.superview && self.window) {
-        [self autoAddSubview:_coverView onSuperview:self.rootView];
+        [self autoAddSubview:_coverView onSuperview:self.rootWindow];
         if (_hideWhenKeyboardIsDismissed && !_manager.keyboardToValid) {
             [_coverView setVisible:NO];
         }
@@ -132,6 +135,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 #pragma mark - React
 
 - (void)insertReactSubview:(__kindof UIView *)subview atIndex:(NSInteger)atIndex {
+    [super insertReactSubview:subview atIndex:atIndex];
     if ([subview class] == [RNKeyboardContentView class]) {
         RCTAssert(_contentView == nil, @"KeyboardView ContainerView is already existed.");
         subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleWidth;
@@ -142,7 +146,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
         RCTAssert(_coverView == nil, @"KeyboardView StickyView is already existed.");
         subview.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleWidth;
         _coverView = subview;
-        [self autoAddSubview:_coverView onSuperview:self.rootView];
+        [self autoAddSubview:_coverView onSuperview:self.rootWindow];
         if (_hideWhenKeyboardIsDismissed && !_manager.keyboardToValid) {
             [_coverView setVisible:NO];
         }
@@ -364,6 +368,10 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 }
 
 #pragma mark - Getter
+
+- (UIWindow *)rootWindow {
+    return RCTSharedApplication().keyWindow;
+}
 
 - (UIView *)rootView {
     if (!_rootView) {

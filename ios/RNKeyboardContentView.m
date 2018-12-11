@@ -3,11 +3,11 @@
 #import <React/RCTTouchHandler.h>
 #import <React/RCTUtils.h>
 
-@interface RNKeyboardShdowView : RCTShadowView
+@interface RNKeyboardContentShdowView : RCTShadowView
 
 @end
 
-@implementation RNKeyboardShdowView
+@implementation RNKeyboardContentShdowView
 
 - (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex {
     [super insertReactSubview:subview atIndex:atIndex];
@@ -31,6 +31,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge {
     if ((self = [super initWithFrame:CGRectZero])) {
+        _visible = YES;
         _touchHandler = [[RCTTouchHandler alloc] initWithBridge:bridge];
         [_touchHandler attachToView:self];
     }
@@ -38,11 +39,25 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 }
 
 - (RCTShadowView *)shadowView {
-    return [RNKeyboardShdowView new];
+    return [RNKeyboardContentShdowView new];
 }
+
+#pragma mark - RCTInvalidating
 
 - (void)invalidate {
     [_touchHandler detachFromView:self];
+    _touchHandler = nil;
+}
+
+#pragma mark - Setter
+
+- (void)setHidden:(BOOL)hidden {
+    // do nothing, let `setCoverHidden` do the stuff
+}
+
+- (void)setVisible:(BOOL)visible {
+    _visible = visible;
+    [super setHidden:!visible];
 }
 
 @end
