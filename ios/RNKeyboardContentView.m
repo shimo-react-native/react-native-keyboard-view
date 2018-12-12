@@ -3,11 +3,11 @@
 #import <React/RCTTouchHandler.h>
 #import <React/RCTUtils.h>
 
-@interface RNKeyboardContentShdowView : RCTShadowView
+@interface RNKeyboardContentShadowView : RCTShadowView
 
 @end
 
-@implementation RNKeyboardContentShdowView
+@implementation RNKeyboardContentShadowView
 
 - (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex {
     [super insertReactSubview:subview atIndex:atIndex];
@@ -39,7 +39,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder
 }
 
 - (RCTShadowView *)shadowView {
-    return [RNKeyboardContentShdowView new];
+    return [RNKeyboardContentShadowView new];
 }
 
 #pragma mark - RCTInvalidating
