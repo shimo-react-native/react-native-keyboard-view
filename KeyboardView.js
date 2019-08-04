@@ -23,6 +23,7 @@ const styles = StyleSheet.create({
     },
 
     androidInputAvoid: isAndroid ? {
+        marginBottom: 100,
         bottom: SCREEN_HEIGHT,
         transform: [{ translateY: SCREEN_HEIGHT }]
     } : {}
