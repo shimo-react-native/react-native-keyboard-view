@@ -144,7 +144,7 @@ export default class extends Component {
         } else {
             return (
               <KeyboardView
-                style={[styles.offSteam]}
+                style={[styles.offSteam, props.keyboardViewStyles]}
                 {...props}
               >
                   {childViews}
