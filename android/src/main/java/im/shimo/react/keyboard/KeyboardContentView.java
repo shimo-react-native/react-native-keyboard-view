@@ -14,10 +14,6 @@ class KeyboardContentView extends ReactViewGroup implements RootView {
 
     private final JSTouchDispatcher mJSTouchDispatcher = new JSTouchDispatcher(this);
 
-    public interface RootView {
-        void handleException (Throwable t);
-    }
-
     public KeyboardContentView(Context context) {
         super(context);
     }
@@ -57,11 +53,6 @@ class KeyboardContentView extends ReactViewGroup implements RootView {
     public void onChildStartedNativeGesture(MotionEvent androidEvent) {
         mJSTouchDispatcher.onChildStartedNativeGesture(androidEvent, getEventDispatcher());
     }
-
-    // Override
-    // public void handleException(Throwable t) {
-
-    // };
 
     @Override
     public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
