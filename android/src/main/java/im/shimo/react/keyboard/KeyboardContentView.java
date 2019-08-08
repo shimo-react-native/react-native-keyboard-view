@@ -14,9 +14,12 @@ class KeyboardContentView extends ReactViewGroup implements RootView {
 
     private final JSTouchDispatcher mJSTouchDispatcher = new JSTouchDispatcher(this);
 
+    public interface RootView {
+        void handleException (Throwable t);
+    }
+
     public KeyboardContentView(Context context) {
         super(context);
-        void handleException (Throwable t);
     }
 
     @Override
