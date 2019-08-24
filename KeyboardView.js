@@ -98,7 +98,9 @@ export default class extends Component {
                   {cover}
               </View>
               {stickyView && (
-                <View style={this.props.stickyViewStyle}>
+                <View style={[{
+                    marginBottom: 70
+                }, this.props.stickyViewStyle]}>
                     <View style={styles.androidInputAvoid}>
                         {stickyView}
                     </View>
