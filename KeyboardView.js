@@ -38,12 +38,14 @@ export default class extends Component {
         onHide: PropTypes.func,
         hideWhenKeyboardIsDismissed: PropTypes.bool,
         contentVisible: PropTypes.bool,
-        keyboardPlaceholderHeight: PropTypes.number
+        keyboardPlaceholderHeight: PropTypes.number,
+        stickyViewStyle: PropTypes.object,
     };
 
     static defaultProps = {
         hideWhenKeyboardIsDismissed: true,
-        contentVisible: true
+        contentVisible: true,
+        stickyViewStyle: {}
     };
 
     static dismiss = isIOS ?
@@ -96,8 +98,12 @@ export default class extends Component {
                   {cover}
               </View>
               {stickyView && (
-                <View style={styles.androidInputAvoid}>
-                    {stickyView}
+                <View style={[{
+                    marginBottom: 70
+                }, this.props.stickyViewStyle]}>
+                    <View style={styles.androidInputAvoid}>
+                        {stickyView}
+                    </View>
                 </View>
               )}
           </KeyboardCoverView>

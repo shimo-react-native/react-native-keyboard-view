@@ -11,18 +11,18 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "25.0.0"
+    compileSdkVersion 28
+    buildToolsVersion "28.0.3"
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
     }
-    lintOptions {
-        abortOnError false
-    }
+    // lintOptions {
+    //     abortOnError false
+    // }
 }
 
 repositories {
@@ -30,7 +30,10 @@ repositories {
     jcenter()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url "$projectDir/../../../node_modules/react-native/android"
+        // url "$projectDir/../../../node_modules/react-native/android"
+        // url "$rootDir/../node_modules/react-native/android"
+        url "$projectDir/../node_modules/react-native/android"
+        // maven { url "$projectDir/../node_modules/react-native/android" }
     }
 }
 
