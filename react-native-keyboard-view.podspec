@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://github.com/shimohq/react-native-keyboard-view'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'zhongjiaren' => 'zhongjiaren@shimo.im' }
-  s.source           = { :git => 'https://github.com/shimohq/react-native-keyboard-view.git', :tag => "v#{s.version} }
+  s.source           = { :git => 'https://github.com/shimohq/react-native-keyboard-view.git', :tag => "v#{s.version}" }
 
   s.ios.deployment_target = '8.0'
   
