@@ -1,7 +1,7 @@
 package im.shimo.react.keyboard;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.view.ViewParent;
 
 import com.facebook.react.ReactRootView;
