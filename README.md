@@ -20,7 +20,13 @@ android √
 npm i react-native-keyboard-view --save
 ```
 
-* Link native library
+* iOS (React Native > 0.60)
+
+```bash
+cd ios && pod install
+```
+
+* Manual link steps (React Native < 0.60)
 
 ```bash
 react-native link react-native-keyboard-view
